@@ -9,9 +9,11 @@ export default async function TenantLayout({ children }: { children: React.React
 
   return (
     <QueryProvider>
-      <AuthProvider>
-        <TenantProvider slug={slug}>{children}</TenantProvider>
-      </AuthProvider>
+      <TenantProvider slug={slug}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </TenantProvider>
     </QueryProvider>
   )
 }

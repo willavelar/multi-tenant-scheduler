@@ -9,7 +9,8 @@ type JwtPayload = {
   sub: string
   email: string
   role: 'tenant_admin' | 'professional' | 'client'
-  tenantId: string
+  tenantId: string | null
+  exp: number
 }
 
 type AuthContextValue = {
@@ -27,6 +28,8 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 function tokenToUser(accessToken: string): User {
   const payload = jwtDecode<JwtPayload>(accessToken)
+  if (payload.exp * 1000 < Date.now()) throw new Error('Token expired')
+  if (!payload.tenantId) throw new Error('Missing tenantId in token')
   return {
     id: payload.sub,
     email: payload.email,
