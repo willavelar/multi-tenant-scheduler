@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Client } from 'pg';
 import * as bcrypt from 'bcryptjs';
 import * as schema from '@scheduler/shared';
+
 async function seed() {
   // Use a single Client (not Pool) so SET session vars persist across queries
   const client = new Client({ connectionString: process.env.DATABASE_URL });
