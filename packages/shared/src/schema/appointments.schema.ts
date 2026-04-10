@@ -11,9 +11,9 @@ export const appointmentStatusEnum = pgEnum('appointment_status', [
 export const appointments = pgTable('appointments', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
-  professionalId: uuid('professional_id').notNull().references(() => professionals.id),
-  serviceId: uuid('service_id').notNull().references(() => services.id),
-  clientId: uuid('client_id').notNull().references(() => users.id),
+  professionalId: uuid('professional_id').notNull().references(() => professionals.id, { onDelete: 'cascade' }),
+  serviceId: uuid('service_id').notNull().references(() => services.id, { onDelete: 'cascade' }),
+  clientId: uuid('client_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   startsAt: timestamp('starts_at').notNull(),
   endsAt: timestamp('ends_at').notNull(),
   status: appointmentStatusEnum('status').notNull().default('pending'),
