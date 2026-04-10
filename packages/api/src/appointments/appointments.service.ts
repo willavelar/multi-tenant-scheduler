@@ -31,6 +31,7 @@ export class AppointmentsService {
       .from(tenants)
       .where(eq(tenants.id, tenantId));
 
+    if (!tenant) throw new NotFoundException('Tenant not found');
     const startsAt = new Date(`${dto.date}T${dto.startTime}:00Z`);
     const endsAt = new Date(startsAt.getTime() + svc.durationMinutes * 60000);
     const status = tenant.confirmationMode === 'auto' ? 'confirmed' : 'pending';
@@ -85,7 +86,7 @@ export class AppointmentsService {
     const [updated] = await this.db
       .update(appointments)
       .set({ status })
-      .where(eq(appointments.id, id))
+      .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)))
       .returning();
     return updated;
   }
