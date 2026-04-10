@@ -1,3 +1,5 @@
+'use client'
+
 import { useServices } from '@/hooks/useServices'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -22,8 +24,16 @@ export function StepService({ onSelect, onBack }: Props) {
         {services.filter((s: Service) => s.active).map((svc: Service) => (
           <Card
             key={svc.id}
+            role="button"
+            tabIndex={0}
             className="p-4 cursor-pointer hover:border-indigo-500 hover:shadow-sm transition-all"
             onClick={() => onSelect(svc.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelect(svc.id)
+              }
+            }}
           >
             <div className="flex items-center justify-between">
               <div>

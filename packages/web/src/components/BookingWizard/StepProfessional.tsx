@@ -1,3 +1,5 @@
+'use client'
+
 import { useProfessionals } from '@/hooks/useProfessionals'
 import { Card } from '@/components/ui/card'
 import type { Professional } from '@/types'
@@ -24,8 +26,16 @@ export function StepProfessional({ onSelect }: Props) {
         {professionals.filter((p: Professional) => p.active).map((prof: Professional) => (
           <Card
             key={prof.id}
+            role="button"
+            tabIndex={0}
             className="p-4 cursor-pointer hover:border-indigo-500 hover:shadow-sm transition-all"
             onClick={() => onSelect(prof.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onSelect(prof.id)
+              }
+            }}
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
