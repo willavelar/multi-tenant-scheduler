@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: ./packages/api
-      dockerfile: Dockerfile
+      context: .                          # monorepo root (was ./packages/api)
+      dockerfile: packages/api/Dockerfile
     ports:
       - "3001:3001"
     environment:
@@ -17,22 +17,22 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     command: pnpm dev
 
-  web:
-    build:
-      context: ./packages/web
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-    volumes:
-      - ./packages/web/src:/app/src
-    depends_on:
-      - api
-    command: pnpm dev
+  # web:
+  #   build:
+  #     context: ./packages/web
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     NEXT_PUBLIC_API_URL: http://localhost:3001
+  #   volumes:
+  #     - ./packages/web/src:/app/src
+  #   depends_on:
+  #     - api
+  #   command: pnpm dev
 
   db:
     image: postgres:16-alpine
@@ -54,6 +54,11 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 volumes:
   postgres_data:
