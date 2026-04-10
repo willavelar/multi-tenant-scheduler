@@ -9,6 +9,7 @@ describe('TenantsService', () => {
   const mockRedis = { get: jest.fn(), set: jest.fn() };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module = await Test.createTestingModule({
       providers: [
         TenantsService,
