@@ -5,7 +5,6 @@ import { DB, DrizzleDB } from '../database/database.module';
 import { SlotsService } from './slots.service';
 import { CreateWeeklyAvailabilityDto } from './dto/create-weekly-availability.dto';
 import { CreateExceptionDto } from './dto/create-exception.dto';
-import { format } from 'date-fns';
 
 @Injectable()
 export class AvailabilityService {
@@ -47,7 +46,7 @@ export class AvailabilityService {
   }
 
   async getAvailableSlots(professionalId: string, date: string, tenantId: string): Promise<string[]> {
-    const dayOfWeek = new Date(date).getDay();
+    const dayOfWeek = new Date(date).getUTCDay();
 
     const [baseAvail] = await this.db
       .select()
@@ -105,7 +104,7 @@ export class AvailabilityService {
 
     const bookedTimes = booked
       .filter(a => a.startsAt >= dayStart && a.startsAt <= dayEnd)
-      .map(a => format(a.startsAt, 'HH:mm'));
+      .map(a => `${a.startsAt.getUTCHours().toString().padStart(2, '0')}:${a.startsAt.getUTCMinutes().toString().padStart(2, '0')}`);
 
     return this.slotsService.subtractBooked(allSlots, bookedTimes, baseAvail.slotDurationMinutes);
   }
