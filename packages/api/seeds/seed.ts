@@ -19,7 +19,7 @@ async function seed() {
   console.log('Tenant created:', tenant.slug);
 
   // Set the current_tenant_id for this session so RLS policies allow access
-  await client.query(`SET app.current_tenant_id = '${tenant.id}'`);
+  await client.query('SELECT set_config($1, $2, false)', ['app.current_tenant_id', tenant.id]);
 
   // Create tenant admin user
   const passwordHash = await bcrypt.hash('password123', 10);
