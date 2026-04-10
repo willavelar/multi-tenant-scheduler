@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment
+.env
+
+# Editor
+.DS_Store
+
+# Test coverage
+coverage/
+
+# Brainstorm sessions (local only)
+.superpowers/
