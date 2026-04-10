@@ -1,0 +1,34 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
+
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message)
+  }
+}
+
+export async function apiFetch(
+  path: string,
+  {
+    slug,
+    token,
+    ...options
+  }: RequestInit & { slug: string; token?: string | null }
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'x-tenant-slug': slug,
+    ...(options.headers as Record<string, string>),
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ message: res.statusText }))
+    throw new ApiError(res.status, body.message ?? res.statusText)
+  }
+
+  return res
+}
