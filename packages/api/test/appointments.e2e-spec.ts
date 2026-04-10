@@ -1,0 +1,100 @@
+import * as request from 'supertest';
+import { Test } from '@nestjs/testing';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { AppModule } from '../src/app.module';
+
+describe('Appointments (e2e)', () => {
+  let app: INestApplication;
+  let clientToken: string;
+  let adminToken: string;
+
+  beforeAll(async () => {
+    const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    app = module.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    await app.init();
+
+    // Login as admin
+    const adminRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .set('x-tenant-slug', 'clinica-demo')
+      .send({ email: 'admin@clinica-demo.com', password: 'password123' });
+    adminToken = adminRes.body.accessToken;
+
+    // Register and login as client
+    const regRes = await request(app.getHttpServer())
+      .post('/auth/register')
+      .set('x-tenant-slug', 'clinica-demo')
+      .send({ email: `client-${Date.now()}@test.com`, password: 'pass123456', name: 'Test Client' });
+    clientToken = regRes.body.accessToken;
+  });
+
+  afterAll(() => app.close());
+
+  it('GET /availability/slots — returns available slots for a professional', async () => {
+    const profsRes = await request(app.getHttpServer())
+      .get('/professionals')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const profId = profsRes.body[0].id;
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const date = tomorrow.toISOString().split('T')[0];
+
+    return request(app.getHttpServer())
+      .get(`/availability/slots?professionalId=${profId}&date=${date}`)
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${clientToken}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(Array.isArray(body)).toBe(true);
+      });
+  });
+
+  it('POST /appointments — client can book an appointment', async () => {
+    const profsRes = await request(app.getHttpServer())
+      .get('/professionals')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const profId = profsRes.body[0].id;
+
+    const svcsRes = await request(app.getHttpServer())
+      .get('/services')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${clientToken}`);
+    const svcId = svcsRes.body[0].id;
+
+    // Find an available slot by checking multiple upcoming weekdays
+    let date: string | undefined;
+    let startTime: string | undefined;
+    for (let offset = 1; offset <= 14; offset++) {
+      const candidate = new Date();
+      candidate.setDate(candidate.getDate() + offset);
+      const candidateDate = candidate.toISOString().split('T')[0];
+      const slotsRes = await request(app.getHttpServer())
+        .get(`/availability/slots?professionalId=${profId}&date=${candidateDate}`)
+        .set('x-tenant-slug', 'clinica-demo')
+        .set('Authorization', `Bearer ${clientToken}`);
+      if (Array.isArray(slotsRes.body) && slotsRes.body.length > 0) {
+        date = candidateDate;
+        startTime = slotsRes.body[0];
+        break;
+      }
+    }
+
+    if (!date || !startTime) {
+      throw new Error('No available slots found in the next 14 days');
+    }
+
+    return request(app.getHttpServer())
+      .post('/appointments')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${clientToken}`)
+      .send({ professionalId: profId, serviceId: svcId, date, startTime })
+      .expect(201)
+      .expect(({ body }) => {
+        expect(body.status).toMatch(/pending|confirmed/);
+      });
+  });
+});
