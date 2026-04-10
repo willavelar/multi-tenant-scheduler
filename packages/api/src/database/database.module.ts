@@ -14,7 +14,9 @@ export type DrizzleDB = NodePgDatabase<typeof schema>;
       provide: DB,
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const pool = new Pool({ connectionString: config.get('DATABASE_URL') });
+        const connectionString = config.get<string>('DATABASE_URL');
+        if (!connectionString) throw new Error('DATABASE_URL environment variable is not set');
+        const pool = new Pool({ connectionString });
         return drizzle(pool, { schema });
       },
     },
