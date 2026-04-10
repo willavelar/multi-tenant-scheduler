@@ -7,8 +7,8 @@
     "build": "nest build",
     "test": "jest",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:migrate": "drizzle-kit push:pg",
     "db:seed": "ts-node seeds/seed.ts"
   },
   "dependencies": {
