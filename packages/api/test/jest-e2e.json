@@ -1,0 +1,19 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": ["ts-jest", {
+      "tsconfig": {
+        "skipLibCheck": true,
+        "paths": {
+          "@scheduler/shared": ["../../shared/src"]
+        }
+      }
+    }]
+  },
+  "moduleNameMapper": {
+    "@scheduler/shared": "<rootDir>/../../shared/src"
+  }
+}
