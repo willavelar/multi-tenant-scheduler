@@ -5,6 +5,7 @@ import { RedisModule } from './redis/redis.module';
 import { TenantsModule } from './tenants/tenants.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfessionalsModule } from './professionals/professionals.module';
+import { ServicesModule } from './services/services.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
@@ -15,6 +16,7 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     TenantsModule,
     AuthModule,
     ProfessionalsModule,
+    ServicesModule,
   ],
 })
 export class AppModule implements NestModule {
