@@ -2,7 +2,7 @@ export type User = {
   id: string
   email: string
   role: 'tenant_admin' | 'professional' | 'client'
-  tenantId: string
+  tenantId: string | null
 }
 
 export type Professional = {
