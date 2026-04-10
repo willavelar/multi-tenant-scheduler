@@ -23,7 +23,8 @@ export default function LoginPage() {
   const { slug } = useTenant()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const from = searchParams.get('from') ?? '/'
+  const raw = searchParams.get('from') ?? '/'
+  const from = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/'
 
   const {
     register,
