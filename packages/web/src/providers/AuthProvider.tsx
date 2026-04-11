@@ -16,11 +16,11 @@ type JwtPayload = {
 type AuthContextValue = {
   user: User | null
   accessToken: string | null
-  login: (email: string, password: string, slug: string) => Promise<void>
+  login: (email: string, password: string, slug: string) => Promise<string>
   register: (
     data: { email: string; password: string; name: string; phone?: string },
     slug: string
-  ) => Promise<void>
+  ) => Promise<string>
   logout: () => void
 }
 
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const login = useCallback(async (email: string, password: string, slug: string) => {
+  const login = useCallback(async (email: string, password: string, slug: string): Promise<string> => {
     const res = await apiFetch('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
@@ -77,13 +77,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     persistTokens(at, rt)
     setAccessToken(at)
     setUser(tokenToUser(at))
+    return at
   }, [])
 
   const register = useCallback(
     async (
       data: { email: string; password: string; name: string; phone?: string },
       slug: string
-    ) => {
+    ): Promise<string> => {
       const res = await apiFetch('/auth/register', {
         method: 'POST',
         body: JSON.stringify(data),
@@ -93,6 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       persistTokens(at, rt)
       setAccessToken(at)
       setUser(tokenToUser(at))
+      return at
     },
     []
   )

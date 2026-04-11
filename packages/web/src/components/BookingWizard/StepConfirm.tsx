@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
 import { useApi } from '@/hooks/useApi'
+import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,6 +44,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
   const queryClient = useQueryClient()
   const [showAuth, setShowAuth] = useState(false)
   const [result, setResult] = useState<{ status: string } | null>(null)
+  const [bookError, setBookError] = useState<string | null>(null)
 
   const bookMutation = useMutation({
     mutationFn: async () => {
@@ -62,6 +64,23 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
   const loginForm = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<z.infer<typeof registerSchema>>({ resolver: zodResolver(registerSchema) })
 
+  async function authAndBook(freshToken: string) {
+    try {
+      const res = await apiFetch('/appointments', {
+        method: 'POST',
+        slug,
+        token: freshToken,
+        body: JSON.stringify({ professionalId, serviceId, date, startTime }),
+      })
+      const data = await res.json()
+      queryClient.invalidateQueries({ queryKey: ['slots'] })
+      queryClient.invalidateQueries({ queryKey: ['appointments'] })
+      setResult(data)
+    } catch (err) {
+      setBookError(err instanceof Error ? err.message : 'Erro ao agendar')
+    }
+  }
+
   async function handleConfirm() {
     if (!user) {
       setShowAuth(true)
@@ -71,15 +90,27 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
   }
 
   async function handleLogin(data: z.infer<typeof loginSchema>) {
-    await login(data.email, data.password, slug)
-    setShowAuth(false)
-    bookMutation.mutate()
+    try {
+      const freshToken = await login(data.email, data.password, slug)
+      setShowAuth(false)
+      await authAndBook(freshToken)
+    } catch (err) {
+      loginForm.setError('root', {
+        message: 'Email ou senha incorretos',
+      })
+    }
   }
 
   async function handleRegister(data: z.infer<typeof registerSchema>) {
-    await registerUser(data, slug)
-    setShowAuth(false)
-    bookMutation.mutate()
+    try {
+      const freshToken = await registerUser(data, slug)
+      setShowAuth(false)
+      await authAndBook(freshToken)
+    } catch (err) {
+      registerForm.setError('root', {
+        message: err instanceof Error ? err.message : 'Erro ao criar conta',
+      })
+    }
   }
 
   if (result) {
@@ -112,9 +143,9 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
         </div>
       </div>
 
-      {bookMutation.error && (
+      {(bookMutation.error || bookError) && (
         <p className="text-sm text-red-500">
-          {bookMutation.error instanceof Error ? bookMutation.error.message : 'Erro ao agendar'}
+          {bookError ?? (bookMutation.error instanceof Error ? bookMutation.error.message : 'Erro ao agendar')}
         </p>
       )}
 
@@ -149,6 +180,9 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
                   <Label>Senha</Label>
                   <Input type="password" {...loginForm.register('password')} />
                 </div>
+                {loginForm.formState.errors.root && (
+                  <p className="text-sm text-red-500">{loginForm.formState.errors.root.message}</p>
+                )}
                 <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
                   Entrar
                 </Button>
@@ -168,6 +202,9 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
                   <Label>Senha</Label>
                   <Input type="password" {...registerForm.register('password')} />
                 </div>
+                {registerForm.formState.errors.root && (
+                  <p className="text-sm text-red-500">{registerForm.formState.errors.root.message}</p>
+                )}
                 <Button type="submit" className="w-full" disabled={registerForm.formState.isSubmitting}>
                   Criar conta
                 </Button>
