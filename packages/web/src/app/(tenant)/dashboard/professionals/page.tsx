@@ -23,11 +23,12 @@ const createSchema = z.object({
 type CreateForm = z.infer<typeof createSchema>
 
 export default function ProfessionalsPage() {
-  const { data: professionals, isLoading } = useProfessionals()
+  const { data: professionals, isLoading, isError } = useProfessionals()
   const api = useApi()
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   const [open, setOpen] = useState(false)
+  const [pendingToggleId, setPendingToggleId] = useState<string | null>(null)
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<CreateForm>({ resolver: zodResolver(createSchema) })
@@ -49,16 +50,19 @@ export default function ProfessionalsPage() {
 
   const toggleMutation = useMutation({
     mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      setPendingToggleId(id)
       const res = await api(`/professionals/${id}`, {
         method: 'PATCH',
         body: JSON.stringify({ active }),
       })
       return res.json()
     },
+    onSettled: () => setPendingToggleId(null),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['professionals', slug] }),
   })
 
   if (isLoading) return <p className="text-gray-500">Carregando...</p>
+  if (isError) return <p className="text-red-500">Erro ao carregar profissionais.</p>
 
   return (
     <div className="space-y-4">
@@ -96,7 +100,7 @@ export default function ProfessionalsPage() {
       </div>
 
       <div className="rounded-md border bg-white">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm" aria-label="Profissionais">
           <thead className="border-b bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left font-medium text-gray-600">ID</th>
@@ -106,6 +110,13 @@ export default function ProfessionalsPage() {
             </tr>
           </thead>
           <tbody>
+            {!professionals?.length && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-400">
+                  Nenhum profissional cadastrado.
+                </td>
+              </tr>
+            )}
             {professionals?.map((prof: Professional) => (
               <tr key={prof.id} className="border-b last:border-0">
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{prof.id.slice(0, 8)}...</td>
@@ -120,7 +131,7 @@ export default function ProfessionalsPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => toggleMutation.mutate({ id: prof.id, active: !prof.active })}
-                    disabled={toggleMutation.isPending}
+                    disabled={pendingToggleId === prof.id}
                   >
                     {prof.active ? 'Desativar' : 'Ativar'}
                   </Button>
