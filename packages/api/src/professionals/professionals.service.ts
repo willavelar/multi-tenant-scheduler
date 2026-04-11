@@ -1,10 +1,25 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { professionals } from '@scheduler/shared';
+import { professionals, users } from '@scheduler/shared';
+import * as bcrypt from 'bcryptjs';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { CreateProfessionalDto } from './dto/create-professional.dto';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
+
+const PROF_FIELDS = {
+  id:        professionals.id,
+  tenantId:  professionals.tenantId,
+  userId:    professionals.userId,
+  bio:       professionals.bio,
+  avatarUrl: professionals.avatarUrl,
+  position:  professionals.position,
+  active:    professionals.active,
+  name:      users.name,
+  email:     users.email,
+  phone:     users.phone,
+  role:      users.role,
+};
 
 @Injectable()
 export class ProfessionalsService {
@@ -12,49 +27,119 @@ export class ProfessionalsService {
 
   findAll(tenantId: string) {
     return withTenant(this.db, tenantId, (tx) =>
-      tx.select().from(professionals).where(eq(professionals.tenantId, tenantId)),
+      tx.select(PROF_FIELDS)
+        .from(professionals)
+        .innerJoin(users, eq(professionals.userId, users.id))
+        .where(eq(professionals.tenantId, tenantId)),
     );
   }
 
   async findOne(id: string, tenantId: string) {
     const [prof] = await withTenant(this.db, tenantId, (tx) =>
-      tx.select().from(professionals).where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId))),
+      tx.select(PROF_FIELDS)
+        .from(professionals)
+        .innerJoin(users, eq(professionals.userId, users.id))
+        .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId))),
     );
     if (!prof) throw new NotFoundException('Professional not found');
     return prof;
   }
 
-  async create(dto: CreateProfessionalDto, tenantId: string) {
+  async findByUserId(userId: string, tenantId: string) {
     const [prof] = await withTenant(this.db, tenantId, (tx) =>
-      tx.insert(professionals).values({ ...dto, tenantId }).returning(),
+      tx.select(PROF_FIELDS)
+        .from(professionals)
+        .innerJoin(users, eq(professionals.userId, users.id))
+        .where(and(eq(professionals.userId, userId), eq(professionals.tenantId, tenantId))),
     );
+    if (!prof) throw new NotFoundException('Professional profile not found');
     return prof;
   }
 
-  async update(id: string, dto: UpdateProfessionalDto, tenantId: string) {
+  async create(dto: CreateProfessionalDto, tenantId: string) {
     return withTenant(this.db, tenantId, async (tx) => {
       const [existing] = await tx
-        .select({ id: professionals.id })
-        .from(professionals)
-        .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
-      if (!existing) throw new NotFoundException('Professional not found');
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.email, dto.email), eq(users.tenantId, tenantId)));
+      if (existing) throw new ConflictException('Email already in use');
 
-      const [prof] = await tx
-        .update(professionals)
-        .set(dto)
-        .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)))
-        .returning();
-      return prof;
+      const passwordHash = await bcrypt.hash(dto.password, 10);
+      const [user] = await tx.insert(users).values({
+        tenantId,
+        email: dto.email,
+        passwordHash,
+        role: 'professional',
+        name: dto.name,
+      }).returning();
+
+      const [prof] = await tx.insert(professionals).values({
+        tenantId,
+        userId: user.id,
+        bio: dto.bio,
+        avatarUrl: dto.avatarUrl,
+        position: dto.position,
+      }).returning();
+
+      return { ...prof, name: user.name, email: user.email, phone: null, role: user.role };
     });
   }
 
-  async remove(id: string, tenantId: string) {
+  async update(
+    id: string,
+    dto: UpdateProfessionalDto,
+    tenantId: string,
+    requestingUserId: string,
+    requestingUserRole: string,
+  ) {
     return withTenant(this.db, tenantId, async (tx) => {
-      const [existing] = await tx
-        .select({ id: professionals.id })
+      const [prof] = await tx
+        .select({ id: professionals.id, userId: professionals.userId })
         .from(professionals)
         .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
-      if (!existing) throw new NotFoundException('Professional not found');
+      if (!prof) throw new NotFoundException('Professional not found');
+
+      const isAdmin = requestingUserRole === 'tenant_admin';
+      const isOwn   = prof.userId === requestingUserId;
+
+      if (!isAdmin && !isOwn) throw new ForbiddenException('Cannot edit another professional');
+
+      // Fields only admin may change
+      if (!isAdmin && (dto.active !== undefined || dto.role !== undefined)) {
+        throw new ForbiddenException('Only admins can change role and status');
+      }
+
+      // Update users table (name, role)
+      const userPatch: Record<string, unknown> = {};
+      if (dto.name !== undefined) userPatch.name = dto.name;
+      if (dto.role !== undefined && isAdmin) userPatch.role = dto.role;
+      if (Object.keys(userPatch).length) {
+        await tx.update(users).set(userPatch).where(eq(users.id, prof.userId));
+      }
+
+      // Update professionals table
+      const profPatch: Record<string, unknown> = {};
+      if (dto.bio       !== undefined) profPatch.bio       = dto.bio;
+      if (dto.avatarUrl !== undefined) profPatch.avatarUrl = dto.avatarUrl;
+      if (dto.position  !== undefined) profPatch.position  = dto.position;
+      if (dto.active    !== undefined && isAdmin) profPatch.active = dto.active;
+      if (Object.keys(profPatch).length) {
+        await tx.update(professionals).set(profPatch)
+          .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
+      }
+
+      return this.findOne(id, tenantId);
+    });
+  }
+
+  async remove(id: string, tenantId: string, requestingUserId: string) {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [prof] = await tx
+        .select({ id: professionals.id, userId: professionals.userId })
+        .from(professionals)
+        .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
+      if (!prof) throw new NotFoundException('Professional not found');
+      if (prof.userId === requestingUserId) throw new ForbiddenException('Cannot delete your own account');
 
       await tx.delete(professionals).where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
     });
