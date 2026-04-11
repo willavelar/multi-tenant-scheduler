@@ -7,6 +7,7 @@ export function useSlots(professionalId: string | null, date: string | null) {
   const { slug } = useTenant()
   return useQuery<string[]>({
     queryKey: ['slots', slug, professionalId, date],
+    staleTime: 0,
     enabled: !!professionalId && !!date,
     queryFn: async () => {
       const res = await api(`/availability/slots?professionalId=${professionalId}&date=${date}`)

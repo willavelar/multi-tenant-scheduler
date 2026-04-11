@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { useSlots } from '@/hooks/useSlots'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,13 @@ function toLocalDateString(date: Date): string {
 export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const dateStr = selectedDate ? toLocalDateString(selectedDate) : null
-  const { data: slots, isLoading } = useSlots(professionalId, dateStr)
+  const { data: slots, isLoading, error: slotsError } = useSlots(professionalId, dateStr)
+
+  const today = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
 
   return (
     <div className="space-y-4">
@@ -30,13 +36,14 @@ export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
         mode="single"
         selected={selectedDate}
         onSelect={setSelectedDate}
-        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+        disabled={(date) => date < today}
         className="rounded-md border"
       />
       {selectedDate && (
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-700">Horários disponíveis</p>
           {isLoading && <p className="text-sm text-gray-400">Carregando...</p>}
+          {slotsError && <p className="text-sm text-red-500">Erro ao carregar horários. Tente novamente.</p>}
           {slots && slots.length === 0 && (
             <p className="text-sm text-gray-400">Nenhum horário disponível neste dia.</p>
           )}
