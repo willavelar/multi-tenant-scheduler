@@ -22,36 +22,42 @@ export class AvailabilityController {
   }
 
   @Get('weekly/:professionalId')
-  getWeekly(@Param('professionalId') professionalId: string) {
-    return this.service.getWeeklyAvailability(professionalId);
+  getWeekly(
+    @Param('professionalId') professionalId: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.service.getWeeklyAvailability(professionalId, tenantId);
   }
 
   @Post('weekly')
   @Roles('tenant_admin')
-  createWeekly(@Body() dto: CreateWeeklyAvailabilityDto) {
-    return this.service.createWeeklyAvailability(dto);
+  createWeekly(@Body() dto: CreateWeeklyAvailabilityDto, @TenantId() tenantId: string) {
+    return this.service.createWeeklyAvailability(dto, tenantId);
   }
 
   @Delete('weekly/:id')
   @Roles('tenant_admin')
-  deleteWeekly(@Param('id') id: string) {
-    return this.service.deleteWeeklyAvailability(id);
+  deleteWeekly(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.service.deleteWeeklyAvailability(id, tenantId);
   }
 
   @Get('exceptions/:professionalId')
-  getExceptions(@Param('professionalId') professionalId: string) {
-    return this.service.getExceptions(professionalId);
+  getExceptions(
+    @Param('professionalId') professionalId: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.service.getExceptions(professionalId, tenantId);
   }
 
   @Post('exceptions')
   @Roles('tenant_admin')
-  createException(@Body() dto: CreateExceptionDto) {
-    return this.service.createException(dto);
+  createException(@Body() dto: CreateExceptionDto, @TenantId() tenantId: string) {
+    return this.service.createException(dto, tenantId);
   }
 
   @Delete('exceptions/:id')
   @Roles('tenant_admin')
-  deleteException(@Param('id') id: string) {
-    return this.service.deleteException(id);
+  deleteException(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.service.deleteException(id, tenantId);
   }
 }

@@ -5,6 +5,7 @@ import * as bcrypt from 'bcryptjs';
 import { eq, and } from 'drizzle-orm';
 import { users } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
+import { withTenant } from '../database/with-tenant';
 import { RegisterDto } from './dto/register.dto';
 
 export interface JwtPayload {
@@ -23,31 +24,32 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto, tenantId: string) {
-    const [existing] = await this.db
-      .select({ id: users.id })
-      .from(users)
-      .where(and(eq(users.email, dto.email), eq(users.tenantId, tenantId)));
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [existing] = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.email, dto.email), eq(users.tenantId, tenantId)));
 
-    if (existing) throw new ConflictException('Email already in use');
+      if (existing) throw new ConflictException('Email already in use');
 
-    const passwordHash = await bcrypt.hash(dto.password, 10);
-    const [user] = await this.db.insert(users).values({
-      tenantId,
-      email: dto.email,
-      passwordHash,
-      role: 'client',
-      name: dto.name,
-      phone: dto.phone,
-    }).returning();
+      const passwordHash = await bcrypt.hash(dto.password, 10);
+      const [user] = await tx.insert(users).values({
+        tenantId,
+        email: dto.email,
+        passwordHash,
+        role: 'client',
+        name: dto.name,
+        phone: dto.phone,
+      }).returning();
 
-    return this.generateTokens(user);
+      return this.generateTokens(user);
+    });
   }
 
   async validateUser(email: string, password: string, tenantId: string) {
-    const [user] = await this.db
-      .select()
-      .from(users)
-      .where(and(eq(users.email, email), eq(users.tenantId, tenantId)));
+    const [user] = await withTenant(this.db, tenantId, (tx) =>
+      tx.select().from(users).where(and(eq(users.email, email), eq(users.tenantId, tenantId))),
+    );
 
     if (!user) throw new UnauthorizedException();
     const valid = await bcrypt.compare(password, user.passwordHash);
