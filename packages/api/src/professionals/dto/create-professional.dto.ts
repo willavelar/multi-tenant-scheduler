@@ -1,8 +1,19 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateProfessionalDto {
-  @IsUUID()
-  userId: string;
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  password: string;
+
+  @IsString()
+  @IsOptional()
+  position?: string;
 
   @IsString()
   @IsOptional()
