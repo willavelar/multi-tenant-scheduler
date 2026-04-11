@@ -21,11 +21,13 @@ const STATUS_VARIANTS: Record<Appointment['status'], 'default' | 'secondary' | '
 }
 
 export default function DashboardPage() {
-  const { data: appointments, isLoading } = useAppointments()
+  const { data: appointments, isLoading, isError } = useAppointments()
   const confirm = useConfirmAppointment()
   const cancel = useCancelAppointment()
+  const actionPending = confirm.isPending || cancel.isPending
 
   if (isLoading) return <p className="text-gray-500">Carregando agendamentos...</p>
+  if (isError) return <p className="text-red-500">Erro ao carregar agendamentos.</p>
   if (!appointments?.length) return <p className="text-gray-500">Nenhum agendamento encontrado.</p>
 
   return (
@@ -59,18 +61,20 @@ export default function DashboardPage() {
                     <Button
                       size="sm"
                       variant="outline"
+                      aria-label={`Confirmar agendamento ${appt.id.slice(0, 8)}`}
                       className="text-green-600 border-green-200 hover:bg-green-50"
                       onClick={() => confirm.mutate(appt.id)}
-                      disabled={confirm.isPending}
+                      disabled={actionPending}
                     >
                       ✓
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
+                      aria-label={`Cancelar agendamento ${appt.id.slice(0, 8)}`}
                       className="text-red-500 border-red-200 hover:bg-red-50"
                       onClick={() => cancel.mutate(appt.id)}
-                      disabled={cancel.isPending}
+                      disabled={actionPending}
                     >
                       ✕
                     </Button>
