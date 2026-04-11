@@ -8,6 +8,7 @@ export const professionals = pgTable('professionals', {
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   bio: text('bio'),
   avatarUrl: text('avatar_url'),
+  position: text('position'),
   active: boolean('active').notNull().default(true),
 });
 
