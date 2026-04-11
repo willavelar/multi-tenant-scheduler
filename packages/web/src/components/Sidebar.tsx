@@ -45,6 +45,7 @@ export function Sidebar() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={pathname === item.href ? 'page' : undefined}
             className={cn(
               'block px-3 py-2 rounded-md text-sm transition-colors',
               pathname === item.href
