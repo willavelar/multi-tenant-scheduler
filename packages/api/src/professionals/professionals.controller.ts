@@ -68,7 +68,7 @@ export class ProfessionalsController {
   remove(
     @Param('id') id: string,
     @TenantId() tenantId: string,
-    @CurrentUser() user: { id: string },
+    @CurrentUser() user: { id: string; role: string },
   ) {
     return this.service.remove(id, tenantId, user.id);
   }
