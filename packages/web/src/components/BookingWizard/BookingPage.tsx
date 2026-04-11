@@ -3,6 +3,8 @@
 import { useReducer } from 'react'
 import { StepProfessional } from './StepProfessional'
 import { StepService } from './StepService'
+import { StepDateTime } from './StepDateTime'
+import { StepConfirm } from './StepConfirm'
 
 type BookingState = {
   step: 1 | 2 | 3 | 4
@@ -77,10 +79,21 @@ export function BookingPage() {
         />
       )}
       {state.step === 3 && (
-        <p className="text-gray-400">Etapa 3 — em breve (Task 6)</p>
+        <StepDateTime
+          professionalId={state.professionalId!}
+          onSelect={(date, startTime) => dispatch({ type: 'SELECT_SLOT', date, startTime })}
+          onBack={() => dispatch({ type: 'BACK' })}
+        />
       )}
       {state.step === 4 && (
-        <p className="text-gray-400">Etapa 4 — em breve (Task 6)</p>
+        <StepConfirm
+          professionalId={state.professionalId!}
+          serviceId={state.serviceId!}
+          date={state.date!}
+          startTime={state.startTime!}
+          onBack={() => dispatch({ type: 'BACK' })}
+          onDone={() => dispatch({ type: 'RESET' })}
+        />
       )}
     </div>
   )
