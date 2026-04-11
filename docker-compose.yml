@@ -11,25 +11,25 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
     volumes:
-      - ./packages/api/src:/app/src
-      - ./packages/shared/src:/shared/src
+      - ./packages/api/src:/app/packages/api/src
+      - ./packages/shared/src:/app/packages/shared/src
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: pnpm dev
+    command: pnpm --filter api dev
 
   web:
     build:
       context: .
       dockerfile: packages/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://api:3001
+        NEXT_PUBLIC_API_URL: http://localhost:3001
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://api:3001
+      NEXT_PUBLIC_API_URL: http://localhost:3001
     depends_on:
       api:
         condition: service_started
