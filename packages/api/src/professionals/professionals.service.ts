@@ -57,6 +57,7 @@ export class ProfessionalsService {
   }
 
   async create(dto: CreateProfessionalDto, tenantId: string) {
+    const passwordHash = await bcrypt.hash(dto.password, 10);
     return withTenant(this.db, tenantId, async (tx) => {
       const [existing] = await tx
         .select({ id: users.id })
@@ -64,7 +65,6 @@ export class ProfessionalsService {
         .where(and(eq(users.email, dto.email), eq(users.tenantId, tenantId)));
       if (existing) throw new ConflictException('Email already in use');
 
-      const passwordHash = await bcrypt.hash(dto.password, 10);
       const [user] = await tx.insert(users).values({
         tenantId,
         email: dto.email,
@@ -128,7 +128,13 @@ export class ProfessionalsService {
           .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
       }
 
-      return this.findOne(id, tenantId);
+      const [updated] = await tx
+        .select(PROF_FIELDS)
+        .from(professionals)
+        .innerJoin(users, eq(professionals.userId, users.id))
+        .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
+      if (!updated) throw new NotFoundException('Professional not found');
+      return updated;
     });
   }
 
@@ -142,6 +148,7 @@ export class ProfessionalsService {
       if (prof.userId === requestingUserId) throw new ForbiddenException('Cannot delete your own account');
 
       await tx.delete(professionals).where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
+      await tx.delete(users).where(eq(users.id, prof.userId));
     });
   }
 }
