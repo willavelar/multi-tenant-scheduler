@@ -13,8 +13,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/professionals/me':    'Meu perfil',
 }
 
-function initials(email: string) {
-  return email.slice(0, 2).toUpperCase()
+function initials(name: string) {
+  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 }
 
 export function Header() {
@@ -113,12 +113,12 @@ export function Header() {
               fontSize: 12, fontWeight: 700,
               flexShrink: 0,
             }}>
-              {user ? initials(user.email) : '??'}
+              {user ? initials(user.name) : '??'}
             </div>
 
             <div style={{ textAlign: 'left' }}>
               <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.3 }}>
-                {user?.email ?? '—'}
+                {user?.name ?? '—'}
               </p>
               <p style={{ fontSize: 11, color: '#6b7280', margin: 0, lineHeight: 1.3 }}>
                 {user ? roleLabel[user.role] : ''}
@@ -158,8 +158,8 @@ export function Header() {
 
               {/* User info header */}
               <div style={{ padding: '12px 14px', borderBottom: '1px solid #f3f4f6' }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{user?.email}</p>
-                <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{user ? roleLabel[user.role] : ''}</p>
+                <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{user?.name}</p>
+                <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{user?.email}</p>
               </div>
 
               <div style={{ padding: '4px 0' }}>

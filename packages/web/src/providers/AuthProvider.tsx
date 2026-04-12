@@ -8,6 +8,7 @@ import type { User } from '@/types'
 type JwtPayload = {
   sub: string
   email: string
+  name: string
   role: 'tenant_admin' | 'professional' | 'client'
   tenantId: string | null
   exp: number
@@ -33,6 +34,7 @@ function tokenToUser(accessToken: string): User {
   return {
     id: payload.sub,
     email: payload.email,
+    name: payload.name ?? payload.email,
     role: payload.role,
     tenantId: payload.tenantId,
   }

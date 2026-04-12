@@ -1,6 +1,7 @@
 export type User = {
   id: string
   email: string
+  name: string
   role: 'tenant_admin' | 'professional' | 'client'
   tenantId: string | null
 }
