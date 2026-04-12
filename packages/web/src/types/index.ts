@@ -16,7 +16,7 @@ export type Professional = {
   name: string
   email: string
   phone: string | null
-  role: string
+  role: 'tenant_admin' | 'professional' | 'client'
 }
 
 export type Client = {
