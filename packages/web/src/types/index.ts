@@ -11,7 +11,20 @@ export type Professional = {
   userId: string
   bio: string | null
   avatarUrl: string | null
+  position: string | null
   active: boolean
+  name: string
+  email: string
+  phone: string | null
+  role: string
+}
+
+export type Client = {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  createdAt: string
 }
 
 export type Service = {
