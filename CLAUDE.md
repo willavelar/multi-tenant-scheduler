@@ -77,13 +77,36 @@ Schema lives in `packages/shared/src/schema/`. Drizzle is configured with `node-
 
 | Path | Description |
 |---|---|
-| `/:slug` | Booking wizard (public) |
-| `/:slug/login` | Login — redirects by role after auth |
+| `/:slug` | Redirects to `/appointments` |
+| `/:slug/login` | Login — redirects to `/appointments` after auth |
 | `/:slug/register` | Registration — always creates `client` role |
-| `/:slug/appointments` | Client appointment list |
-| `/:slug/dashboard` | Admin/professional dashboard (guarded in layout) |
+| `/:slug/appointments` | Appointment list (all roles) |
+| `/:slug/appointments/create` | New appointment wizard |
+| `/:slug/clients` | Client list (admin + professional) |
+| `/:slug/professionals` | Professionals list (admin only) |
+| `/:slug/professionals/new` | Create professional (admin only) |
+| `/:slug/professionals/me` | Redirects professional to own profile page |
+| `/:slug/professionals/:id` | Professional detail/edit page |
 
-`dashboard/layout.tsx` redirects `client` role to `/appointments`. `login/page.tsx` redirects `client` to `/appointments` and admin/professional to `/dashboard` after successful login.
+All authenticated pages are wrapped by the `(app)` route group which renders the `AppShell` (sidebar + header). The sidebar shows role-filtered nav items. `login/page.tsx` always redirects to `/appointments` after login, regardless of role.
+
+### Módulo de Profissionais — regras de acesso
+
+| Endpoint | tenant_admin | professional |
+|---|---|---|
+| GET /professionals | ✅ lista todos | ❌ |
+| GET /professionals/me | ✅ | ✅ (próprio perfil) |
+| GET /professionals/:id | ✅ qualquer | ✅ somente o próprio |
+| POST /professionals | ✅ | ❌ |
+| PATCH /professionals/:id | ✅ todos os campos | ✅ somente o próprio, sem `active`/`role` |
+| DELETE /professionals/:id | ✅ exceto si mesmo | ❌ |
+
+Campos do profissional:
+- `name`, `email` → tabela `users`
+- `bio` (Observações), `avatarUrl`, `position` (Cargo), `active` (Status) → tabela `professionals`
+- `role` (Função) → tabela `users`; somente admin pode alterar
+
+Criação de profissional (`POST /professionals`) provisiona um `users` record com `role='professional'` e um `professionals` record na mesma transação.
 
 ### Next.js version note
 
