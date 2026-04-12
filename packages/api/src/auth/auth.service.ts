@@ -11,6 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 export interface JwtPayload {
   sub: string;
   email: string;
+  name: string;
   role: string;
   tenantId: string | null;
 }
@@ -57,6 +58,15 @@ export class AuthService {
     return user;
   }
 
+  async listClients(tenantId: string) {
+    return withTenant(this.db, tenantId, (tx) =>
+      tx
+        .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, createdAt: users.createdAt })
+        .from(users)
+        .where(and(eq(users.tenantId, tenantId), eq(users.role, 'client'))),
+    );
+  }
+
   async login(user: typeof users.$inferSelect) {
     return this.generateTokens(user);
   }
@@ -65,6 +75,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      name: user.name ?? user.email,
       role: user.role,
       tenantId: user.tenantId,
     };
