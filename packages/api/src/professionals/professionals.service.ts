@@ -147,7 +147,7 @@ export class ProfessionalsService {
       if (!prof) throw new NotFoundException('Professional not found');
       if (prof.userId === requestingUserId) throw new ForbiddenException('Cannot delete your own account');
 
-      await tx.delete(professionals).where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
+      // Delete user first — FK cascade on professionals.userId removes the professional row automatically
       await tx.delete(users).where(eq(users.id, prof.userId));
     });
   }

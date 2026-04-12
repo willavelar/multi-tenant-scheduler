@@ -63,8 +63,12 @@ export default function ProfessionalDetailPage() {
   async function handleDelete() {
     if (!prof) return
     if (!confirm(`Excluir ${prof.name}? Esta ação não pode ser desfeita.`)) return
-    await del.mutateAsync(prof.id)
-    router.push('/professionals')
+    try {
+      await del.mutateAsync(prof.id)
+      router.push('/professionals')
+    } catch {
+      setError('Não foi possível excluir o profissional.')
+    }
   }
 
   const inputCls: React.CSSProperties = {
@@ -97,11 +101,11 @@ export default function ProfessionalDetailPage() {
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 50; }
         .modal-box { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 480px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); }
         .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
-        .cancel-btn { padding: 9px 18px; border: 1px solid #e5e7eb; background: #fff; color: '#374151'; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: var(--font-inter, Inter, sans-serif); }
+        .cancel-btn { padding: 9px 18px; border: 1px solid #e5e7eb; background: #fff; color: #374151; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; font-family: var(--font-inter, Inter, sans-serif); }
         .save-btn { padding: 9px 20px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: var(--font-inter, Inter, sans-serif); }
         .save-btn:hover:not(:disabled) { background: #4f46e5; }
         .save-btn:disabled { opacity: 0.65; cursor: not-allowed; }
-        .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: '#6b7280'; font-weight: 500; background: none; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; padding: 7px 14px; font-family: var(--font-inter, Inter, sans-serif); transition: background 0.12s; }
+        .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280; font-weight: 500; background: none; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; padding: 7px 14px; font-family: var(--font-inter, Inter, sans-serif); transition: background 0.12s; }
         .back-btn:hover { background: #f9fafb; }
       `}</style>
 
@@ -114,12 +118,10 @@ export default function ProfessionalDetailPage() {
               Profissionais &rsaquo; {prof.name}
             </p>
           </div>
-          {isAdmin && (
-            <button className="back-btn" onClick={() => router.push('/professionals')}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-              Voltar para profissionais
-            </button>
-          )}
+          <button className="back-btn" onClick={() => router.push(isAdmin ? '/professionals' : '/appointments')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            {isAdmin ? 'Voltar para profissionais' : 'Voltar para agendamentos'}
+          </button>
         </div>
 
         {/* Identity header */}
