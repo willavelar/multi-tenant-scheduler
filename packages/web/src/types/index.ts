@@ -25,7 +25,28 @@ export type Client = {
   name: string
   email: string
   phone: string | null
+  lastLoginAt: string | null
   createdAt: string
+  profileId: string | null
+  birthDate: string | null
+  notes: string | null
+  active: boolean | null
+  allProfessionals: boolean | null
+  allServices: boolean | null
+  serviceLimitCount: number | null
+  serviceLimitPeriod: 'day' | 'week' | 'month' | null
+}
+
+export type ClientPage = {
+  data: Client[]
+  total: number
+  page: number
+  limit: number
+}
+
+export type ClientDetail = Client & {
+  linkedProfessionals: { professionalId: string; name: string; position: string | null }[]
+  linkedServices: { serviceId: string; name: string }[]
 }
 
 export type Service = {
@@ -39,15 +60,23 @@ export type Service = {
 
 export type Appointment = {
   id: string
-  tenantId: string
   professionalId: string
   serviceId: string
   clientId: string
   startsAt: string
   endsAt: string
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-  notes: string | null
   createdAt: string
+  clientName: string
+  serviceName: string
+  professionalName: string
+}
+
+export type AppointmentPage = {
+  data: Appointment[]
+  total: number
+  page: number
+  limit: number
 }
 
 export type WeeklyAvailability = {

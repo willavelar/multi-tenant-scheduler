@@ -1,0 +1,1 @@
+ALTER TABLE "client_profiles" ADD COLUMN "all_services" boolean DEFAULT false NOT NULL;

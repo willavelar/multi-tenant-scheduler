@@ -1,4 +1,4 @@
-import { IsString, IsUUID, Matches } from 'class-validator';
+import { IsOptional, IsString, IsUUID, Matches } from 'class-validator';
 
 export class CreateAppointmentDto {
   @IsUUID()
@@ -14,4 +14,8 @@ export class CreateAppointmentDto {
   @IsString()
   @Matches(/^\d{2}:\d{2}$/)
   startTime: string; // "HH:MM"
+
+  @IsOptional()
+  @IsUUID()
+  clientId?: string; // admin/professional can specify the client
 }

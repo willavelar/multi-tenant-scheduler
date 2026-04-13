@@ -2,8 +2,8 @@ import { ConflictException, Inject, Injectable, UnauthorizedException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { eq, and } from 'drizzle-orm';
-import { users } from '@scheduler/shared';
+import { eq, and, or, ilike } from 'drizzle-orm';
+import { users, clientProfiles } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { RegisterDto } from './dto/register.dto';
@@ -43,6 +43,8 @@ export class AuthService {
         phone: dto.phone,
       }).returning();
 
+      await tx.insert(clientProfiles).values({ tenantId, userId: user.id });
+
       return this.generateTokens(user);
     });
   }
@@ -58,16 +60,26 @@ export class AuthService {
     return user;
   }
 
-  async listClients(tenantId: string) {
-    return withTenant(this.db, tenantId, (tx) =>
-      tx
+  async listClients(tenantId: string, q?: string) {
+    return withTenant(this.db, tenantId, (tx) => {
+      const base = and(eq(users.tenantId, tenantId), eq(users.role, 'client'));
+      const where = q
+        ? and(base, or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`)))
+        : base;
+      return tx
         .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, createdAt: users.createdAt })
         .from(users)
-        .where(and(eq(users.tenantId, tenantId), eq(users.role, 'client'))),
-    );
+        .where(where)
+        .limit(20);
+    });
   }
 
   async login(user: typeof users.$inferSelect) {
+    if (user.tenantId) {
+      await withTenant(this.db, user.tenantId, (tx) =>
+        tx.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, user.id)),
+      );
+    }
     return this.generateTokens(user);
   }
 

@@ -3,7 +3,6 @@
 import { useReducer } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
-import { Button } from '@/components/ui/button'
 import { StepProfessional } from './StepProfessional'
 import { StepService } from './StepService'
 import { StepDateTime } from './StepDateTime'
@@ -53,34 +52,20 @@ const STEPS = ['Profissional', 'Serviço', 'Data & Horário', 'Confirmação']
 
 export function BookingPage() {
   const [state, dispatch] = useReducer(reducer, initialState)
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
-
-  function handleLogout() {
-    logout()
-    router.push('/login')
-  }
 
   return (
     <div className="max-w-lg mx-auto py-10 px-4">
       {user && (
         <div className="flex items-center justify-between mb-6 text-sm text-gray-500">
           <span>{user.email}</span>
-          <div className="flex gap-2">
-            {(user.role === 'tenant_admin' || user.role === 'professional') && (
-              <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')}>
-                Dashboard
-              </Button>
-            )}
-            {user.role === 'client' && (
-              <Button variant="ghost" size="sm" onClick={() => router.push('/appointments')}>
-                Meus agendamentos
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" className="text-red-500" onClick={handleLogout}>
-              Sair
-            </Button>
-          </div>
+          <button
+            onClick={() => router.push('/appointments')}
+            style={{ fontSize: 13, color: '#6366f1', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 6 }}
+          >
+            Meus agendamentos →
+          </button>
         </div>
       )}
       {/* Progress bar */}

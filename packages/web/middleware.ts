@@ -20,11 +20,15 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const response = NextResponse.next()
+  // Forward slug as a request header so Server Components can read it via headers()
+  const requestHeaders = new Headers(request.headers)
   if (slug) {
-    response.headers.set('x-tenant-slug', slug)
+    requestHeaders.set('x-tenant-slug', slug)
   }
-  return response
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  })
 }
 
 export const config = {

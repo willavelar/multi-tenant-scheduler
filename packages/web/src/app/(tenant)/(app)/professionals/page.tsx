@@ -2,16 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useProfessionals, useDeleteProfessional } from '@/hooks/useProfessionals'
+import { AvatarName } from '@/components/ui/AvatarName'
 import type { Professional } from '@/types'
-
-function avatar(name: string) {
-  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
-const COLORS = ['#6366f1','#8b5cf6','#ec4899','#06b6d4','#10b981','#f59e0b']
-function pickColor(str: string) {
-  let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return COLORS[h % COLORS.length]
-}
 
 export default function ProfessionalsPage() {
   const router = useRouter()
@@ -70,17 +62,9 @@ export default function ProfessionalsPage() {
                 {professionals.map((prof: Professional) => (
                   <tr key={prof.id} className="prof-row" style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.1s' }}>
                     <td style={{ padding: '12px 16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: pickColor(prof.name), color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
-                          {avatar(prof.name)}
-                        </div>
-                        <div>
-                          <button className="name-link" onClick={() => router.push(`/professionals/${prof.id}`)}>
-                            {prof.name}
-                          </button>
-                          <p style={{ margin: '1px 0 0', fontSize: 12, color: '#9ca3af' }}>{prof.email}</p>
-                        </div>
-                      </div>
+                      <button className="name-link" style={{ display: 'block', width: '100%', textAlign: 'left' }} onClick={() => router.push(`/professionals/${prof.id}`)}>
+                        <AvatarName name={prof.name} subtitle={prof.email} />
+                      </button>
                     </td>
                     <td style={{ padding: '12px 16px', color: '#6b7280' }}>{prof.position ?? '—'}</td>
                     <td style={{ padding: '12px 16px', color: '#6b7280' }}>

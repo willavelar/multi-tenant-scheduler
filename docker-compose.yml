@@ -1,7 +1,7 @@
 services:
   api:
     build:
-      context: .                          # monorepo root (was ./packages/api)
+      context: .
       dockerfile: packages/api/Dockerfile
     ports:
       - "3001:3001"
@@ -10,8 +10,11 @@ services:
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "300"
     volumes:
       - ./packages/api/src:/app/packages/api/src
+      - ./packages/api/seeds:/app/packages/api/seeds
       - ./packages/shared/src:/app/packages/shared/src
     depends_on:
       db:
@@ -23,13 +26,18 @@ services:
   web:
     build:
       context: .
-      dockerfile: packages/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: http://localhost:3001
+      dockerfile: packages/web/Dockerfile.dev
     ports:
       - "3000:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3001
+      WATCHPACK_POLLING: "true"
+      HOSTNAME: "0.0.0.0"
+    volumes:
+      - ./packages/web/src:/app/packages/web/src
+      - ./packages/web/public:/app/packages/web/public
+      - ./packages/web/next.config.ts:/app/packages/web/next.config.ts
+      - ./packages/web/middleware.ts:/app/packages/web/middleware.ts
     depends_on:
       api:
         condition: service_started

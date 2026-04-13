@@ -8,6 +8,20 @@
       "when": 1775855896213,
       "tag": "0000_nifty_tyger_tiger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1776041578197,
+      "tag": "0001_amused_cyclops",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1776042665352,
+      "tag": "0002_aberrant_unicorn",
+      "breakpoints": true
     }
   ]
 }

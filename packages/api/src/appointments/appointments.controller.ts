@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -17,15 +17,27 @@ export class AppointmentsController {
     @TenantId() tenantId: string,
     @CurrentUser() user: { id: string; role: string },
   ) {
-    return this.service.create(dto, user.id, tenantId);
+    return this.service.create(dto, user.id, user.role, tenantId);
   }
 
   @Get()
   findAll(
     @TenantId() tenantId: string,
     @CurrentUser() user: { id: string; role: string },
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('serviceId') serviceId?: string,
+    @Query('status') status?: string,
+    @Query('clientId') clientId?: string,
   ) {
-    return this.service.findAll(tenantId, user.id, user.role);
+    return this.service.findAll(
+      tenantId, user.id, user.role,
+      Math.max(1, parseInt(page)),
+      Math.min(100, Math.max(1, parseInt(limit))),
+      { dateFrom, dateTo, serviceId, status, clientId },
+    );
   }
 
   @Patch(':id/confirm')

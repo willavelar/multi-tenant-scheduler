@@ -4,13 +4,35 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 
-const PAGE_TITLES: Record<string, string> = {
-  '/appointments':        'Agendamentos',
-  '/appointments/create': 'Novo agendamento',
-  '/clients':             'Clientes',
-  '/professionals':       'Profissionais',
-  '/professionals/new':   'Novo profissional',
-  '/professionals/me':    'Meu perfil',
+type Crumb = { label: string; href?: string }
+
+function getBreadcrumbs(pathname: string): Crumb[] {
+  // strip the tenant slug (first segment after leading slash)
+  const segments = pathname.split('/').slice(2)
+  const path = '/' + segments.join('/')
+
+  const STATIC: Record<string, Crumb[]> = {
+    '/appointments':        [{ label: 'Agendamentos' }],
+    '/appointments/create': [{ label: 'Agendamentos', href: '/appointments' }, { label: 'Novo agendamento' }],
+    '/clients':             [{ label: 'Clientes' }],
+    '/clients/new':         [{ label: 'Clientes', href: '/clients' }, { label: 'Novo cliente' }],
+    '/professionals':       [{ label: 'Profissionais' }],
+    '/professionals/new':   [{ label: 'Profissionais', href: '/professionals' }, { label: 'Novo profissional' }],
+    '/professionals/me':    [{ label: 'Meu perfil' }],
+  }
+
+  if (STATIC[path]) return STATIC[path]
+
+  if (segments[0] === 'clients' && segments.length === 2)
+    return [{ label: 'Clientes', href: '/clients' }, { label: 'Visualizar cliente' }]
+
+  if (segments[0] === 'clients' && segments.length === 3 && segments[2] === 'edit')
+    return [{ label: 'Clientes', href: '/clients' }, { label: 'Editar cliente' }]
+
+  if (segments[0] === 'professionals' && segments.length === 2)
+    return [{ label: 'Profissionais', href: '/professionals' }, { label: 'Profissional' }]
+
+  return [{ label: 'Scheduler' }]
 }
 
 function initials(name: string) {
@@ -24,9 +46,7 @@ export function Header() {
   const [open, setOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // derive page title from current path
-  const segment = '/' + (pathname.split('/').slice(2).join('/') || '')
-  const title = PAGE_TITLES[segment] ?? 'Scheduler'
+  const crumbs = getBreadcrumbs(pathname)
 
   // close dropdown on outside click
   useEffect(() => {
@@ -93,12 +113,32 @@ export function Header() {
         fontFamily: 'var(--font-inter, Inter, sans-serif)',
       }}>
 
-        {/* Left: page title */}
-        <div>
-          <h1 style={{ fontSize: 16, fontWeight: 600, color: '#111827', margin: 0 }}>
-            {title}
-          </h1>
-        </div>
+        {/* Left: breadcrumb */}
+        <nav style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {crumbs.map((crumb, i) => (
+            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {i > 0 && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round">
+                  <polyline points="9 18 15 12 9 6"/>
+                </svg>
+              )}
+              {crumb.href ? (
+                <button
+                  onClick={() => router.push(crumb.href!)}
+                  style={{ fontSize: 14, fontWeight: 500, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-inter, Inter, sans-serif)', transition: 'color 0.12s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#6366f1')}
+                  onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
+                >
+                  {crumb.label}
+                </button>
+              ) : (
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
+                  {crumb.label}
+                </span>
+              )}
+            </span>
+          ))}
+        </nav>
 
         {/* Right: user menu */}
         <div style={{ position: 'relative' }} ref={menuRef}>
