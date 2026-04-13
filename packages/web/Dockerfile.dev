@@ -1,0 +1,10 @@
+FROM node:20-alpine
+RUN npm install -g pnpm
+WORKDIR /app
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
+COPY packages/web/package.json ./packages/web/
+RUN pnpm install --filter web
+COPY packages/web ./packages/web
+EXPOSE 3000
+ENV HOSTNAME=0.0.0.0
+CMD ["pnpm", "--filter", "web", "dev"]

@@ -1,17 +1,42 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useApi } from './useApi'
 import { useTenant } from '@/providers/TenantProvider'
-import type { Appointment } from '@/types'
+import type { AppointmentPage } from '@/types'
 
-export function useAppointments() {
+type AppointmentFilters = {
+  dateFrom?: string
+  dateTo?: string
+  serviceId?: string
+  status?: string
+  clientId?: string
+}
+
+export function useAppointments(page = 1, filters: AppointmentFilters = {}) {
   const api = useApi()
   const { slug } = useTenant()
-  return useQuery<Appointment[]>({
-    queryKey: ['appointments', slug],
+  return useQuery<AppointmentPage>({
+    queryKey: ['appointments', slug, page, filters],
     queryFn: async () => {
-      const res = await api('/appointments')
+      const params = new URLSearchParams({ page: String(page), limit: '10' })
+      if (filters.dateFrom)  params.set('dateFrom',  filters.dateFrom)
+      if (filters.dateTo)    params.set('dateTo',    filters.dateTo)
+      if (filters.serviceId) params.set('serviceId', filters.serviceId)
+      if (filters.status)    params.set('status',    filters.status)
+      if (filters.clientId)  params.set('clientId',  filters.clientId)
+      const res = await api(`/appointments?${params}`)
       return res.json()
     },
+  })
+}
+
+export function useCreateAppointment() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+  const { slug } = useTenant()
+  return useMutation({
+    mutationFn: (body: { professionalId: string; serviceId: string; date: string; startTime: string; clientId?: string }) =>
+      api('/appointments', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
   })
 }
 
@@ -33,6 +58,17 @@ export function useCancelAppointment() {
   return useMutation({
     mutationFn: (id: string) =>
       api(`/appointments/${id}/cancel`, { method: 'PATCH' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
+  })
+}
+
+export function useCompleteAppointment() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+  const { slug } = useTenant()
+  return useMutation({
+    mutationFn: (id: string) =>
+      api(`/appointments/${id}/complete`, { method: 'PATCH' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
   })
 }

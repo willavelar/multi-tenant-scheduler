@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
@@ -23,12 +23,12 @@ type FormData = z.infer<typeof schema>
 
 function EyeIcon({ open }: { open: boolean }) {
   return open ? (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
       <circle cx="12" cy="12" r="3"/>
     </svg>
   ) : (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
       <line x1="1" y1="1" x2="23" y2="23"/>
     </svg>
@@ -38,34 +38,30 @@ function EyeIcon({ open }: { open: boolean }) {
 function Spinner() {
   return (
     <svg
-      width="18" height="18" viewBox="0 0 24 24" fill="none"
+      width="16" height="16" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-      style={{ animation: 'spin 0.8s linear infinite', display: 'inline-block' }}
+      style={{ animation: 'auth-spin 0.75s linear infinite', display: 'inline-block' }}
     >
       <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
     </svg>
   )
 }
 
-type FieldState = { focused: boolean; value: string }
-
 export default function RegisterPage() {
-  const { register: registerUser } = useAuth()
+  const { register: registerUser, user } = useAuth()
   const { slug } = useTenant()
   const router = useRouter()
 
-  const [showPassword, setShowPassword]        = useState(false)
-  const [showConfirmPass, setShowConfirmPass]  = useState(false)
-  const [fields, setFields] = useState<Record<string, FieldState>>({
-    name: { focused: false, value: '' },
-    email: { focused: false, value: '' },
-    password: { focused: false, value: '' },
-    confirmPassword: { focused: false, value: '' },
-    phone: { focused: false, value: '' },
-  })
+  useEffect(() => {
+    if (user) router.replace('/appointments')
+  }, [user, router])
 
-  const focus   = (key: string) => setFields(p => ({ ...p, [key]: { ...p[key], focused: true } }))
-  const blur    = (key: string) => setFields(p => ({ ...p, [key]: { ...p[key], focused: false } }))
+  const [showPassword,    setShowPassword]    = useState(false)
+  const [showConfirmPass, setShowConfirmPass] = useState(false)
+  const [focused, setFocused] = useState<Record<string, boolean>>({})
+
+  const focus = (k: string) => setFocused(p => ({ ...p, [k]: true }))
+  const blur  = (k: string) => setFocused(p => ({ ...p, [k]: false }))
 
   const {
     register,
@@ -76,214 +72,169 @@ export default function RegisterPage() {
 
   async function onSubmit(data: FormData) {
     try {
-      await registerUser({ name: data.name, email: data.email, password: data.password, phone: data.phone }, slug)
+      await registerUser(
+        { name: data.name, email: data.email, password: data.password, phone: data.phone },
+        slug,
+      )
       router.push('/appointments')
     } catch {
       setError('root', { message: 'Não foi possível criar a conta. Tente novamente.' })
     }
   }
 
-  function inputStyle(key: string, hasError: boolean): React.CSSProperties {
-    const f = fields[key]?.focused
-    return {
-      width: '100%',
-      height: 44,
-      padding: '0 14px',
-      fontSize: 14,
-      color: '#0e1117',
-      background: f ? '#fff' : '#faf9f7',
-      border: `1.5px solid ${hasError ? '#e53935' : f ? '#0e1117' : '#e2ddd6'}`,
-      borderRadius: 8,
-      boxSizing: 'border-box' as const,
-      transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s',
-      boxShadow: f && !hasError ? '0 0 0 3px rgba(14,17,23,0.07)' : 'none',
-      outline: 'none',
-    }
-  }
+  const borderColor = (key: string, hasError: boolean) =>
+    hasError ? '#ef4444' : focused[key] ? '#2563eb' : '#e5e7eb'
 
-  function labelStyle(key: string): React.CSSProperties {
-    return {
-      display: 'block',
-      fontSize: 13,
-      fontWeight: 600,
-      color: fields[key]?.focused ? '#0e1117' : '#4a4540',
-      marginBottom: 6,
-      transition: 'color 0.2s',
-      letterSpacing: '0.01em',
-    }
+  const shadowStyle = (key: string, hasError: boolean): React.CSSProperties =>
+    focused[key]
+      ? { boxShadow: `0 0 0 3px ${hasError ? 'rgba(239,68,68,0.12)' : 'rgba(37,99,235,0.12)'}` }
+      : {}
+
+  const baseInput = (key: string, hasError: boolean, extraPadding = false): React.CSSProperties => ({
+    width: '100%',
+    height: 42,
+    padding: `0 ${extraPadding ? 42 : 12}px 0 12px`,
+    fontSize: 14,
+    color: '#111827',
+    background: '#fff',
+    border: `1px solid ${borderColor(key, hasError)}`,
+    borderRadius: 8,
+    boxSizing: 'border-box',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+    outline: 'none',
+    ...shadowStyle(key, hasError),
+  })
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: 13,
+    fontWeight: 500,
+    color: '#374151',
+    marginBottom: 6,
   }
 
   return (
     <>
       <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-6px); }
+        @keyframes auth-spin { to { transform: rotate(360deg); } }
+        @keyframes auth-fade-up {
+          from { opacity: 0; transform: translateY(12px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(18px); }
+        @keyframes auth-slide-down {
+          from { opacity: 0; transform: translateY(-5px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .login-btn {
-          position: relative;
-          overflow: hidden;
-          transition: background 0.2s, transform 0.12s, box-shadow 0.2s;
+        .auth-card { animation: auth-fade-up 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+        .auth-error { animation: auth-slide-down 0.2s ease both; }
+        .auth-submit {
+          transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+          position: relative; overflow: hidden;
         }
-        .login-btn:not(:disabled):hover {
-          background: #1c2433 !important;
-          box-shadow: 0 6px 20px rgba(14,17,23,0.35);
+        .auth-submit:not(:disabled):hover {
+          background: #1d4ed8 !important;
+          box-shadow: 0 4px 14px rgba(37,99,235,0.35);
           transform: translateY(-1px);
         }
-        .login-btn:not(:disabled):active {
-          transform: translateY(0px) scale(0.98);
-          box-shadow: 0 2px 8px rgba(14,17,23,0.2);
+        .auth-submit:not(:disabled):active {
+          transform: translateY(0) scale(0.98);
+          box-shadow: none;
         }
-        .login-btn::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 70%);
-          opacity: 0;
-          transition: opacity 0.3s;
-        }
-        .login-btn:not(:disabled):active::after {
-          opacity: 1;
-        }
-        .eye-btn {
-          transition: color 0.2s, transform 0.15s;
-        }
-        .eye-btn:hover {
-          color: #0e1117;
-          transform: scale(1.1);
-        }
-        .eye-btn:active {
-          transform: scale(0.92);
-        }
-        .card-wrap {
-          animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
-        .error-msg {
-          animation: slideDown 0.22s ease both;
-        }
+        .auth-eye { transition: color 0.15s, transform 0.12s; display: flex; align-items: center; }
+        .auth-eye:hover { color: #374151; transform: scale(1.1); }
+        .auth-eye:active { transform: scale(0.9); }
       `}</style>
 
       <div style={{
         minHeight: '100vh',
-        background: '#f2efe9',
+        background: '#f9fafb',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: 'var(--font-inter, sans-serif)',
         padding: '24px',
+        fontFamily: 'var(--font-inter, Inter, sans-serif)',
       }}>
-        <div className="card-wrap" style={{ width: '100%', maxWidth: 420 }}>
+        <div className="auth-card" style={{ width: '100%', maxWidth: 440 }}>
 
-          {/* Brand */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 44,
-              height: 44,
-              background: '#0e1117',
-              borderRadius: 10,
-              marginBottom: 20,
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="18" height="16" rx="2" stroke="#e8960a" strokeWidth="2"/>
-                <path d="M8 9h8M8 13h5" stroke="#e8960a" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
+          {/* Heading */}
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
             <h1 style={{
-              fontFamily: 'var(--font-playfair, Georgia, serif)',
-              fontSize: 26,
+              fontSize: 24,
               fontWeight: 700,
-              color: '#0e1117',
-              margin: 0,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.2,
+              color: '#111827',
+              margin: '0 0 8px',
+              letterSpacing: '-0.015em',
+              fontFamily: 'var(--font-inter, Inter, sans-serif)',
             }}>
               Crie sua conta
             </h1>
-            <p style={{ margin: '8px 0 0', fontSize: 14, color: '#7a7165' }}>
-              Agende seus serviços com praticidade
+            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
+              Preencha os dados para se cadastrar
             </p>
           </div>
 
           {/* Card */}
           <div style={{
             background: '#ffffff',
-            borderRadius: 16,
-            padding: '36px 36px 32px',
-            boxShadow: '0 2px 4px rgba(14,17,23,0.04), 0 8px 32px rgba(14,17,23,0.08)',
+            borderRadius: 12,
+            padding: '32px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)',
           }}>
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
               {/* Nome */}
-              <div style={{ marginBottom: 18 }}>
-                <label htmlFor="name" style={labelStyle('name')}>Nome completo</label>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="name" style={labelStyle}>Nome completo</label>
                 <input
-                  id="name"
-                  type="text"
-                  placeholder="Seu nome"
+                  id="name" type="text" placeholder="Seu nome"
                   autoComplete="name"
                   {...register('name')}
-                  onFocus={() => focus('name')}
-                  onBlur={() => blur('name')}
-                  style={inputStyle('name', !!errors.name)}
+                  onFocus={() => focus('name')} onBlur={() => blur('name')}
+                  style={baseInput('name', !!errors.name)}
                 />
                 {errors.name && (
-                  <p className="error-msg" style={{ margin: '6px 0 0', fontSize: 12, color: '#e53935' }}>
+                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
                     {errors.name.message}
                   </p>
                 )}
               </div>
 
               {/* E-mail */}
-              <div style={{ marginBottom: 18 }}>
-                <label htmlFor="email" style={labelStyle('email')}>E-mail</label>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="email" style={labelStyle}>E-mail</label>
                 <input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
+                  id="email" type="email" placeholder="seu@email.com"
                   autoComplete="email"
                   {...register('email')}
-                  onFocus={() => focus('email')}
-                  onBlur={() => blur('email')}
-                  style={inputStyle('email', !!errors.email)}
+                  onFocus={() => focus('email')} onBlur={() => blur('email')}
+                  style={baseInput('email', !!errors.email)}
                 />
                 {errors.email && (
-                  <p className="error-msg" style={{ margin: '6px 0 0', fontSize: 12, color: '#e53935' }}>
+                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
                     {errors.email.message}
                   </p>
                 )}
               </div>
 
               {/* Telefone */}
-              <div style={{ marginBottom: 18 }}>
-                <label htmlFor="phone" style={labelStyle('phone')}>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="phone" style={labelStyle}>
                   Telefone{' '}
-                  <span style={{ fontSize: 11, fontWeight: 400, color: '#9e9589' }}>(opcional)</span>
+                  <span style={{ fontSize: 12, fontWeight: 400, color: '#9ca3af' }}>(opcional)</span>
                 </label>
                 <input
-                  id="phone"
-                  type="tel"
-                  placeholder="(11) 99999-9999"
+                  id="phone" type="tel" placeholder="(11) 99999-9999"
                   autoComplete="tel"
                   {...register('phone')}
-                  onFocus={() => focus('phone')}
-                  onBlur={() => blur('phone')}
-                  style={inputStyle('phone', false)}
+                  onFocus={() => focus('phone')} onBlur={() => blur('phone')}
+                  style={baseInput('phone', false)}
                 />
               </div>
 
               {/* Senha */}
-              <div style={{ marginBottom: 18 }}>
-                <label htmlFor="password" style={labelStyle('password')}>Senha</label>
+              <div style={{ marginBottom: 16 }}>
+                <label htmlFor="password" style={labelStyle}>Senha</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     id="password"
@@ -291,36 +242,25 @@ export default function RegisterPage() {
                     placeholder="Mínimo 8 caracteres"
                     autoComplete="new-password"
                     {...register('password')}
-                    onFocus={() => focus('password')}
-                    onBlur={() => blur('password')}
-                    style={{ ...inputStyle('password', !!errors.password), paddingRight: 44 }}
+                    onFocus={() => focus('password')} onBlur={() => blur('password')}
+                    style={baseInput('password', !!errors.password, true)}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(v => !v)}
-                    className="eye-btn"
-                    style={{
-                      position: 'absolute', right: 12, top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', padding: 0,
-                      cursor: 'pointer', color: '#9e9589',
-                      display: 'flex', alignItems: 'center',
-                    }}
-                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                  >
+                  <button type="button" onClick={() => setShowPassword(v => !v)} className="auth-eye"
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#9ca3af' }}
+                    aria-label={showPassword ? 'Ocultar' : 'Mostrar'}>
                     <EyeIcon open={showPassword} />
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="error-msg" style={{ margin: '6px 0 0', fontSize: 12, color: '#e53935' }}>
+                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
                     {errors.password.message}
                   </p>
                 )}
               </div>
 
               {/* Confirmar senha */}
-              <div style={{ marginBottom: 8 }}>
-                <label htmlFor="confirmPassword" style={labelStyle('confirmPassword')}>Confirmar senha</label>
+              <div style={{ marginBottom: 20 }}>
+                <label htmlFor="confirmPassword" style={labelStyle}>Confirmar senha</label>
                 <div style={{ position: 'relative' }}>
                   <input
                     id="confirmPassword"
@@ -328,28 +268,17 @@ export default function RegisterPage() {
                     placeholder="Repita a senha"
                     autoComplete="new-password"
                     {...register('confirmPassword')}
-                    onFocus={() => focus('confirmPassword')}
-                    onBlur={() => blur('confirmPassword')}
-                    style={{ ...inputStyle('confirmPassword', !!errors.confirmPassword), paddingRight: 44 }}
+                    onFocus={() => focus('confirmPassword')} onBlur={() => blur('confirmPassword')}
+                    style={baseInput('confirmPassword', !!errors.confirmPassword, true)}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPass(v => !v)}
-                    className="eye-btn"
-                    style={{
-                      position: 'absolute', right: 12, top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none', border: 'none', padding: 0,
-                      cursor: 'pointer', color: '#9e9589',
-                      display: 'flex', alignItems: 'center',
-                    }}
-                    aria-label={showConfirmPass ? 'Ocultar senha' : 'Mostrar senha'}
-                  >
+                  <button type="button" onClick={() => setShowConfirmPass(v => !v)} className="auth-eye"
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#9ca3af' }}
+                    aria-label={showConfirmPass ? 'Ocultar' : 'Mostrar'}>
                     <EyeIcon open={showConfirmPass} />
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="error-msg" style={{ margin: '6px 0 0', fontSize: 12, color: '#e53935' }}>
+                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
                     {errors.confirmPassword.message}
                   </p>
                 )}
@@ -357,19 +286,19 @@ export default function RegisterPage() {
 
               {/* Erro global */}
               {errors.root && (
-                <div className="error-msg" style={{
-                  margin: '16px 0 0',
-                  padding: '10px 14px',
-                  background: '#fff5f5',
-                  border: '1.5px solid #fca5a5',
+                <div className="auth-error" style={{
+                  marginBottom: 16,
+                  padding: '10px 12px',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
                   borderRadius: 8,
                   fontSize: 13,
-                  color: '#c53030',
+                  color: '#b91c1c',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
                 }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}>
                     <circle cx="12" cy="12" r="10"/>
                     <line x1="12" y1="8" x2="12" y2="12"/>
                     <line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -382,53 +311,40 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="login-btn"
+                className="auth-submit"
                 style={{
-                  marginTop: 24,
                   width: '100%',
-                  height: 46,
-                  background: '#0e1117',
-                  color: '#ffffff',
+                  height: 42,
+                  background: '#2563eb',
+                  color: '#fff',
                   border: 'none',
                   borderRadius: 8,
                   fontSize: 14,
                   fontWeight: 600,
-                  letterSpacing: '0.02em',
                   cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: isSubmitting ? 0.7 : 1,
+                  opacity: isSubmitting ? 0.75 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  transition: 'opacity 0.2s',
+                  fontFamily: 'var(--font-inter, Inter, sans-serif)',
                 }}
               >
-                {isSubmitting ? (
-                  <>
-                    <Spinner />
-                    Criando conta...
-                  </>
-                ) : (
-                  'Criar conta'
-                )}
+                {isSubmitting ? <><Spinner />Criando conta...</> : 'Criar conta'}
               </button>
 
             </form>
           </div>
 
           {/* Footer */}
-          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 13, color: '#7a7165' }}>
+          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#6b7280' }}>
             Já tem uma conta?{' '}
-            <a href="./login" style={{
-              fontWeight: 700,
-              color: '#0e1117',
-              textDecoration: 'none',
-              borderBottom: '1.5px solid #e8960a',
-              paddingBottom: 1,
-              transition: 'color 0.2s',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.color = '#e8960a')}
-            onMouseLeave={e => (e.currentTarget.style.color = '#0e1117')}>
+            <a
+              href="./login"
+              style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
+              onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+              onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+            >
               Entrar
             </a>
           </p>

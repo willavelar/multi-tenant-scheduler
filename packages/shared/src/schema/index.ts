@@ -5,3 +5,6 @@ export * from './services.schema';
 export * from './weekly-availability.schema';
 export * from './schedule-exceptions.schema';
 export * from './appointments.schema';
+export * from './client-profiles.schema';
+export * from './client-professionals.schema';
+export * from './client-services.schema';

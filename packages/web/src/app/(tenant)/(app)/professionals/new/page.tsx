@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { useRouter } from 'next/navigation'
 import { useCreateProfessional } from '@/hooks/useProfessionals'
+import { BackButton } from '@/components/ui/BackButton'
 
 const schema = z.object({
   name:      z.string().min(2, 'Nome obrigatório'),
@@ -60,10 +61,7 @@ export default function NewProfessionalPage() {
       `}</style>
 
       <div style={{ maxWidth: 560 }}>
-        <button onClick={() => router.push('/professionals')} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6b7280', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 20px', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Voltar para profissionais
-        </button>
+        <BackButton href="/professionals" variant="ghost">Voltar para profissionais</BackButton>
 
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '28px 28px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
           <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 24px' }}>Dados do profissional</h2>

@@ -1,5 +1,5 @@
-import { BookingPage } from '@/components/BookingWizard/BookingPage'
+import { redirect } from 'next/navigation'
 
-export default function HomePage() {
-  return <BookingPage />
+export default function RootPage() {
+  redirect('/appointments')
 }

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useProfessional, useUpdateProfessional, useDeleteProfessional } from '@/hooks/useProfessionals'
+import { BackButton } from '@/components/ui/BackButton'
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -105,8 +106,6 @@ export default function ProfessionalDetailPage() {
         .save-btn { padding: 9px 20px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: var(--font-inter, Inter, sans-serif); }
         .save-btn:hover:not(:disabled) { background: #4f46e5; }
         .save-btn:disabled { opacity: 0.65; cursor: not-allowed; }
-        .back-btn { display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6b7280; font-weight: 500; background: none; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; padding: 7px 14px; font-family: var(--font-inter, Inter, sans-serif); transition: background 0.12s; }
-        .back-btn:hover { background: #f9fafb; }
       `}</style>
 
       <div style={{ maxWidth: 800 }}>
@@ -118,10 +117,9 @@ export default function ProfessionalDetailPage() {
               Profissionais &rsaquo; {prof.name}
             </p>
           </div>
-          <button className="back-btn" onClick={() => router.push(isAdmin ? '/professionals' : '/appointments')}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+          <BackButton href={isAdmin ? '/professionals' : '/appointments'}>
             {isAdmin ? 'Voltar para profissionais' : 'Voltar para agendamentos'}
-          </button>
+          </BackButton>
         </div>
 
         {/* Identity header */}
