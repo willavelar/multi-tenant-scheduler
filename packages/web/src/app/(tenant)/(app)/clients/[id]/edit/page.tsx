@@ -7,30 +7,8 @@ import { useProfessionals } from '@/hooks/useProfessionals'
 import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { BackButton } from '@/components/ui/BackButton'
+import { cn } from '@/lib/utils'
 import type { Professional, Service } from '@/types'
-
-const inputStyle = (focused: boolean, hasError = false): React.CSSProperties => ({
-  width: '100%', height: 42, padding: '0 12px', fontSize: 14,
-  color: '#111827', background: '#fff', outline: 'none', boxSizing: 'border-box',
-  border: `1px solid ${hasError ? '#ef4444' : focused ? '#6366f1' : '#e5e7eb'}`,
-  borderRadius: 8,
-  boxShadow: focused && !hasError ? '0 0 0 3px rgba(99,102,241,0.10)' : 'none',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
-  fontFamily: 'var(--font-inter, Inter, sans-serif)',
-})
-
-const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: 13, fontWeight: 500, color: '#374151', marginBottom: 6,
-}
-
-const sectionStyle: React.CSSProperties = {
-  background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12,
-  padding: '24px', marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-}
-
-const sectionTitle: React.CSSProperties = {
-  fontSize: 14, fontWeight: 700, color: '#111827', margin: '0 0 20px',
-}
 
 type FormState = {
   name: string
@@ -58,7 +36,6 @@ export default function EditClientPage() {
     notes: '', active: true, serviceLimitCount: '', serviceLimitPeriod: '',
   })
   const [errors, setErrors] = useState<Partial<Record<keyof FormState | 'root', string>>>({})
-  const [focused, setFocused] = useState<Record<string, boolean>>({})
 
   // Professional search
   const [allProfs, setAllProfs] = useState(false)
@@ -95,9 +72,7 @@ export default function EditClientPage() {
     setReady(true)
   }, [client, allProfessionals, ready])
 
-  const focus = (k: string) => setFocused(p => ({ ...p, [k]: true }))
-  const blur  = (k: string) => setFocused(p => ({ ...p, [k]: false }))
-  const set   = (k: keyof FormState, v: string | boolean) => {
+  const set = (k: keyof FormState, v: string | boolean) => {
     setForm(f => ({ ...f, [k]: v }))
     setErrors(e => ({ ...e, [k]: undefined }))
   }
@@ -183,255 +158,244 @@ export default function EditClientPage() {
   }
 
   if (isLoading || !ready) {
-    return <div style={{ padding: 48, color: '#9ca3af', fontSize: 14 }}>Carregando...</div>
+    return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
   }
 
   return (
-    <>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .submit-btn { height: 42px; padding: 0 24px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; font-family: var(--font-inter, Inter, sans-serif); display: inline-flex; align-items: center; gap: 8px; }
-        .submit-btn:hover:not(:disabled) { background: #4f46e5; }
-        .submit-btn:disabled { opacity: 0.65; cursor: not-allowed; }
-        .cancel-btn { height: 42px; padding: 0 20px; background: #fff; color: #374151; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: var(--font-inter, Inter, sans-serif); }
-        .cancel-btn:hover { background: #f9fafb; }
-        .prof-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px; font-size: 13px; color: #1e40af; }
-        .prof-chip-remove { background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; color: #93c5fd; }
-        .prof-chip-remove:hover { color: #1e40af; }
-        .svc-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f3f4f6; cursor: pointer; }
-        .svc-item:last-child { border-bottom: none; }
-        .svc-item:hover { background: #f9fafb; margin: 0 -12px; padding-left: 12px; padding-right: 12px; border-radius: 6px; }
-      `}</style>
+    <div>
+      <div className="mb-7">
+        <BackButton href={`/clients/${id}`}>Voltar para cliente</BackButton>
+      </div>
 
-      <div>
-        <div style={{ marginBottom: 28 }}>
-          <BackButton href={`/clients/${id}`}>Voltar para cliente</BackButton>
-        </div>
+      <form onSubmit={handleSubmit} noValidate>
 
-        <form onSubmit={handleSubmit} noValidate>
+        {/* Personal data */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+          <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
 
-          {/* Personal data */}
-          <div style={sectionStyle}>
-            <p style={sectionTitle}>Dados pessoais</p>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {([
-                { key: 'name',  label: 'Nome completo', type: 'text',  required: true },
-                { key: 'email', label: 'E-mail',         type: 'email', required: true },
-                { key: 'phone', label: 'Telefone',        type: 'tel',   required: false },
-              ] as const).map(({ key, label, type, required }) => (
-                <div key={key}>
-                  <label style={labelStyle}>{label}{required && <span style={{ color: '#ef4444' }}> *</span>}</label>
-                  <input
-                    type={type}
-                    value={form[key]}
-                    onChange={e => set(key, e.target.value)}
-                    onFocus={() => focus(key)}
-                    onBlur={() => blur(key)}
-                    style={inputStyle(!!focused[key], !!errors[key])}
-                  />
-                  {errors[key] && <p style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>{errors[key]}</p>}
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-              <label style={labelStyle}>Data de nascimento</label>
-              <input
-                type="date"
-                value={form.birthDate}
-                onChange={e => set('birthDate', e.target.value)}
-                onFocus={() => focus('birthDate')}
-                onBlur={() => blur('birthDate')}
-                style={{ ...inputStyle(!!focused['birthDate']), maxWidth: 220 }}
-              />
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {([
+              { key: 'name',  label: 'Nome completo', type: 'text',  required: true },
+              { key: 'email', label: 'E-mail',         type: 'email', required: true },
+              { key: 'phone', label: 'Telefone',        type: 'tel',   required: false },
+            ] as const).map(({ key, label, type, required }) => (
+              <div key={key}>
+                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  {label}{required && <span className="text-red-400"> *</span>}
+                </label>
+                <input
+                  type={type}
+                  value={form[key]}
+                  onChange={e => set(key, e.target.value)}
+                  className={cn(
+                    'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+                    errors[key] ? 'border-red-400' : 'border-gray-200'
+                  )}
+                />
+                {errors[key] && <p className="text-xs text-red-500 mt-1 m-0">{errors[key]}</p>}
+              </div>
+            ))}
           </div>
 
-          {/* Profile */}
-          <div style={sectionStyle}>
-            <p style={sectionTitle}>Perfil</p>
+          <div className="mt-4">
+            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Data de nascimento</label>
+            <input
+              type="date"
+              value={form.birthDate}
+              onChange={e => set('birthDate', e.target.value)}
+              className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+              style={{ maxWidth: 220 }}
+            />
+          </div>
+        </div>
 
-            <div style={{ marginBottom: 16 }}>
-              <label style={labelStyle}>Observações</label>
-              <textarea
-                value={form.notes}
-                onChange={e => set('notes', e.target.value)}
-                onFocus={() => focus('notes')}
-                onBlur={() => blur('notes')}
-                rows={3}
-                style={{ ...inputStyle(!!focused['notes']), height: 'auto', padding: '10px 12px', resize: 'vertical' }}
-              />
-            </div>
+        {/* Profile */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+          <p className="text-sm font-bold text-gray-900 m-0 mb-5">Perfil</p>
 
-            <div>
-              <label style={labelStyle}>Status</label>
+          <div className="mb-4">
+            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Observações</label>
+            <textarea
+              value={form.notes}
+              onChange={e => set('notes', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
+            <div className="relative" style={{ maxWidth: 180 }}>
               <select
                 value={form.active ? 'true' : 'false'}
                 onChange={e => set('active', e.target.value === 'true')}
-                style={{ ...inputStyle(false), maxWidth: 180, cursor: 'pointer' }}
+                className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
               >
                 <option value="true">Ativo</option>
                 <option value="false">Inativo</option>
               </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
           </div>
+        </div>
 
-          {/* Service limits */}
-          <div style={sectionStyle}>
-            <p style={sectionTitle}>Limite de serviços</p>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>
-              Define quantos agendamentos este cliente pode fazer em um determinado período.
-            </p>
+        {/* Service limits */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+          <p className="text-sm font-bold text-gray-900 m-0 mb-5">Limite de serviços</p>
+          <p className="text-[13px] text-gray-500 m-0 mb-4">
+            Define quantos agendamentos este cliente pode fazer em um determinado período.
+          </p>
 
-            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-              <div style={{ flex: '0 0 140px' }}>
-                <label style={labelStyle}>Quantidade</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={form.serviceLimitCount}
-                  onChange={e => set('serviceLimitCount', e.target.value)}
-                  onFocus={() => focus('serviceLimitCount')}
-                  onBlur={() => blur('serviceLimitCount')}
-                  placeholder="Ex: 3"
-                  style={inputStyle(!!focused['serviceLimitCount'], !!errors['serviceLimitCount'])}
-                />
-                {errors.serviceLimitCount && <p style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>{errors.serviceLimitCount}</p>}
-              </div>
-              <div style={{ flex: '0 0 180px' }}>
-                <label style={labelStyle}>Por período</label>
+          <div className="flex gap-3 items-end">
+            <div style={{ flex: '0 0 140px' }}>
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
+              <input
+                type="number"
+                min={1}
+                value={form.serviceLimitCount}
+                onChange={e => set('serviceLimitCount', e.target.value)}
+                placeholder="Ex: 3"
+                className={cn(
+                  'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+                  errors.serviceLimitCount ? 'border-red-400' : 'border-gray-200'
+                )}
+              />
+              {errors.serviceLimitCount && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitCount}</p>}
+            </div>
+            <div style={{ flex: '0 0 180px' }}>
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Por período</label>
+              <div className="relative">
                 <select
                   value={form.serviceLimitPeriod}
                   onChange={e => set('serviceLimitPeriod', e.target.value)}
-                  style={{ ...inputStyle(false, !!errors['serviceLimitPeriod']), cursor: 'pointer' }}
+                  className={cn(
+                    'w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+                    errors.serviceLimitPeriod ? 'border-red-400' : 'border-gray-200'
+                  )}
                 >
                   <option value="">Selecione…</option>
                   <option value="day">Dia</option>
                   <option value="week">Semana</option>
                   <option value="month">Mês</option>
                 </select>
-                {errors.serviceLimitPeriod && <p style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>{errors.serviceLimitPeriod}</p>}
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
               </div>
-              {form.serviceLimitCount && (
-                <button
-                  type="button"
-                  onClick={() => { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }}
-                  style={{ height: 42, padding: '0 12px', background: 'none', border: '1px solid #e5e7eb', borderRadius: 8, fontSize: 12, color: '#6b7280', cursor: 'pointer', marginBottom: errors.serviceLimitCount || errors.serviceLimitPeriod ? 22 : 0 }}
-                >
-                  Remover limite
-                </button>
-              )}
+              {errors.serviceLimitPeriod && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitPeriod}</p>}
             </div>
-          </div>
-
-          {/* Professional linking */}
-          <div style={{ ...sectionStyle, position: 'relative' }}>
-            <p style={sectionTitle}>Profissionais vinculados</p>
-            <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>
-              Restringe quais profissionais este cliente pode agendar. Deixe vazio para não restringir.
-            </p>
-
-            {/* All professionals checkbox */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer', userSelect: 'none' }}>
-              <input
-                type="checkbox"
-                checked={allProfs}
-                onChange={e => {
-                  setAllProfs(e.target.checked)
-                  if (e.target.checked) { setSelectedProfs([]); setProfSearch(''); setShowProfDrop(false) }
-                }}
-                style={{ width: 16, height: 16, accentColor: '#6366f1', cursor: 'pointer', flexShrink: 0 }}
-              />
-              <span style={{ fontSize: 13.5, fontWeight: 500, color: '#374151' }}>Todos os profissionais</span>
-              <span style={{ fontSize: 12, color: '#9ca3af' }}>O cliente poderá agendar com qualquer profissional</span>
-            </label>
-
-            {!allProfs && (
-              <div ref={profRef} style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  value={profSearch}
-                  onChange={e => { setProfSearch(e.target.value); setShowProfDrop(true) }}
-                  onFocus={() => setShowProfDrop(true)}
-                  placeholder="Buscar profissional pelo nome..."
-                  style={inputStyle(showProfDrop)}
-                />
-
-                {showProfDrop && profSearch.length > 0 && (
-                  <div style={{
-                    position: 'absolute', top: 46, left: 0, right: 0,
-                    background: '#fff', border: '1px solid #e5e7eb', borderRadius: 10,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 20,
-                    maxHeight: 220, overflowY: 'auto',
-                  }}>
-                    {filteredProfs.length === 0 ? (
-                      <div style={{ padding: '12px 14px', fontSize: 13, color: '#9ca3af' }}>Nenhum profissional encontrado</div>
-                    ) : filteredProfs.slice(0, 8).map(p => (
-                      <div
-                        key={p.id}
-                        onMouseDown={() => addProf(p)}
-                        style={{ padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
-                        onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-                        onMouseLeave={e => (e.currentTarget.style.background = '')}
-                      >
-                        <AvatarName name={p.name} size={28} />
-                        <span style={{ fontSize: 13, color: '#6b7280' }}>{p.position ?? p.email}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {selectedProfs.length > 0 && (
-                  <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {selectedProfs.map(p => (
-                      <span key={p.id} className="prof-chip">
-                        <AvatarName name={p.name} size={20} />
-                        <button
-                          type="button"
-                          className="prof-chip-remove"
-                          onClick={() => removeProf(p.id)}
-                          title="Remover"
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+            {form.serviceLimitCount && (
+              <button
+                type="button"
+                onClick={() => { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }}
+                className="h-[42px] px-3 bg-transparent border border-gray-200 rounded-lg text-xs text-gray-500 cursor-pointer hover:bg-gray-50 transition-colors"
+                style={{ marginBottom: errors.serviceLimitCount || errors.serviceLimitPeriod ? 22 : 0 }}
+              >
+                Remover limite
+              </button>
             )}
           </div>
+        </div>
 
-          {/* Services */}
-          {allServices.length > 0 && (
-            <div style={sectionStyle}>
-              <p style={sectionTitle}>Serviços permitidos</p>
-              <p style={{ fontSize: 13, color: '#6b7280', margin: '0 0 16px' }}>
-                Restringe quais serviços este cliente pode agendar. Deixe vazio para não restringir.
-              </p>
+        {/* Professional linking */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm relative">
+          <p className="text-sm font-bold text-gray-900 m-0 mb-5">Profissionais vinculados</p>
+          <p className="text-[13px] text-gray-500 m-0 mb-4">
+            Restringe quais profissionais este cliente pode agendar. Deixe vazio para não restringir.
+          </p>
 
-              {/* All services checkbox */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer', userSelect: 'none' }}>
-                <input
-                  type="checkbox"
-                  checked={allSvcs}
-                  onChange={e => {
-                    setAllSvcs(e.target.checked)
-                    if (e.target.checked) setSelectedServiceIds([])
-                  }}
-                  style={{ width: 16, height: 16, accentColor: '#6366f1', cursor: 'pointer', flexShrink: 0 }}
-                />
-                <span style={{ fontSize: 13.5, fontWeight: 500, color: '#374151' }}>Todos os serviços</span>
-                <span style={{ fontSize: 12, color: '#9ca3af' }}>O cliente poderá agendar qualquer serviço</span>
-              </label>
+          {/* All professionals checkbox */}
+          <label className="flex items-center gap-2.5 mb-4 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={allProfs}
+              onChange={e => {
+                setAllProfs(e.target.checked)
+                if (e.target.checked) { setSelectedProfs([]); setProfSearch(''); setShowProfDrop(false) }
+              }}
+              className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
+            />
+            <span className="text-[13.5px] font-medium text-gray-700">Todos os profissionais</span>
+            <span className="text-xs text-gray-400">O cliente poderá agendar com qualquer profissional</span>
+          </label>
 
-              {!allSvcs && (
+          {!allProfs && (
+            <div ref={profRef} className="relative">
+              <input
+                type="text"
+                value={profSearch}
+                onChange={e => { setProfSearch(e.target.value); setShowProfDrop(true) }}
+                onFocus={() => setShowProfDrop(true)}
+                placeholder="Buscar profissional pelo nome..."
+                className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+              />
+
+              {showProfDrop && profSearch.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1.5 duration-150">
+                  {filteredProfs.length === 0 ? (
+                    <div className="px-3.5 py-3 text-[13px] text-gray-400">Nenhum profissional encontrado</div>
+                  ) : filteredProfs.slice(0, 8).map(p => (
+                    <div
+                      key={p.id}
+                      onMouseDown={() => addProf(p)}
+                      className="px-3.5 py-2.5 cursor-pointer flex items-center gap-2.5 hover:bg-gray-50"
+                    >
+                      <AvatarName name={p.name} size={28} />
+                      <span className="text-[13px] text-gray-500">{p.position ?? p.email}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedProfs.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProfs.map(p => (
+                    <span key={p.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 pl-1.5 bg-blue-50 border border-blue-200 rounded-full text-[13px] text-blue-800">
+                      <AvatarName name={p.name} size={20} />
+                      {p.name}
+                      <button
+                        type="button"
+                        className="bg-transparent border-0 cursor-pointer p-0 flex items-center text-blue-300 hover:text-blue-800 transition-colors"
+                        onClick={() => removeProf(p.id)}
+                        title="Remover"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Services */}
+        {allServices.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+            <p className="text-sm font-bold text-gray-900 m-0 mb-5">Serviços permitidos</p>
+            <p className="text-[13px] text-gray-500 m-0 mb-4">
+              Restringe quais serviços este cliente pode agendar. Deixe vazio para não restringir.
+            </p>
+
+            {/* All services checkbox */}
+            <label className="flex items-center gap-2.5 mb-4 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allSvcs}
+                onChange={e => {
+                  setAllSvcs(e.target.checked)
+                  if (e.target.checked) setSelectedServiceIds([])
+                }}
+                className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
+              />
+              <span className="text-[13.5px] font-medium text-gray-700">Todos os serviços</span>
+              <span className="text-xs text-gray-400">O cliente poderá agendar qualquer serviço</span>
+            </label>
+
+            {!allSvcs && (
               <div>
                 {allServices.map((svc: Service) => (
                   <div
                     key={svc.id}
-                    className="svc-item"
+                    className="flex items-center gap-2.5 py-2.5 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 -mx-3 px-3 rounded-md transition-colors"
                     onClick={() => toggleService(svc.id)}
                   >
                     <input
@@ -439,38 +403,50 @@ export default function EditClientPage() {
                       checked={selectedServiceIds.includes(svc.id)}
                       onChange={() => toggleService(svc.id)}
                       onClick={e => e.stopPropagation()}
-                      style={{ width: 16, height: 16, accentColor: '#6366f1', cursor: 'pointer', flexShrink: 0 }}
+                      className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
                     />
                     <div>
-                      <span style={{ fontSize: 13.5, fontWeight: 500, color: '#111827' }}>{svc.name}</span>
-                      <span style={{ fontSize: 12, color: '#9ca3af', marginLeft: 8 }}>{svc.durationMinutes} min</span>
+                      <span className="text-[13.5px] font-medium text-gray-900">{svc.name}</span>
+                      <span className="text-xs text-gray-400 ml-2">{svc.durationMinutes} min</span>
                     </div>
                   </div>
                 ))}
               </div>
-              )}
-            </div>
-          )}
-
-          {errors.root && (
-            <div style={{ marginBottom: 16, padding: '10px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, fontSize: 13, color: '#b91c1c' }}>
-              {errors.root}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button type="submit" className="submit-btn" disabled={update.isPending}>
-              {update.isPending ? (
-                <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: 'spin 0.75s linear infinite' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Salvando...</>
-              ) : 'Salvar alterações'}
-            </button>
-            <button type="button" className="cancel-btn" onClick={() => router.push(`/clients/${id}`)}>
-              Cancelar
-            </button>
+            )}
           </div>
+        )}
 
-        </form>
-      </div>
-    </>
+        {errors.root && (
+          <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
+            {errors.root}
+          </div>
+        )}
+
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={update.isPending}
+            className="h-[42px] px-6 bg-indigo-500 text-white text-sm font-semibold rounded-lg border-0 cursor-pointer inline-flex items-center gap-2 hover:bg-indigo-600 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
+          >
+            {update.isPending ? (
+              <>
+                <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+                Salvando...
+              </>
+            ) : 'Salvar alterações'}
+          </button>
+          <button
+            type="button"
+            className="h-[42px] px-5 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => router.push(`/clients/${id}`)}
+          >
+            Cancelar
+          </button>
+        </div>
+
+      </form>
+    </div>
   )
 }
