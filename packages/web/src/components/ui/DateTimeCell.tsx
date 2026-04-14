@@ -4,7 +4,7 @@ type Props = {
 }
 
 export function DateTimeCell({ iso, fallback = '—' }: Props) {
-  if (!iso) return <span style={{ color: '#9ca3af' }}>{fallback}</span>
+  if (!iso) return <span className="text-gray-400">{fallback}</span>
 
   const d = new Date(iso)
   const day    = String(d.getDate()).padStart(2, '0')
@@ -14,7 +14,7 @@ export function DateTimeCell({ iso, fallback = '—' }: Props) {
   const mins   = String(d.getMinutes()).padStart(2, '0')
 
   return (
-    <span style={{ whiteSpace: 'nowrap', color: '#6b7280' }}>
+    <span className="whitespace-nowrap text-gray-500">
       {`${day}/${month}/${year} às ${hours}:${mins}`}
     </span>
   )
