@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { cn } from '@/lib/utils'
 
 type Props = {
   href: string
@@ -20,39 +21,15 @@ const chevron = (
 export function BackButton({ href, children, variant = 'border' }: Props) {
   const router = useRouter()
 
-  if (variant === 'ghost') {
-    return (
-      <button
-        onClick={() => router.push(href)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 6,
-          fontSize: 13, color: '#6b7280', fontWeight: 500,
-          background: 'none', border: 'none', cursor: 'pointer',
-          padding: 0, marginBottom: 20,
-          fontFamily: 'var(--font-inter, Inter, sans-serif)',
-        }}
-        onMouseEnter={e => (e.currentTarget.style.color = '#374151')}
-        onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
-      >
-        {chevron}
-        {children}
-      </button>
-    )
-  }
-
   return (
     <button
       onClick={() => router.push(href)}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        fontSize: 13, color: '#6b7280', fontWeight: 500,
-        background: 'none', border: '1px solid #e5e7eb', borderRadius: 8,
-        cursor: 'pointer', padding: '7px 14px',
-        fontFamily: 'var(--font-inter, Inter, sans-serif)',
-        transition: 'background 0.12s',
-      }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-      onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+      className={cn(
+        'flex items-center gap-1.5 text-[13px] font-medium text-gray-500 bg-transparent border-0 cursor-pointer transition-colors',
+        variant === 'ghost'
+          ? 'p-0 mb-5 hover:text-gray-700'
+          : 'px-3.5 py-[7px] border border-gray-200 rounded-lg hover:bg-gray-50'
+      )}
     >
       {chevron}
       {children}
