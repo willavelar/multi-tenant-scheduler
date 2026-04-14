@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
+import { cn } from '@/lib/utils'
 
 type Crumb = { label: string; href?: string }
 
 function getBreadcrumbs(pathname: string): Crumb[] {
-  // strip the tenant slug (first segment after leading slash)
   const segments = pathname.split('/').slice(2)
   const path = '/' + segments.join('/')
 
@@ -48,7 +48,6 @@ export function Header() {
 
   const crumbs = getBreadcrumbs(pathname)
 
-  // close dropdown on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -71,164 +70,102 @@ export function Header() {
   }
 
   return (
-    <>
-      <style>{`
-        .header-menu-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 14px;
-          font-size: 13.5px;
-          color: #374151;
-          cursor: pointer;
-          transition: background 0.12s;
-          border: none;
-          background: none;
-          width: 100%;
-          text-align: left;
-          font-family: var(--font-inter, Inter, sans-serif);
-        }
-        .header-menu-item:hover { background: #f3f4f6; }
-        .header-menu-item.danger { color: #dc2626; }
-        .header-avatar-btn {
-          display: flex; align-items: center; gap: 8px;
-          background: none; border: none; cursor: pointer;
-          padding: 6px 8px; border-radius: 8px;
-          transition: background 0.12s;
-        }
-        .header-avatar-btn:hover { background: #f3f4f6; }
-      `}</style>
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30">
 
-      <header style={{
-        height: 64,
-        background: '#ffffff',
-        borderBottom: '1px solid #e5e7eb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 30,
-        fontFamily: 'var(--font-inter, Inter, sans-serif)',
-      }}>
+      {/* Left: breadcrumb */}
+      <nav className="flex items-center gap-1.5">
+        {crumbs.map((crumb, i) => (
+          <span key={i} className="flex items-center gap-1.5">
+            {i > 0 && (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            )}
+            {crumb.href ? (
+              <button
+                onClick={() => router.push(crumb.href!)}
+                className="text-sm font-medium text-gray-500 bg-transparent border-0 cursor-pointer p-0 transition-colors hover:text-indigo-500"
+              >
+                {crumb.label}
+              </button>
+            ) : (
+              <span className="text-sm font-semibold text-gray-900">{crumb.label}</span>
+            )}
+          </span>
+        ))}
+      </nav>
 
-        {/* Left: breadcrumb */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {crumbs.map((crumb, i) => (
-            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              {i > 0 && (
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth="2.5" strokeLinecap="round">
-                  <polyline points="9 18 15 12 9 6"/>
+      {/* Right: user menu */}
+      <div className="relative" ref={menuRef}>
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="flex items-center gap-2 bg-transparent border-0 cursor-pointer px-2 py-1.5 rounded-lg transition-colors hover:bg-gray-100"
+        >
+          <div className="w-[34px] h-[34px] rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
+            {user ? initials(user.name) : '??'}
+          </div>
+
+          <div className="text-left">
+            <p className="text-[13px] font-semibold text-gray-900 m-0 leading-[1.3]">
+              {user?.name ?? '—'}
+            </p>
+            <p className="text-[11px] text-gray-500 m-0 leading-[1.3]">
+              {user ? roleLabel[user.role] : ''}
+            </p>
+          </div>
+
+          <svg
+            width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round"
+            className={cn('shrink-0 transition-transform duration-150', open && 'rotate-180')}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        {/* Dropdown */}
+        {open && (
+          <div className="absolute top-[calc(100%+6px)] right-0 w-[210px] bg-white border border-gray-200 rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1.5 duration-150">
+
+            {/* User info header */}
+            <div className="px-3.5 py-3 border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-900 m-0">{user?.name}</p>
+              <p className="text-[11px] text-gray-400 m-0 mt-0.5">{user?.email}</p>
+            </div>
+
+            <div className="py-1">
+              <button
+                className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 bg-transparent border-0 cursor-pointer w-full text-left transition-colors hover:bg-gray-100 disabled:opacity-50"
+                onClick={() => setOpen(false)}
+                disabled
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
                 </svg>
-              )}
-              {crumb.href ? (
-                <button
-                  onClick={() => router.push(crumb.href!)}
-                  style={{ fontSize: 14, fontWeight: 500, color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'var(--font-inter, Inter, sans-serif)', transition: 'color 0.12s' }}
-                  onMouseEnter={e => (e.currentTarget.style.color = '#6366f1')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#6b7280')}
-                >
-                  {crumb.label}
-                </button>
-              ) : (
-                <span style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>
-                  {crumb.label}
+                Perfil
+                <span className="ml-auto text-[10px] text-gray-300 bg-gray-50 px-1.5 py-0.5 rounded">
+                  Em breve
                 </span>
-              )}
-            </span>
-          ))}
-        </nav>
-
-        {/* Right: user menu */}
-        <div style={{ position: 'relative' }} ref={menuRef}>
-          <button className="header-avatar-btn" onClick={() => setOpen(v => !v)}>
-            {/* Avatar circle */}
-            <div style={{
-              width: 34, height: 34,
-              borderRadius: '50%',
-              background: '#6366f1',
-              color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 700,
-              flexShrink: 0,
-            }}>
-              {user ? initials(user.name) : '??'}
+              </button>
             </div>
 
-            <div style={{ textAlign: 'left' }}>
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.3 }}>
-                {user?.name ?? '—'}
-              </p>
-              <p style={{ fontSize: 11, color: '#6b7280', margin: 0, lineHeight: 1.3 }}>
-                {user ? roleLabel[user.role] : ''}
-              </p>
+            <div className="border-t border-gray-100 py-1">
+              <button
+                className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-red-600 bg-transparent border-0 cursor-pointer w-full text-left transition-colors hover:bg-gray-100"
+                onClick={handleLogout}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Sair
+              </button>
             </div>
-
-            {/* Chevron */}
-            <svg
-              width="14" height="14" viewBox="0 0 24 24" fill="none"
-              stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round"
-              style={{ transition: 'transform 0.15s', transform: open ? 'rotate(180deg)' : 'none', flexShrink: 0 }}
-            >
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-
-          {/* Dropdown */}
-          {open && (
-            <div style={{
-              position: 'absolute',
-              top: 'calc(100% + 6px)',
-              right: 0,
-              width: 210,
-              background: '#fff',
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-              overflow: 'hidden',
-              animation: 'dropdown-in 0.15s ease both',
-            }}>
-              <style>{`
-                @keyframes dropdown-in {
-                  from { opacity: 0; transform: translateY(-6px); }
-                  to   { opacity: 1; transform: translateY(0); }
-                }
-              `}</style>
-
-              {/* User info header */}
-              <div style={{ padding: '12px 14px', borderBottom: '1px solid #f3f4f6' }}>
-                <p style={{ fontSize: 12, fontWeight: 600, color: '#111827', margin: 0 }}>{user?.name}</p>
-                <p style={{ fontSize: 11, color: '#9ca3af', margin: '2px 0 0' }}>{user?.email}</p>
-              </div>
-
-              <div style={{ padding: '4px 0' }}>
-                <button className="header-menu-item" onClick={() => setOpen(false)} disabled>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  Perfil
-                  <span style={{ marginLeft: 'auto', fontSize: 10, color: '#d1d5db', background: '#f9fafb', padding: '2px 6px', borderRadius: 4 }}>
-                    Em breve
-                  </span>
-                </button>
-              </div>
-
-              <div style={{ borderTop: '1px solid #f3f4f6', padding: '4px 0' }}>
-                <button className="header-menu-item danger" onClick={handleLogout}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                    <polyline points="16 17 21 12 16 7"/>
-                    <line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
-                  Sair
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-    </>
+          </div>
+        )}
+      </div>
+    </header>
   )
 }
