@@ -20,31 +20,17 @@ export function AvatarName({ name, subtitle, size = 34 }: Props) {
   const fontSize = Math.round(size * 0.35)
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: pickColor(name),
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize,
-        fontWeight: 700,
-        flexShrink: 0,
-        userSelect: 'none',
-      }}>
+    <div className="flex items-center gap-2.5">
+      <div
+        className="rounded-full text-white flex items-center justify-center font-bold shrink-0 select-none"
+        style={{ width: size, height: size, background: pickColor(name), fontSize }}
+      >
         {initials(name)}
       </div>
       <div>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: 12, color: '#111827', lineHeight: 1.3 }}>
-          {name}
-        </p>
+        <p className="m-0 font-semibold text-xs text-gray-900 leading-[1.3]">{name}</p>
         {subtitle && (
-          <p style={{ margin: '1px 0 0', fontSize: 12, color: '#9ca3af', lineHeight: 1.3 }}>
-            {subtitle}
-          </p>
+          <p className="m-0 mt-px text-xs text-gray-400 leading-[1.3]">{subtitle}</p>
         )}
       </div>
     </div>
