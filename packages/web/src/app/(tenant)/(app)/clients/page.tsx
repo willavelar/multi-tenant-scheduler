@@ -6,6 +6,7 @@ import { useClients } from '@/hooks/useClients'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { useAuth } from '@/providers/AuthProvider'
 import type { Client } from '@/types'
 
@@ -17,14 +18,7 @@ function formatBirthDate(dateStr: string | null) {
 
 function ClientStatusBadge({ active }: { active: boolean | null }) {
   const on = active !== false
-  return (
-    <StatusBadge
-      label={on ? 'Ativo' : 'Inativo'}
-      bg={on ? '#ecfdf5' : '#fef2f2'}
-      color={on ? '#059669' : '#dc2626'}
-      dot={on ? '#10b981' : '#ef4444'}
-    />
-  )
+  return <StatusBadge label={on ? 'Ativo' : 'Inativo'} variant={on ? 'success' : 'error'} />
 }
 
 export default function ClientsPage() {
@@ -50,164 +44,150 @@ export default function ClientsPage() {
   const COLS = ['Cliente', 'Telefone', 'Nascimento', 'Último login', 'Cadastrado em', 'Status', 'Ações']
 
   return (
-    <>
-      <style>{`
-        .cl-row:hover { background: #f9fafb; }
-        .cl-edit-btn { padding: 5px 12px; border: 1px solid #e0e7ff; background: #fff; color: #6366f1; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.12s; font-family: var(--font-inter, Inter, sans-serif); }
-        .cl-edit-btn:hover { background: #eef2ff; }
-        .filter-input { height: 36px; padding: 0 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13px; color: #111827; background: #fff; outline: none; font-family: var(--font-inter, Inter, sans-serif); transition: border-color 0.15s, box-shadow 0.15s; width: 100%; box-sizing: border-box; }
-        .filter-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .filter-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
-        .clear-btn { height: 36px; padding: 0 14px; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.12s, color 0.12s; font-family: var(--font-inter, Inter, sans-serif); white-space: nowrap; }
-        .clear-btn:hover { background: #f3f4f6; color: #374151; }
-        .page-btn { display: inline-flex; align-items: center; justify-content: center; padding: 6px 12px; border: 1px solid #e5e7eb; background: #fff; color: #374151; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.12s, border-color 0.12s; font-family: var(--font-inter, Inter, sans-serif); gap: 4px; }
-        .page-btn:hover:not(:disabled) { background: #f9fafb; border-color: #d1d5db; }
-        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-      `}</style>
+    <div className="w-full">
 
-      <div style={{ width: '100%' }}>
+      {/* Header row */}
+      {isAdmin && (
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => router.push('/clients/new')}
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Novo cliente
+          </button>
+        </div>
+      )}
 
-        {/* Header row */}
-        {isAdmin && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <button
-              onClick={() => router.push('/clients/new')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13.5, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Novo cliente
-            </button>
-          </div>
-        )}
+      {/* Filters */}
+      <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-4 shadow-sm">
+        <div className="flex flex-wrap gap-3 items-end">
 
-        {/* Filters */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 20px', marginBottom: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
-
-            {/* Search */}
-            <div style={{ minWidth: 240, flex: '2 1 240px', position: 'relative' }}>
-              <label className="filter-label">Busca</label>
-              <div style={{ position: 'relative' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"
-                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input
-                  type="text"
-                  className="filter-input"
-                  placeholder="Nome ou e-mail…"
-                  value={q}
-                  onChange={e => setQ(e.target.value)}
-                  style={{ paddingLeft: 30 }}
-                />
-              </div>
+          {/* Search */}
+          <div className="relative" style={{ minWidth: 240, flex: '2 1 240px' }}>
+            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Busca</label>
+            <div className="relative">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Nome ou e-mail…"
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                className="h-9 w-full pl-[30px] pr-3 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+              />
             </div>
+          </div>
 
-            {/* Status */}
-            <div style={{ minWidth: 160, flex: '1 1 160px' }}>
-              <label className="filter-label">Status</label>
+          {/* Status */}
+          <div style={{ minWidth: 160, flex: '1 1 160px' }}>
+            <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Status</label>
+            <div className="relative">
               <select
-                className="filter-input"
                 value={active}
                 onChange={e => setActive(e.target.value)}
-                style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', paddingRight: 30, cursor: 'pointer' }}
+                className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
               >
                 <option value="">Todos</option>
                 <option value="true">Ativo</option>
                 <option value="false">Inativo</option>
               </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-
-            {/* Clear */}
-            {hasFilters && (
-              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <button className="clear-btn" onClick={() => { setQ(''); setActive('') }}>Limpar filtros</button>
-              </div>
-            )}
           </div>
-        </div>
 
-        {/* Table card */}
-        <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-          {isLoading ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>Carregando...</div>
-          ) : !clients.length ? (
-            <div style={{ padding: '64px 32px', textAlign: 'center' }}>
-              <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                </svg>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>Nenhum cliente</p>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
-                {hasFilters ? 'Nenhum cliente encontrado para os filtros aplicados.' : 'Clientes aparecerão aqui após se cadastrarem.'}
-              </p>
+          {/* Clear */}
+          {hasFilters && (
+            <div className="flex items-end">
+              <button
+                className="h-9 px-3.5 bg-white text-gray-500 border border-gray-200 rounded-lg text-[13px] font-medium cursor-pointer hover:bg-gray-100 hover:text-gray-700 whitespace-nowrap transition-colors"
+                onClick={() => { setQ(''); setActive('') }}
+              >
+                Limpar filtros
+              </button>
             </div>
-          ) : (
-            <>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      {COLS.map((col, i) => (
-                        <th key={i} style={{
-                          padding: '12px 16px',
-                          textAlign: 'left',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.06em',
-                          whiteSpace: 'nowrap',
-                        }}>
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {clients.map((client: Client) => (
-                      <tr key={client.id} className="cl-row" style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.1s' }}>
-                        <td style={{ padding: '12px 16px' }}>
-                          <AvatarName name={client.name} size={32} />
-                        </td>
-                        <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{client.phone ?? '—'}</td>
-                        <td style={{ padding: '12px 16px', color: '#6b7280', whiteSpace: 'nowrap' }}>{formatBirthDate(client.birthDate)}</td>
-                        <td style={{ padding: '12px 16px' }}><DateTimeCell iso={client.lastLoginAt} /></td>
-                        <td style={{ padding: '12px 16px' }}><DateTimeCell iso={client.createdAt} /></td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <ClientStatusBadge active={client.active} />
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <button className="cl-edit-btn" onClick={() => router.push(`/clients/${client.id}`)}>Visualizar</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderTop: '1px solid #f3f4f6' }}>
-                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
-                  Página {page} de {totalPages}
-                </p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page <= 1}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    Anterior
-                  </button>
-                  <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page >= totalPages}>
-                    Próxima
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                  </button>
-                </div>
-              </div>
-            </>
           )}
         </div>
       </div>
-    </>
+
+      {/* Table card */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        {isLoading ? (
+          <div className="p-12 text-center text-gray-400 text-sm">Carregando...</div>
+        ) : !clients.length ? (
+          <EmptyState
+            title="Nenhum cliente"
+            description={hasFilters ? 'Nenhum cliente encontrado para os filtros aplicados.' : 'Clientes aparecerão aqui após se cadastrarem.'}
+          />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    {COLS.map((col, i) => (
+                      <th key={i} className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.06em] whitespace-nowrap">
+                        {col}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {clients.map((client: Client) => (
+                    <tr key={client.id} className="border-b border-gray-50 transition-colors hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <AvatarName name={client.name} size={32} />
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{client.phone ?? '—'}</td>
+                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatBirthDate(client.birthDate)}</td>
+                      <td className="px-4 py-3"><DateTimeCell iso={client.lastLoginAt} /></td>
+                      <td className="px-4 py-3"><DateTimeCell iso={client.createdAt} /></td>
+                      <td className="px-4 py-3">
+                        <ClientStatusBadge active={client.active} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          className="px-3 py-[5px] border border-indigo-100 bg-white text-indigo-500 rounded-md text-xs font-medium cursor-pointer hover:bg-indigo-50 transition-colors"
+                          onClick={() => router.push(`/clients/${client.id}`)}
+                        >
+                          Visualizar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+              <p className="text-[13px] text-gray-500 m-0">
+                Página {page} de {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page <= 1}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                  Anterior
+                </button>
+                <button
+                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= totalPages}
+                >
+                  Próxima
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   )
 }
