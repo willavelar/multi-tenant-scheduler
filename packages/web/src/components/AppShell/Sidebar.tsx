@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTenant } from '@/providers/TenantProvider'
 import { useAuth } from '@/providers/AuthProvider'
+import { cn } from '@/lib/utils'
 
 function CalendarIcon() {
   return (
@@ -52,10 +53,10 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Agendamentos', href: '/appointments',    icon: <CalendarIcon />, roles: ['tenant_admin', 'professional', 'client'] },
-  { label: 'Clientes',     href: '/clients',         icon: <UsersIcon />,    roles: ['tenant_admin', 'professional'] },
-  { label: 'Profissionais',href: '/professionals',   icon: <BriefcaseIcon />,roles: ['tenant_admin'] },
-  { label: 'Meu perfil',   href: '/professionals/me',icon: <UserIcon />,     roles: ['professional'] },
+  { label: 'Agendamentos', href: '/appointments',     icon: <CalendarIcon />, roles: ['tenant_admin', 'professional', 'client'] },
+  { label: 'Clientes',     href: '/clients',          icon: <UsersIcon />,    roles: ['tenant_admin', 'professional'] },
+  { label: 'Profissionais',href: '/professionals',    icon: <BriefcaseIcon />,roles: ['tenant_admin'] },
+  { label: 'Meu perfil',   href: '/professionals/me', icon: <UserIcon />,     roles: ['professional'] },
 ]
 
 export function Sidebar() {
@@ -68,103 +69,52 @@ export function Sidebar() {
   )
 
   return (
-    <>
-      <style>{`
-        .sidebar-item {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 9px 12px;
-          border-radius: 8px;
-          text-decoration: none;
-          font-size: 13.5px;
-          font-weight: 500;
-          color: #94a3b8;
-          transition: background 0.15s, color 0.15s;
-          margin-bottom: 2px;
-          cursor: pointer;
-          border: none;
-          width: 100%;
-          text-align: left;
-        }
-        .sidebar-item:hover {
-          background: rgba(255,255,255,0.07);
-          color: #f1f5f9;
-        }
-        .sidebar-item.active {
-          background: rgba(99,102,241,0.18);
-          color: #a5b4fc;
-        }
-        .sidebar-item.active svg {
-          color: #818cf8;
-        }
-      `}</style>
+    <aside className="w-[260px] min-h-screen bg-slate-900 fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-white/[0.05]">
 
-      <aside style={{
-        width: 260,
-        minHeight: '100vh',
-        background: '#0f172a',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'var(--font-inter, Inter, sans-serif)',
-        zIndex: 40,
-        borderRight: '1px solid rgba(255,255,255,0.05)',
-      }}>
-
-        {/* Brand */}
-        <div style={{
-          padding: '20px 20px 16px',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{
-              width: 32, height: 32,
-              background: '#6366f1',
-              borderRadius: 8,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" strokeWidth="2"/>
-                <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#f1f5f9', letterSpacing: '-0.01em' }}>
-              Scheduler
-            </span>
+      {/* Brand */}
+      <div className="px-5 pt-5 pb-4 border-b border-white/[0.07]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" strokeWidth="2"/>
+              <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </div>
+          <span className="text-[15px] font-bold text-slate-100 tracking-[-0.01em]">
+            Scheduler
+          </span>
         </div>
+      </div>
 
-        {/* Nav */}
-        <nav style={{ padding: '16px 12px', flex: 1 }}>
-          <p style={{ fontSize: 10, fontWeight: 600, color: '#475569', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 12px', marginBottom: 8 }}>
-            Menu
-          </p>
-          {items.map(item => {
-            const active = pathname === item.href || pathname.startsWith(item.href + '/')
-            return (
-              <Link key={item.href} href={item.href} className={`sidebar-item${active ? ' active' : ''}`}>
-                {item.icon}
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
+      {/* Nav */}
+      <nav className="px-3 pt-4 flex-1">
+        <p className="text-[10px] font-semibold text-slate-500 tracking-[0.08em] uppercase px-3 mb-2">
+          Menu
+        </p>
+        {items.map(item => {
+          const active = pathname === item.href || pathname.startsWith(item.href + '/')
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
+                active
+                  ? 'bg-indigo-500/[0.18] text-indigo-300'
+                  : 'text-slate-400 hover:bg-white/[0.07] hover:text-slate-100'
+              )}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          )
+        })}
+      </nav>
 
-        {/* Footer */}
-        <div style={{
-          padding: '12px',
-          borderTop: '1px solid rgba(255,255,255,0.07)',
-          fontSize: 11,
-          color: '#475569',
-          textAlign: 'center',
-        }}>
-          {slug}
-        </div>
-      </aside>
-    </>
+      {/* Footer */}
+      <div className="p-3 border-t border-white/[0.07] text-[11px] text-slate-500 text-center">
+        {slug}
+      </div>
+    </aside>
   )
 }

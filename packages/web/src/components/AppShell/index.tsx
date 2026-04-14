@@ -9,29 +9,23 @@ import { Header } from './Header'
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
   const router = useRouter()
-  // Track whether the auth hydration from localStorage has completed
   const [hydrated, setHydrated] = useState(false)
 
-  useEffect(() => {
-    setHydrated(true)
-  }, [])
+  useEffect(() => { setHydrated(true) }, [])
 
   useEffect(() => {
     if (!hydrated) return
-    if (!user) {
-      router.replace('/login')
-    }
+    if (!user) router.replace('/login')
   }, [hydrated, user, router])
 
-  // Still hydrating — show nothing to avoid flash
   if (!hydrated || !user) return null
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', fontFamily: 'var(--font-inter, Inter, sans-serif)' }}>
+    <div className="flex min-h-screen">
       <Sidebar />
-      <div style={{ marginLeft: 260, flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="ml-[260px] flex-1 flex flex-col min-h-screen">
         <Header />
-        <main style={{ flex: 1, background: '#f9fafb', padding: '28px' }}>
+        <main className="flex-1 bg-gray-50 p-7">
           {children}
         </main>
       </div>
