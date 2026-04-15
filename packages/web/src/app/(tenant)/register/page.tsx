@@ -7,6 +7,7 @@ import { z } from 'zod/v3'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
+import { cn } from '@/lib/utils'
 
 const schema = z.object({
   name: z.string().min(2, 'Informe seu nome completo'),
@@ -38,9 +39,9 @@ function EyeIcon({ open }: { open: boolean }) {
 function Spinner() {
   return (
     <svg
+      className="animate-spin"
       width="16" height="16" viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-      style={{ animation: 'auth-spin 0.75s linear infinite', display: 'inline-block' }}
     >
       <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
     </svg>
@@ -58,10 +59,6 @@ export default function RegisterPage() {
 
   const [showPassword,    setShowPassword]    = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)
-  const [focused, setFocused] = useState<Record<string, boolean>>({})
-
-  const focus = (k: string) => setFocused(p => ({ ...p, [k]: true }))
-  const blur  = (k: string) => setFocused(p => ({ ...p, [k]: false }))
 
   const {
     register,
@@ -82,275 +79,182 @@ export default function RegisterPage() {
     }
   }
 
-  const borderColor = (key: string, hasError: boolean) =>
-    hasError ? '#ef4444' : focused[key] ? '#2563eb' : '#e5e7eb'
-
-  const shadowStyle = (key: string, hasError: boolean): React.CSSProperties =>
-    focused[key]
-      ? { boxShadow: `0 0 0 3px ${hasError ? 'rgba(239,68,68,0.12)' : 'rgba(37,99,235,0.12)'}` }
-      : {}
-
-  const baseInput = (key: string, hasError: boolean, extraPadding = false): React.CSSProperties => ({
-    width: '100%',
-    height: 42,
-    padding: `0 ${extraPadding ? 42 : 12}px 0 12px`,
-    fontSize: 14,
-    color: '#111827',
-    background: '#fff',
-    border: `1px solid ${borderColor(key, hasError)}`,
-    borderRadius: 8,
-    boxSizing: 'border-box',
-    transition: 'border-color 0.15s, box-shadow 0.15s',
-    outline: 'none',
-    ...shadowStyle(key, hasError),
-  })
-
-  const labelStyle: React.CSSProperties = {
-    display: 'block',
-    fontSize: 13,
-    fontWeight: 500,
-    color: '#374151',
-    marginBottom: 6,
-  }
-
   return (
-    <>
-      <style>{`
-        @keyframes auth-spin { to { transform: rotate(360deg); } }
-        @keyframes auth-fade-up {
-          from { opacity: 0; transform: translateY(12px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes auth-slide-down {
-          from { opacity: 0; transform: translateY(-5px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .auth-card { animation: auth-fade-up 0.35s cubic-bezier(0.22,1,0.36,1) both; }
-        .auth-error { animation: auth-slide-down 0.2s ease both; }
-        .auth-submit {
-          transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-          position: relative; overflow: hidden;
-        }
-        .auth-submit:not(:disabled):hover {
-          background: #1d4ed8 !important;
-          box-shadow: 0 4px 14px rgba(37,99,235,0.35);
-          transform: translateY(-1px);
-        }
-        .auth-submit:not(:disabled):active {
-          transform: translateY(0) scale(0.98);
-          box-shadow: none;
-        }
-        .auth-eye { transition: color 0.15s, transform 0.12s; display: flex; align-items: center; }
-        .auth-eye:hover { color: #374151; transform: scale(1.1); }
-        .auth-eye:active { transform: scale(0.9); }
-      `}</style>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-3 duration-300">
 
-      <div style={{
-        minHeight: '100vh',
-        background: '#f9fafb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px',
-        fontFamily: 'var(--font-inter, Inter, sans-serif)',
-      }}>
-        <div className="auth-card" style={{ width: '100%', maxWidth: 440 }}>
-
-          {/* Heading */}
-          <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <h1 style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: '#111827',
-              margin: '0 0 8px',
-              letterSpacing: '-0.015em',
-              fontFamily: 'var(--font-inter, Inter, sans-serif)',
-            }}>
-              Crie sua conta
-            </h1>
-            <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-              Preencha os dados para se cadastrar
-            </p>
-          </div>
-
-          {/* Card */}
-          <div style={{
-            background: '#ffffff',
-            borderRadius: 12,
-            padding: '32px',
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06)',
-          }}>
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-
-              {/* Nome */}
-              <div style={{ marginBottom: 16 }}>
-                <label htmlFor="name" style={labelStyle}>Nome completo</label>
-                <input
-                  id="name" type="text" placeholder="Seu nome"
-                  autoComplete="name"
-                  {...register('name')}
-                  onFocus={() => focus('name')} onBlur={() => blur('name')}
-                  style={baseInput('name', !!errors.name)}
-                />
-                {errors.name && (
-                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              {/* E-mail */}
-              <div style={{ marginBottom: 16 }}>
-                <label htmlFor="email" style={labelStyle}>E-mail</label>
-                <input
-                  id="email" type="email" placeholder="seu@email.com"
-                  autoComplete="email"
-                  {...register('email')}
-                  onFocus={() => focus('email')} onBlur={() => blur('email')}
-                  style={baseInput('email', !!errors.email)}
-                />
-                {errors.email && (
-                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Telefone */}
-              <div style={{ marginBottom: 16 }}>
-                <label htmlFor="phone" style={labelStyle}>
-                  Telefone{' '}
-                  <span style={{ fontSize: 12, fontWeight: 400, color: '#9ca3af' }}>(opcional)</span>
-                </label>
-                <input
-                  id="phone" type="tel" placeholder="(11) 99999-9999"
-                  autoComplete="tel"
-                  {...register('phone')}
-                  onFocus={() => focus('phone')} onBlur={() => blur('phone')}
-                  style={baseInput('phone', false)}
-                />
-              </div>
-
-              {/* Senha */}
-              <div style={{ marginBottom: 16 }}>
-                <label htmlFor="password" style={labelStyle}>Senha</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="Mínimo 8 caracteres"
-                    autoComplete="new-password"
-                    {...register('password')}
-                    onFocus={() => focus('password')} onBlur={() => blur('password')}
-                    style={baseInput('password', !!errors.password, true)}
-                  />
-                  <button type="button" onClick={() => setShowPassword(v => !v)} className="auth-eye"
-                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#9ca3af' }}
-                    aria-label={showPassword ? 'Ocultar' : 'Mostrar'}>
-                    <EyeIcon open={showPassword} />
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Confirmar senha */}
-              <div style={{ marginBottom: 20 }}>
-                <label htmlFor="confirmPassword" style={labelStyle}>Confirmar senha</label>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    id="confirmPassword"
-                    type={showConfirmPass ? 'text' : 'password'}
-                    placeholder="Repita a senha"
-                    autoComplete="new-password"
-                    {...register('confirmPassword')}
-                    onFocus={() => focus('confirmPassword')} onBlur={() => blur('confirmPassword')}
-                    style={baseInput('confirmPassword', !!errors.confirmPassword, true)}
-                  />
-                  <button type="button" onClick={() => setShowConfirmPass(v => !v)} className="auth-eye"
-                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#9ca3af' }}
-                    aria-label={showConfirmPass ? 'Ocultar' : 'Mostrar'}>
-                    <EyeIcon open={showConfirmPass} />
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="auth-error" style={{ margin: '5px 0 0', fontSize: 12, color: '#ef4444' }}>
-                    {errors.confirmPassword.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Erro global */}
-              {errors.root && (
-                <div className="auth-error" style={{
-                  marginBottom: 16,
-                  padding: '10px 12px',
-                  background: '#fef2f2',
-                  border: '1px solid #fecaca',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  color: '#b91c1c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ flexShrink: 0 }}>
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  {errors.root.message}
-                </div>
-              )}
-
-              {/* Botão */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="auth-submit"
-                style={{
-                  width: '100%',
-                  height: 42,
-                  background: '#2563eb',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                  opacity: isSubmitting ? 0.75 : 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)',
-                }}
-              >
-                {isSubmitting ? <><Spinner />Criando conta...</> : 'Criar conta'}
-              </button>
-
-            </form>
-          </div>
-
-          {/* Footer */}
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: '#6b7280' }}>
-            Já tem uma conta?{' '}
-            <a
-              href="./login"
-              style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-            >
-              Entrar
-            </a>
+        {/* Heading */}
+        <div className="text-center mb-7">
+          <h1 className="text-2xl font-bold text-gray-900 m-0 mb-2 tracking-[-0.015em]">
+            Crie sua conta
+          </h1>
+          <p className="text-sm text-gray-500 m-0">
+            Preencha os dados para se cadastrar
           </p>
-
         </div>
+
+        {/* Card */}
+        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+
+            {/* Nome */}
+            <div className="mb-4">
+              <label htmlFor="name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                Nome completo
+              </label>
+              <input
+                id="name" type="text" placeholder="Seu nome"
+                autoComplete="name"
+                {...register('name')}
+                className={cn(
+                  'w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                  errors.name ? 'border-red-400' : 'border-gray-200',
+                )}
+              />
+              {errors.name && (
+                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                  {errors.name.message}
+                </p>
+              )}
+            </div>
+
+            {/* E-mail */}
+            <div className="mb-4">
+              <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                E-mail
+              </label>
+              <input
+                id="email" type="email" placeholder="seu@email.com"
+                autoComplete="email"
+                {...register('email')}
+                className={cn(
+                  'w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                  errors.email ? 'border-red-400' : 'border-gray-200',
+                )}
+              />
+              {errors.email && (
+                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* Telefone */}
+            <div className="mb-4">
+              <label htmlFor="phone" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                Telefone{' '}
+                <span className="text-xs font-normal text-gray-400">(opcional)</span>
+              </label>
+              <input
+                id="phone" type="tel" placeholder="(11) 99999-9999"
+                autoComplete="tel"
+                {...register('phone')}
+                className="w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border"
+              />
+            </div>
+
+            {/* Senha */}
+            <div className="mb-4">
+              <label htmlFor="password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                Senha
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mínimo 8 caracteres"
+                  autoComplete="new-password"
+                  {...register('password')}
+                  className={cn(
+                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                    errors.password ? 'border-red-400' : 'border-gray-200',
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                  aria-label={showPassword ? 'Ocultar' : 'Mostrar'}
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </div>
+              {errors.password && (
+                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Confirmar senha */}
+            <div className="mb-5">
+              <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                Confirmar senha
+              </label>
+              <div className="relative">
+                <input
+                  id="confirmPassword"
+                  type={showConfirmPass ? 'text' : 'password'}
+                  placeholder="Repita a senha"
+                  autoComplete="new-password"
+                  {...register('confirmPassword')}
+                  className={cn(
+                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                    errors.confirmPassword ? 'border-red-400' : 'border-gray-200',
+                  )}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPass(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                  aria-label={showConfirmPass ? 'Ocultar' : 'Mostrar'}
+                >
+                  <EyeIcon open={showConfirmPass} />
+                </button>
+              </div>
+              {errors.confirmPassword && (
+                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
+
+            {/* Erro global */}
+            {errors.root && (
+              <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {errors.root.message}
+              </div>
+            )}
+
+            {/* Botão */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-[46px] bg-blue-600 text-white font-semibold rounded-lg border-0 cursor-pointer flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-px active:translate-y-0 active:shadow-none disabled:opacity-65 disabled:cursor-not-allowed transition-all"
+            >
+              {isSubmitting ? <><Spinner />Criando conta...</> : 'Criar conta'}
+            </button>
+
+          </form>
+        </div>
+
+        {/* Footer */}
+        <p className="text-center mt-5 text-[13px] text-gray-500">
+          Já tem uma conta?{' '}
+          <a
+            href="./login"
+            className="text-blue-600 font-semibold no-underline hover:underline"
+          >
+            Entrar
+          </a>
+        </p>
+
       </div>
-    </>
+    </div>
   )
 }
