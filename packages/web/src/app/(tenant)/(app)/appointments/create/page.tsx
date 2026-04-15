@@ -10,6 +10,7 @@ import { useClients, useClient, useSearchClients } from '@/hooks/useClients'
 import { useAuth } from '@/providers/AuthProvider'
 import { BackButton } from '@/components/ui/BackButton'
 import { AvatarName } from '@/components/ui/AvatarName'
+import { cn } from '@/lib/utils'
 import type { Professional, Service, ClientDetail } from '@/types'
 
 function today() {
@@ -49,37 +50,34 @@ function Section({ step, current, title, children }: {
   const locked = current < step
 
   return (
-    <div style={{
-      background: '#fff',
-      border: `1px solid ${active ? '#6366f1' : '#e5e7eb'}`,
-      borderRadius: 12,
-      transition: 'border-color 0.2s',
-      boxShadow: active ? '0 0 0 3px rgba(99,102,241,0.10)' : '0 1px 3px rgba(0,0,0,0.04)',
-    }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: '14px 20px',
-        background: locked ? '#fafafa' : '#fff',
-        borderBottom: active ? '1px solid #e5e7eb' : 'none',
-      }}>
-        <div style={{
-          width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 12, fontWeight: 700,
-          background: done ? '#6366f1' : active ? '#6366f1' : '#e5e7eb',
-          color: done || active ? '#fff' : '#9ca3af',
-        }}>
+    <div className={cn(
+      'bg-white border transition-colors',
+      active ? 'border-indigo-500 shadow-[0_0_0_3px_rgba(99,102,241,0.10)]' : 'border-gray-200 shadow-sm',
+      'rounded-xl',
+    )}>
+      <div className={cn(
+        'flex items-center gap-3 px-5 py-3.5 transition-colors',
+        locked ? 'bg-gray-50' : 'bg-white',
+        active ? 'border-b border-gray-200' : '',
+        locked ? 'rounded-xl' : 'rounded-t-xl',
+      )}>
+        <div className={cn(
+          'w-6.5 h-6.5 rounded-full shrink-0 flex items-center justify-center text-xs font-bold',
+          done || active ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-400',
+        )}
+          style={{ width: 26, height: 26 }}
+        >
           {done
             ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
             : step}
         </div>
-        <span style={{ fontSize: 14, fontWeight: 600, color: locked ? '#9ca3af' : '#111827' }}>
+        <span className={cn('text-sm font-semibold', locked ? 'text-gray-400' : 'text-gray-900')}>
           {title}
         </span>
       </div>
 
-      {active && <div style={{ padding: '20px' }}>{children}</div>}
-      {done  && <div style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>{children}</div>}
+      {active && <div className="p-5">{children}</div>}
+      {done  && <div className="px-5 py-3 flex items-center justify-between">{children}</div>}
     </div>
   )
 }
@@ -87,14 +85,10 @@ function Section({ step, current, title, children }: {
 function SelectionSummary({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <>
-      <span style={{ fontSize: 13.5, color: '#374151', fontWeight: 500 }}>{label}</span>
-      <button onClick={onClear} style={{
-        fontSize: 12, color: '#6366f1', fontWeight: 600,
-        background: 'none', border: 'none', cursor: 'pointer', padding: '2px 8px',
-        borderRadius: 6, transition: 'background 0.12s',
-      }}
-        onMouseEnter={e => (e.currentTarget.style.background = '#eef2ff')}
-        onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+      <span className="text-[13.5px] text-gray-700 font-medium">{label}</span>
+      <button
+        onClick={onClear}
+        className="text-xs text-indigo-500 font-semibold bg-transparent border-none cursor-pointer px-2 py-0.5 rounded-md transition-colors hover:bg-indigo-50"
       >
         Alterar
       </button>
@@ -196,237 +190,213 @@ export default function CreateAppointmentPage() {
     setClientSearch(''); setShowDropdown(false)
   }
 
-  const cardGrid: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: 10,
-  }
-  const card = (selected: boolean): React.CSSProperties => ({
-    padding: '12px 14px',
-    border: `1.5px solid ${selected ? '#6366f1' : '#e5e7eb'}`,
-    borderRadius: 8, cursor: 'pointer',
-    background: selected ? '#eef2ff' : '#fff',
-    transition: 'border-color 0.15s, background 0.15s',
-    textAlign: 'left',
-  })
-
   return (
-    <>
-      <style>{`
-        .appt-card:hover { border-color: #a5b4fc !important; background: #f5f3ff !important; }
-        .slot-btn { padding: 8px 14px; border: 1.5px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; background: #fff; color: #374151; transition: border-color 0.15s, background 0.15s, color 0.15s; font-family: var(--font-inter, Inter, sans-serif); }
-        .slot-btn:hover { border-color: #a5b4fc; background: #f5f3ff; color: #4f46e5; }
-        .slot-btn.selected { border-color: #6366f1; background: #eef2ff; color: #4f46e5; }
-        .submit-btn { width: 100%; height: 44px; background: #6366f1; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s, transform 0.1s; font-family: var(--font-inter, Inter, sans-serif); display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .submit-btn:hover:not(:disabled) { background: #4f46e5; transform: translateY(-1px); }
-        .submit-btn:active:not(:disabled) { transform: scale(0.98); }
-        .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .client-input { outline: none; }
-        .client-input:focus { border-color: #6366f1 !important; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-        .client-dropdown-item { padding: 9px 14px; cursor: pointer; font-size: 13.5px; color: #111827; border-radius: 6px; transition: background 0.1s; }
-        .client-dropdown-item:hover { background: #f5f3ff; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
+    <div className="w-full">
 
-      <div style={{ width: '100%' }}>
+      <BackButton href="/appointments" variant="ghost">Voltar para agendamentos</BackButton>
 
-        <BackButton href="/appointments" variant="ghost">Voltar para agendamentos</BackButton>
+      <div className="flex flex-col gap-3">
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-
-          {/* ── Step 1 (admin/prof): Cliente ── */}
-          {isAdminOrProfessional && (
-            <Section step={1} current={step} title="Cliente">
-              {step === 1 ? (
-                <div>
-                  <p style={{ margin: '0 0 12px', fontSize: 13, color: '#6b7280' }}>
-                    Busque pelo nome ou e-mail do cliente (mínimo 3 caracteres).
-                  </p>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      className="client-input"
-                      type="text"
-                      placeholder="Buscar cliente..."
-                      value={clientSearch}
-                      onChange={e => { setClientSearch(e.target.value); setShowDropdown(true) }}
-                      onFocus={() => clientSearch.length >= 3 && setShowDropdown(true)}
-                      style={{
-                        width: '100%', height: 40, padding: '0 12px',
-                        fontSize: 14, border: '1.5px solid #e5e7eb', borderRadius: 8,
-                        background: '#fff', color: '#111827', boxSizing: 'border-box',
-                        fontFamily: 'var(--font-inter, Inter, sans-serif)',
-                      }}
-                    />
-                    {showDropdown && clientResults.length > 0 && (
-                      <div style={{
-                        position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10,
-                        background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8,
-                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)', marginTop: 4, padding: 4,
-                      }}>
-                        {clientResults.map(c => (
-                          <div key={c.id} className="client-dropdown-item" onMouseDown={() => selectClient(c.id, c.name)}>
-                            <AvatarName name={c.name} size={28} />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : step > 1 ? (
-                <SelectionSummary label={clientName} onClear={clearClient} />
-              ) : null}
-            </Section>
-          )}
-
-          {/* ── Step 2 (admin) / 1 (client): Serviço ── */}
-          <Section step={isAdminOrProfessional ? 2 : 1} current={step} title="Serviço">
-            {step === (isAdminOrProfessional ? 2 : 1) ? (
-              loadingServices || (isAdminOrProfessional && loadingProfile && !!clientId) ? (
-                <p style={{ fontSize: 13, color: '#9ca3af' }}>Carregando...</p>
-              ) : availableServices.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af' }}>Nenhum serviço disponível para este cliente.</p>
-              ) : (
-                <div style={cardGrid}>
-                  {availableServices.map((svc: Service) => (
-                    <button key={svc.id} className="appt-card" style={card(serviceId === svc.id)} onClick={() => setServiceId(svc.id)}>
-                      <p style={{ margin: '0 0 4px', fontSize: 13.5, fontWeight: 600, color: '#111827' }}>{svc.name}</p>
-                      <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>{svc.durationMinutes} min</p>
-                      {svc.description && <p style={{ margin: '4px 0 0', fontSize: 12, color: '#9ca3af' }}>{svc.description}</p>}
-                    </button>
-                  ))}
-                </div>
-              )
-            ) : step > (isAdminOrProfessional ? 2 : 1) ? (
-              <SelectionSummary
-                label={`${selectedService?.name} · ${selectedService?.durationMinutes} min`}
-                onClear={clearService}
-              />
-            ) : null}
-          </Section>
-
-          {/* ── Step 3 (admin) / 2 (client): Profissional ── */}
-          <Section step={isAdminOrProfessional ? 3 : 2} current={step} title="Profissional">
-            {step === (isAdminOrProfessional ? 3 : 2) ? (
-              loadingProfs || (isAdminOrProfessional && loadingProfile && !!clientId) ? (
-                <p style={{ fontSize: 13, color: '#9ca3af' }}>Carregando...</p>
-              ) : availableProfessionals.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9ca3af' }}>Nenhum profissional disponível para este cliente.</p>
-              ) : (
-                <div style={cardGrid}>
-                  {availableProfessionals.map((prof: Professional) => (
-                    <button key={prof.id} className="appt-card" style={card(professionalId === prof.id)} onClick={() => setProfessionalId(prof.id)}>
-                      <div style={{
-                        width: 36, height: 36, borderRadius: '50%',
-                        background: '#6366f1', color: '#fff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 13, fontWeight: 700, marginBottom: 8,
-                      }}>
-                        {prof.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <p style={{ margin: 0, fontSize: 13.5, fontWeight: 600, color: '#111827' }}>{prof.name}</p>
-                      {prof.position && <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9ca3af' }}>{prof.position}</p>}
-                    </button>
-                  ))}
-                </div>
-              )
-            ) : step > (isAdminOrProfessional ? 3 : 2) ? (
-              <SelectionSummary label={selectedProf?.name ?? ''} onClear={clearProfessional} />
-            ) : null}
-          </Section>
-
-          {/* ── Step 4 (admin) / 3 (client): Data e horário ── */}
-          <Section step={isAdminOrProfessional ? 4 : 3} current={step} title="Data e horário">
-            {step === (isAdminOrProfessional ? 4 : 3) ? (
+        {/* ── Step 1 (admin/prof): Cliente ── */}
+        {isAdminOrProfessional && (
+          <Section step={1} current={step} title="Cliente">
+            {step === 1 ? (
               <div>
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Data
-                  </label>
+                <p className="text-[13px] text-gray-500 mb-3">
+                  Busque pelo nome ou e-mail do cliente (mínimo 3 caracteres).
+                </p>
+                <div className="relative">
                   <input
-                    type="date"
-                    value={date}
-                    min={today()}
-                    onChange={e => { setDate(e.target.value); setStartTime(null) }}
-                    style={{
-                      height: 40, padding: '0 12px', fontSize: 14,
-                      border: '1.5px solid #e5e7eb', borderRadius: 8,
-                      outline: 'none', background: '#fff', color: '#111827',
-                      fontFamily: 'var(--font-inter, Inter, sans-serif)', cursor: 'pointer',
-                    }}
+                    type="text"
+                    placeholder="Buscar cliente..."
+                    value={clientSearch}
+                    onChange={e => { setClientSearch(e.target.value); setShowDropdown(true) }}
+                    onFocus={() => clientSearch.length >= 3 && setShowDropdown(true)}
+                    className="w-full h-10 px-3 text-sm text-gray-900 bg-white border-[1.5px] border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] transition-[border-color,box-shadow] box-border"
                   />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#6b7280', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    Horários disponíveis
-                  </label>
-                  {loadingSlots ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af' }}>Carregando horários...</p>
-                  ) : slots.length === 0 ? (
-                    <p style={{ fontSize: 13, color: '#9ca3af' }}>Nenhum horário disponível para esta data.</p>
-                  ) : (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                      {slots.map((slot: string) => (
-                        <button key={slot} className={`slot-btn${startTime === slot ? ' selected' : ''}`} onClick={() => setStartTime(slot)}>
-                          {slot}
-                        </button>
+                  {showDropdown && clientResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.08)] mt-1 p-1">
+                      {clientResults.map(c => (
+                        <div
+                          key={c.id}
+                          className="px-3.5 py-2.5 cursor-pointer text-[13.5px] text-gray-900 rounded-md transition-colors hover:bg-indigo-50"
+                          onMouseDown={() => selectClient(c.id, c.name)}
+                        >
+                          <AvatarName name={c.name} size={28} />
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
               </div>
-            ) : step > (isAdminOrProfessional ? 4 : 3) ? (
-              <SelectionSummary
-                label={`${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às ${startTime}`}
-                onClear={() => setStartTime(null)}
-              />
+            ) : step > 1 ? (
+              <SelectionSummary label={clientName} onClear={clearClient} />
             ) : null}
           </Section>
+        )}
 
-          {/* ── Step 5 (admin) / 4 (client): Confirmar ── */}
-          <Section step={confirmStep} current={step} title="Confirmar agendamento">
-            {step === confirmStep && (
-              <div>
-                <div style={{
-                  background: '#f9fafb', borderRadius: 8, padding: '14px 16px',
-                  marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 8,
-                }}>
-                  {[
-                    ...(isAdminOrProfessional ? [{ label: 'Cliente', value: clientName }] : []),
-                    { label: 'Serviço',      value: `${selectedService?.name} · ${selectedService?.durationMinutes} min` },
-                    { label: 'Profissional', value: selectedProf?.name },
-                    { label: 'Data',         value: new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) },
-                    { label: 'Horário',      value: startTime },
-                  ].map(({ label, value }) => (
-                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5 }}>
-                      <span style={{ color: '#6b7280' }}>{label}</span>
-                      <span style={{ fontWeight: 600, color: '#111827' }}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {create.isError && (
-                  <p style={{ fontSize: 13, color: '#dc2626', marginBottom: 14 }}>
-                    Horário indisponível. Escolha outro horário.
-                  </p>
-                )}
-
-                <button className="submit-btn" onClick={handleSubmit} disabled={create.isPending}>
-                  {create.isPending ? (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" style={{ animation: 'spin 0.75s linear infinite' }}>
-                        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                      </svg>
-                      Confirmando...
-                    </>
-                  ) : 'Confirmar agendamento'}
-                </button>
+        {/* ── Step 2 (admin) / 1 (client): Serviço ── */}
+        <Section step={isAdminOrProfessional ? 2 : 1} current={step} title="Serviço">
+          {step === (isAdminOrProfessional ? 2 : 1) ? (
+            loadingServices || (isAdminOrProfessional && loadingProfile && !!clientId) ? (
+              <p className="text-[13px] text-gray-400">Carregando...</p>
+            ) : availableServices.length === 0 ? (
+              <p className="text-[13px] text-gray-400">Nenhum serviço disponível para este cliente.</p>
+            ) : (
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                {availableServices.map((svc: Service) => (
+                  <button
+                    key={svc.id}
+                    onClick={() => setServiceId(svc.id)}
+                    className={cn(
+                      'px-3.5 py-3 border-[1.5px] rounded-lg cursor-pointer text-left transition-[border-color,background] hover:border-indigo-300 hover:bg-indigo-50/60',
+                      serviceId === svc.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white',
+                    )}
+                  >
+                    <p className="m-0 mb-1 text-[13.5px] font-semibold text-gray-900">{svc.name}</p>
+                    <p className="m-0 text-xs text-gray-500">{svc.durationMinutes} min</p>
+                    {svc.description && <p className="mt-1 m-0 text-xs text-gray-400">{svc.description}</p>}
+                  </button>
+                ))}
               </div>
-            )}
-          </Section>
+            )
+          ) : step > (isAdminOrProfessional ? 2 : 1) ? (
+            <SelectionSummary
+              label={`${selectedService?.name} · ${selectedService?.durationMinutes} min`}
+              onClear={clearService}
+            />
+          ) : null}
+        </Section>
 
-        </div>
+        {/* ── Step 3 (admin) / 2 (client): Profissional ── */}
+        <Section step={isAdminOrProfessional ? 3 : 2} current={step} title="Profissional">
+          {step === (isAdminOrProfessional ? 3 : 2) ? (
+            loadingProfs || (isAdminOrProfessional && loadingProfile && !!clientId) ? (
+              <p className="text-[13px] text-gray-400">Carregando...</p>
+            ) : availableProfessionals.length === 0 ? (
+              <p className="text-[13px] text-gray-400">Nenhum profissional disponível para este cliente.</p>
+            ) : (
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                {availableProfessionals.map((prof: Professional) => (
+                  <button
+                    key={prof.id}
+                    onClick={() => setProfessionalId(prof.id)}
+                    className={cn(
+                      'px-3.5 py-3 border-[1.5px] rounded-lg cursor-pointer text-left transition-[border-color,background] hover:border-indigo-300 hover:bg-indigo-50/60',
+                      professionalId === prof.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white',
+                    )}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[13px] font-bold mb-2">
+                      {prof.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <p className="m-0 text-[13.5px] font-semibold text-gray-900">{prof.name}</p>
+                    {prof.position && <p className="mt-0.5 m-0 text-xs text-gray-400">{prof.position}</p>}
+                  </button>
+                ))}
+              </div>
+            )
+          ) : step > (isAdminOrProfessional ? 3 : 2) ? (
+            <SelectionSummary label={selectedProf?.name ?? ''} onClear={clearProfessional} />
+          ) : null}
+        </Section>
+
+        {/* ── Step 4 (admin) / 3 (client): Data e horário ── */}
+        <Section step={isAdminOrProfessional ? 4 : 3} current={step} title="Data e horário">
+          {step === (isAdminOrProfessional ? 4 : 3) ? (
+            <div>
+              <div className="mb-5">
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-[0.06em]">
+                  Data
+                </label>
+                <input
+                  type="date"
+                  value={date}
+                  min={today()}
+                  onChange={e => { setDate(e.target.value); setStartTime(null) }}
+                  className="h-10 px-3 text-sm border-[1.5px] border-gray-200 rounded-lg outline-none bg-white text-gray-900 cursor-pointer focus:border-indigo-500 transition-[border-color]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-2.5 uppercase tracking-[0.06em]">
+                  Horários disponíveis
+                </label>
+                {loadingSlots ? (
+                  <p className="text-[13px] text-gray-400">Carregando horários...</p>
+                ) : slots.length === 0 ? (
+                  <p className="text-[13px] text-gray-400">Nenhum horário disponível para esta data.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {slots.map((slot: string) => (
+                      <button
+                        key={slot}
+                        onClick={() => setStartTime(slot)}
+                        className={cn(
+                          'px-3.5 py-2 border-[1.5px] rounded-lg cursor-pointer text-[13px] font-semibold transition-[border-color,background,color] hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700',
+                          startTime === slot
+                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                            : 'border-gray-200 bg-white text-gray-700',
+                        )}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : step > (isAdminOrProfessional ? 4 : 3) ? (
+            <SelectionSummary
+              label={`${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às ${startTime}`}
+              onClear={() => setStartTime(null)}
+            />
+          ) : null}
+        </Section>
+
+        {/* ── Step 5 (admin) / 4 (client): Confirmar ── */}
+        <Section step={confirmStep} current={step} title="Confirmar agendamento">
+          {step === confirmStep && (
+            <div>
+              <div className="bg-gray-50 rounded-lg px-4 py-3.5 mb-5 flex flex-col gap-2">
+                {[
+                  ...(isAdminOrProfessional ? [{ label: 'Cliente', value: clientName }] : []),
+                  { label: 'Serviço',      value: `${selectedService?.name} · ${selectedService?.durationMinutes} min` },
+                  { label: 'Profissional', value: selectedProf?.name },
+                  { label: 'Data',         value: new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) },
+                  { label: 'Horário',      value: startTime },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex justify-between text-[13.5px]">
+                    <span className="text-gray-500">{label}</span>
+                    <span className="font-semibold text-gray-900">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {create.isError && (
+                <p className="text-[13px] text-red-600 mb-3.5">
+                  Horário indisponível. Escolha outro horário.
+                </p>
+              )}
+
+              <button
+                onClick={handleSubmit}
+                disabled={create.isPending}
+                className="w-full h-11 bg-indigo-500 text-white border-0 rounded-lg text-sm font-semibold cursor-pointer flex items-center justify-center gap-2 transition-[background,transform] hover:enabled:bg-indigo-600 hover:enabled:-translate-y-px active:enabled:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {create.isPending ? (
+                  <>
+                    <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    </svg>
+                    Confirmando...
+                  </>
+                ) : 'Confirmar agendamento'}
+              </button>
+            </div>
+          )}
+        </Section>
+
       </div>
-    </>
+    </div>
   )
 }
