@@ -1,6 +1,7 @@
 'use client'
 
 import { BackButton } from './BackButton'
+import { cn } from '@/lib/utils'
 
 type Props = {
   back?: { href: string; label: string }
@@ -18,11 +19,12 @@ export function PageHeader({ back, action }: Props) {
       {action && (
         <button
           onClick={action.onClick}
-          className={
+          className={cn(
+            'px-4 py-2 text-[13px] font-semibold rounded-lg cursor-pointer transition-colors',
             action.variant === 'destructive'
-              ? 'px-4 py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 transition-colors'
-              : 'px-4 py-2 bg-white text-gray-700 text-[13px] font-semibold rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors'
-          }
+              ? 'bg-red-600 text-white border-0 hover:bg-red-700'
+              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+          )}
         >
           {action.label}
         </button>
