@@ -62,10 +62,9 @@ function Section({ step, current, title, children }: {
         locked ? 'rounded-xl' : 'rounded-t-xl',
       )}>
         <div className={cn(
-          'w-6.5 h-6.5 rounded-full shrink-0 flex items-center justify-center text-xs font-bold',
+          'w-[26px] h-[26px] rounded-full shrink-0 flex items-center justify-center text-xs font-bold',
           done || active ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-400',
         )}
-          style={{ width: 26, height: 26 }}
         >
           {done
             ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
