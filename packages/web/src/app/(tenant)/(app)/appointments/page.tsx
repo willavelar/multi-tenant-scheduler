@@ -8,6 +8,7 @@ import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
 import { StatusBadge } from '@/components/ui/StatusBadge'
+import { EmptyState } from '@/components/ui/EmptyState'
 import type { Appointment } from '@/types'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
@@ -17,11 +18,11 @@ const STATUS_LABELS: Record<Appointment['status'], string> = {
   completed: 'Pago',
 }
 
-const STATUS_COLORS: Record<Appointment['status'], { bg: string; text: string; dot: string }> = {
-  pending:   { bg: '#fef9c3', text: '#854d0e', dot: '#ca8a04' },
-  confirmed: { bg: '#dcfce7', text: '#166534', dot: '#16a34a' },
-  cancelled: { bg: '#fee2e2', text: '#991b1b', dot: '#dc2626' },
-  completed: { bg: '#ede9fe', text: '#5b21b6', dot: '#7c3aed' },
+const STATUS_VARIANTS: Record<Appointment['status'], import('@/components/ui/StatusBadge').StatusVariant> = {
+  pending:   'warning',
+  confirmed: 'success',
+  cancelled: 'error',
+  completed: 'purple',
 }
 
 // Mask dd/mm/yyyy as the user types
@@ -118,79 +119,14 @@ export default function AppointmentsPage() {
 
   return (
     <>
-      <style>{`
-        .appt-row:hover { background: #f9fafb; }
-        .cancel-btn {
-          padding: 5px 12px;
-          border: 1px solid #fecaca;
-          background: #fff;
-          color: #dc2626;
-          border-radius: 6px;
-          font-size: 12px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.12s;
-          font-family: var(--font-inter, Inter, sans-serif);
-        }
-        .cancel-btn:hover { background: #fef2f2; }
-        .cancel-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .new-appt-btn {
-          display: flex; align-items: center; gap: 6px;
-          padding: 8px 16px;
-          background: #6366f1;
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          font-size: 13.5px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s, transform 0.1s;
-          font-family: var(--font-inter, Inter, sans-serif);
-        }
-        .new-appt-btn:hover { background: #4f46e5; transform: translateY(-1px); }
-        .page-btn {
-          display: inline-flex; align-items: center; justify-content: center;
-          padding: 6px 12px;
-          border: 1px solid #e5e7eb;
-          background: #fff;
-          color: #374151;
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: background 0.12s, border-color 0.12s;
-          font-family: var(--font-inter, Inter, sans-serif);
-          gap: 4px;
-        }
-        .page-btn:hover:not(:disabled) { background: #f9fafb; border-color: #d1d5db; }
-        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .filter-input {
-          height: 36px;
-          padding: 0 10px;
-          border: 1px solid #e5e7eb;
-          border-radius: 8px;
-          font-size: 13px;
-          color: #111827;
-          background: #fff;
-          outline: none;
-          font-family: var(--font-inter, Inter, sans-serif);
-          transition: border-color 0.15s, box-shadow 0.15s;
-          width: 100%;
-          box-sizing: border-box;
-        }
-        .filter-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
-        .filter-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }
-        .clear-btn { height: 36px; padding: 0 14px; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.12s, color 0.12s; font-family: var(--font-inter, Inter, sans-serif); white-space: nowrap; }
-        .clear-btn:hover { background: #f3f4f6; color: #374151; }
-        .client-result { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; transition: background 0.1s; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-inter, Inter, sans-serif); }
-        .client-result:hover { background: #f9fafb; }
-      `}</style>
-
       <div>
 
         {/* Page header */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-          <button className="new-appt-btn" onClick={() => router.push('/appointments/create')}>
+        <div className="flex justify-end mb-4">
+          <button
+            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
+            onClick={() => router.push('/appointments/create')}
+          >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
@@ -199,22 +135,15 @@ export default function AppointmentsPage() {
         </div>
 
         {/* Filters */}
-        <div style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 12,
-          padding: '16px 20px',
-          marginBottom: 16,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+        <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-4 shadow-sm">
+          <div className="flex flex-wrap gap-3 items-end">
 
             {/* Date From */}
-            <div style={{ minWidth: 140, flex: '1 1 140px' }}>
-              <label className="filter-label">De</label>
+            <div className="min-w-[140px] flex-[1_1_140px]">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">De</label>
               <input
                 type="text"
-                className="filter-input"
+                className="h-9 w-full px-3 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
                 placeholder="dd/mm/aaaa"
                 value={dateFromMask}
                 onChange={e => {
@@ -227,11 +156,11 @@ export default function AppointmentsPage() {
             </div>
 
             {/* Date To */}
-            <div style={{ minWidth: 140, flex: '1 1 140px' }}>
-              <label className="filter-label">Até</label>
+            <div className="min-w-[140px] flex-[1_1_140px]">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Até</label>
               <input
                 type="text"
-                className="filter-input"
+                className="h-9 w-full px-3 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
                 placeholder="dd/mm/aaaa"
                 value={dateToMask}
                 onChange={e => {
@@ -244,61 +173,64 @@ export default function AppointmentsPage() {
             </div>
 
             {/* Service */}
-            <div style={{ minWidth: 160, flex: '1 1 160px' }}>
-              <label className="filter-label">Serviço</label>
-              <select
-                className="filter-input"
-                value={serviceId}
-                onChange={e => setServiceId(e.target.value)}
-                style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', paddingRight: 30 }}
-              >
-                <option value="">Todos</option>
-                {servicesList.map(s => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </select>
+            <div className="min-w-[160px] flex-[1_1_160px]">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Serviço</label>
+              <div className="relative">
+                <select
+                  className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+                  value={serviceId}
+                  onChange={e => setServiceId(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {servicesList.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
             </div>
 
             {/* Status */}
-            <div style={{ minWidth: 140, flex: '1 1 140px' }}>
-              <label className="filter-label">Status</label>
-              <select
-                className="filter-input"
-                value={status}
-                onChange={e => setStatus(e.target.value)}
-                style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', paddingRight: 30 }}
-              >
-                <option value="">Todos</option>
-                <option value="pending">Agendado</option>
-                <option value="confirmed">Confirmado</option>
-                <option value="cancelled">Cancelado</option>
-                <option value="completed">Pago</option>
-              </select>
+            <div className="min-w-[140px] flex-[1_1_140px]">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Status</label>
+              <div className="relative">
+                <select
+                  className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+                  value={status}
+                  onChange={e => setStatus(e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  <option value="pending">Agendado</option>
+                  <option value="confirmed">Confirmado</option>
+                  <option value="cancelled">Cancelado</option>
+                  <option value="completed">Pago</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
             </div>
 
             {/* Client search */}
-            <div style={{ minWidth: 200, flex: '2 1 200px', position: 'relative' }} ref={clientRef}>
-              <label className="filter-label">Cliente</label>
-              <div style={{ position: 'relative' }}>
+            <div className="min-w-[200px] flex-[2_1_200px] relative" ref={clientRef}>
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Cliente</label>
+              <div className="relative">
                 <svg
                   width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"
-                  style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
                 >
                   <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input
                   type="text"
-                  className="filter-input"
+                  className="h-9 w-full pl-[30px] pr-[30px] text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
                   placeholder="Buscar por nome ou e-mail…"
                   value={clientDisplayValue}
                   onChange={e => handleClientInput(e.target.value)}
                   onFocus={() => { if (clientQuery.length >= 3) setClientDropOpen(true) }}
-                  style={{ paddingLeft: 30, paddingRight: clientId ? 30 : 10 }}
                 />
                 {clientId && (
                   <button
                     onClick={() => { setClientId(''); setClientDisplayValue(''); setClientQuery('') }}
-                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex', padding: 2 }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-gray-400 flex p-0.5"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -309,25 +241,17 @@ export default function AppointmentsPage() {
 
               {/* Dropdown */}
               {clientDropOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 4px)',
-                  left: 0, right: 0,
-                  background: '#fff',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: 8,
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
-                  zIndex: 40,
-                  overflow: 'hidden',
-                  maxHeight: 240,
-                  overflowY: 'auto',
-                }}>
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1.5 duration-150">
                   {searchingClients ? (
-                    <p style={{ padding: '10px 12px', fontSize: 13, color: '#9ca3af', margin: 0 }}>Buscando...</p>
+                    <p className="px-3 py-2.5 text-[13px] text-gray-400 m-0">Buscando...</p>
                   ) : clientResults.length === 0 ? (
-                    <p style={{ padding: '10px 12px', fontSize: 13, color: '#9ca3af', margin: 0 }}>Nenhum cliente encontrado</p>
+                    <p className="px-3 py-2.5 text-[13px] text-gray-400 m-0">Nenhum cliente encontrado</p>
                   ) : clientResults.map(c => (
-                    <button key={c.id} className="client-result" onClick={() => selectClient(c.id, c.name)}>
+                    <button
+                      key={c.id}
+                      className="flex items-center gap-2 px-3 py-2 cursor-pointer border-0 bg-transparent w-full text-left hover:bg-gray-50 transition-colors"
+                      onClick={() => selectClient(c.id, c.name)}
+                    >
                       <AvatarName name={c.name} subtitle={c.email} size={28} />
                     </button>
                   ))}
@@ -337,123 +261,88 @@ export default function AppointmentsPage() {
 
             {/* Clear */}
             {hasFilters && (
-              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-                <button className="clear-btn" onClick={clearFilters}>Limpar filtros</button>
+              <div className="flex items-end">
+                <button
+                  className="h-9 px-3.5 border border-gray-200 bg-white text-gray-500 rounded-lg text-[13px] font-medium cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors whitespace-nowrap"
+                  onClick={clearFilters}
+                >
+                  Limpar filtros
+                </button>
               </div>
             )}
           </div>
         </div>
 
         {/* Table card */}
-        <div style={{
-          background: '#fff',
-          border: '1px solid #e5e7eb',
-          borderRadius: 12,
-          overflow: 'hidden',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-        }}>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
           {isLoading ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>
-              Carregando...
-            </div>
+            <div className="p-12 text-center text-gray-400 text-sm">Carregando...</div>
           ) : !appointments.length ? (
-            <div style={{ padding: '64px 32px', textAlign: 'center' }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: '50%',
-                background: '#f3f4f6',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 16px',
-              }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round">
-                  <rect x="3" y="4" width="18" height="18" rx="2"/>
-                  <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-                  <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-              </div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#374151', margin: '0 0 4px' }}>Nenhum agendamento</p>
-              <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>Clique em &quot;Novo agendamento&quot; para começar.</p>
-            </div>
+            <EmptyState
+              title="Nenhum agendamento"
+              description={hasFilters ? 'Nenhum agendamento encontrado para os filtros aplicados.' : 'Nenhum agendamento cadastrado.'}
+            />
           ) : (
             <>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-[13px]">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <tr className="border-b border-gray-100">
                       {['Agendado em', 'Cliente', 'Profissional', 'Serviço', 'Status', 'Cadastrado em', 'Ação'].map(col => (
-                        <th key={col} style={{
-                          padding: '12px 16px',
-                          textAlign: 'left',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          color: '#6b7280',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.06em',
-                          whiteSpace: 'nowrap',
-                        }}>
+                        <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.06em] whitespace-nowrap">
                           {col}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {appointments.map((appt: Appointment) => {
-                      const colors = STATUS_COLORS[appt.status]
-                      return (
-                        <tr key={appt.id} className="appt-row" style={{ borderBottom: '1px solid #f9fafb', transition: 'background 0.1s' }}>
-                          <td style={{ padding: '14px 16px' }}>
-                            <DateTimeCell iso={appt.startsAt} />
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <AvatarName name={appt.clientName} />
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <AvatarName name={appt.professionalName} />
-                          </td>
-                          <td style={{ padding: '14px 16px', whiteSpace: 'nowrap', color: '#6b7280' }}>
-                            {appt.serviceName}
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <StatusBadge
-                              label={STATUS_LABELS[appt.status]}
-                              bg={colors.bg}
-                              color={colors.text}
-                              dot={colors.dot}
-                            />
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            <DateTimeCell iso={appt.createdAt} />
-                          </td>
-                          <td style={{ padding: '14px 16px' }}>
-                            {(appt.status === 'pending' || appt.status === 'confirmed') && (
-                              <button
-                                className="cancel-btn"
-                                onClick={() => setCancelId(appt.id)}
-                              >
-                                Cancelar
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
+                    {appointments.map((appt: Appointment) => (
+                      <tr key={appt.id} className="border-b border-gray-50 transition-colors hover:bg-gray-50">
+                        <td className="px-4 py-3.5">
+                          <DateTimeCell iso={appt.startsAt} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <AvatarName name={appt.clientName} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <AvatarName name={appt.professionalName} />
+                        </td>
+                        <td className="px-4 py-3.5 whitespace-nowrap text-gray-500">
+                          {appt.serviceName}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <StatusBadge
+                            label={STATUS_LABELS[appt.status]}
+                            variant={STATUS_VARIANTS[appt.status]}
+                          />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <DateTimeCell iso={appt.createdAt} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          {(appt.status === 'pending' || appt.status === 'confirmed') && (
+                            <button
+                              className="px-3 py-[5px] border border-red-200 bg-white text-red-600 rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              onClick={() => setCancelId(appt.id)}
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
 
               {/* Pagination */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '12px 16px',
-                borderTop: '1px solid #f3f4f6',
-              }}>
-                <p style={{ fontSize: 13, color: '#6b7280', margin: 0 }}>
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                <p className="text-[13px] text-gray-500 m-0">
                   Página {page} de {totalPages}
                 </p>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   <button
-                    className="page-btn"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     onClick={() => setPage(p => p - 1)}
                     disabled={page <= 1}
                   >
@@ -463,7 +352,7 @@ export default function AppointmentsPage() {
                     Anterior
                   </button>
                   <button
-                    className="page-btn"
+                    className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     onClick={() => setPage(p => p + 1)}
                     disabled={page >= totalPages}
                   >
@@ -478,41 +367,19 @@ export default function AppointmentsPage() {
           )}
         </div>
       </div>
+
       {/* Cancel confirmation modal */}
       {cancelId && (
         <div
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 50,
-            animation: 'modal-fade 0.15s ease both',
-          }}
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
           onClick={() => !cancel.isPending && setCancelId(null)}
         >
-          <style>{`
-            @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
-            @keyframes modal-slide { from { opacity: 0; transform: translateY(-8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-          `}</style>
           <div
-            style={{
-              background: '#fff',
-              borderRadius: 12,
-              padding: '28px 28px 24px',
-              width: '100%',
-              maxWidth: 400,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
-              animation: 'modal-slide 0.18s cubic-bezier(0.22,1,0.36,1) both',
-            }}
+            className="bg-white rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
             {/* Icon */}
-            <div style={{
-              width: 44, height: 44, borderRadius: '50%',
-              background: '#fef2f2',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              marginBottom: 16,
-            }}>
+            <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mb-4">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="12" y1="8" x2="12" y2="12"/>
@@ -520,53 +387,25 @@ export default function AppointmentsPage() {
               </svg>
             </div>
 
-            <h2 style={{ fontSize: 16, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>
+            <h2 className="text-base font-bold text-gray-900 m-0 mb-2">
               Cancelar agendamento
             </h2>
-            <p style={{ fontSize: 13.5, color: '#6b7280', margin: '0 0 24px', lineHeight: 1.5 }}>
+            <p className="text-[13.5px] text-gray-500 m-0 mb-6 leading-relaxed">
               Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
             </p>
 
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+            <div className="flex gap-2.5 justify-end">
               <button
                 onClick={() => setCancelId(null)}
                 disabled={cancel.isPending}
-                style={{
-                  padding: '8px 16px',
-                  border: '1px solid #e5e7eb',
-                  background: '#fff',
-                  color: '#374151',
-                  borderRadius: 8,
-                  fontSize: 13.5,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)',
-                  transition: 'background 0.12s',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+                className="px-4 py-[9px] border border-gray-200 bg-white text-gray-700 text-[13.5px] font-semibold rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 Voltar
               </button>
               <button
                 onClick={confirmCancel}
                 disabled={cancel.isPending}
-                style={{
-                  padding: '8px 16px',
-                  border: 'none',
-                  background: '#dc2626',
-                  color: '#fff',
-                  borderRadius: 8,
-                  fontSize: 13.5,
-                  fontWeight: 600,
-                  cursor: cancel.isPending ? 'not-allowed' : 'pointer',
-                  opacity: cancel.isPending ? 0.7 : 1,
-                  fontFamily: 'var(--font-inter, Inter, sans-serif)',
-                  transition: 'background 0.12s',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
-                onMouseEnter={e => { if (!cancel.isPending) e.currentTarget.style.background = '#b91c1c' }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#dc2626' }}
+                className="px-5 py-[9px] bg-red-600 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 disabled:opacity-65 transition-colors"
               >
                 {cancel.isPending ? 'Cancelando...' : 'Sim, cancelar'}
               </button>
