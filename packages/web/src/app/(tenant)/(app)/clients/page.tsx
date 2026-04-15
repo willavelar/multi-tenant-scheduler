@@ -64,7 +64,7 @@ export default function ClientsPage() {
         <div className="flex flex-wrap gap-3 items-end">
 
           {/* Search */}
-          <div className="relative" style={{ minWidth: 240, flex: '2 1 240px' }}>
+          <div className="relative min-w-[240px] [flex:2_1_240px]">
             <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Busca</label>
             <div className="relative">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"
@@ -82,7 +82,7 @@ export default function ClientsPage() {
           </div>
 
           {/* Status */}
-          <div style={{ minWidth: 160, flex: '1 1 160px' }}>
+          <div className="min-w-[160px] [flex:1_1_160px]">
             <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Status</label>
             <div className="relative">
               <select

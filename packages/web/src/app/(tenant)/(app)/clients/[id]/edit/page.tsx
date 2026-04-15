@@ -173,7 +173,7 @@ export default function EditClientPage() {
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div className="grid grid-cols-2 gap-4">
             {([
               { key: 'name',  label: 'Nome completo', type: 'text',  required: true },
               { key: 'email', label: 'E-mail',         type: 'email', required: true },
@@ -203,8 +203,7 @@ export default function EditClientPage() {
               type="date"
               value={form.birthDate}
               onChange={e => set('birthDate', e.target.value)}
-              className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-              style={{ maxWidth: 220 }}
+              className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 max-w-[220px]"
             />
           </div>
         </div>
@@ -225,7 +224,7 @@ export default function EditClientPage() {
 
           <div>
             <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
-            <div className="relative" style={{ maxWidth: 180 }}>
+            <div className="relative max-w-[180px]">
               <select
                 value={form.active ? 'true' : 'false'}
                 onChange={e => set('active', e.target.value === 'true')}
@@ -247,7 +246,7 @@ export default function EditClientPage() {
           </p>
 
           <div className="flex gap-3 items-end">
-            <div style={{ flex: '0 0 140px' }}>
+            <div className="[flex:0_0_140px]">
               <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
               <input
                 type="number"
@@ -262,7 +261,7 @@ export default function EditClientPage() {
               />
               {errors.serviceLimitCount && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitCount}</p>}
             </div>
-            <div style={{ flex: '0 0 180px' }}>
+            <div className="[flex:0_0_180px]">
               <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Por período</label>
               <div className="relative">
                 <select
