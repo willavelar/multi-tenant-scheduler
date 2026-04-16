@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useProfessionalsPage, useDeleteProfessional } from '@/hooks/useProfessionals'
+import { useProfessionalsPage } from '@/hooks/useProfessionals'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -13,8 +13,6 @@ const COLS = ['Profissional', 'Cargo', 'Função', 'Último login', 'Cadastrado 
 
 export default function ProfessionalsPage() {
   const router = useRouter()
-  const del = useDeleteProfessional()
-
   const [page, setPage]     = useState(1)
   const [q, setQ]           = useState('')
   const [active, setActive] = useState('')
@@ -28,11 +26,6 @@ export default function ProfessionalsPage() {
   const hasFilters    = !!(q || active)
 
   useEffect(() => { setPage(1) }, [q, active])
-
-  function handleDelete(prof: Professional) {
-    if (!confirm(`Excluir ${prof.name}? Esta ação não pode ser desfeita.`)) return
-    del.mutate(prof.id)
-  }
 
   return (
     <div className="w-full">
@@ -150,11 +143,10 @@ export default function ProfessionalsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <button
-                          className="px-3 py-[5px] border border-red-200 bg-white text-red-600 rounded-md text-xs font-medium cursor-pointer hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          onClick={() => handleDelete(prof)}
-                          disabled={del.isPending && del.variables === prof.id}
+                          className="px-3 py-[5px] border border-indigo-100 bg-white text-indigo-500 rounded-md text-xs font-medium cursor-pointer hover:bg-indigo-50 transition-colors"
+                          onClick={() => router.push(`/professionals/${prof.id}`)}
                         >
-                          Excluir
+                          Visualizar
                         </button>
                       </td>
                     </tr>
