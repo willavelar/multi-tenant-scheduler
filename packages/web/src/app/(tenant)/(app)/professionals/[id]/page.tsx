@@ -19,10 +19,6 @@ function initials(name: string) {
   return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  tenant_admin: 'Administrador',
-  professional: 'Profissional',
-}
 
 export default function ProfessionalDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -84,12 +80,9 @@ export default function ProfessionalDetailPage() {
         <FieldRow label="Cargo" value={prof.position ?? '—'} />
         <FieldRow label="Observações" value={<span className="whitespace-pre-wrap">{prof.bio || '—'}</span>} />
         {isAdmin && (
-          <>
-            <FieldRow label="Função" value={ROLE_LABELS[prof.role] ?? prof.role} />
-            <FieldRow label="Status" value={
-              <StatusBadge label={prof.active ? 'Ativo' : 'Inativo'} variant={prof.active ? 'success' : 'neutral'} />
-            } />
-          </>
+          <FieldRow label="Status" value={
+            <StatusBadge label={prof.active ? 'Ativo' : 'Inativo'} variant={prof.active ? 'success' : 'neutral'} />
+          } />
         )}
         <FieldRow label="Último login" value={<DateTimeCell iso={prof.lastLoginAt} />} />
         <FieldRow label="Cadastrado em" value={<DateTimeCell iso={prof.createdAt} />} />

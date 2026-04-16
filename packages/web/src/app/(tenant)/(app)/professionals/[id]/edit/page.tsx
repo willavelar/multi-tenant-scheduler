@@ -21,7 +21,6 @@ export default function EditProfessionalPage() {
   const [position, setPosition] = useState('')
   const [bio, setBio]           = useState('')
   const [active, setActive]     = useState(true)
-  const [role, setRole]         = useState('professional')
   const [error, setError]       = useState('')
 
   useEffect(() => {
@@ -30,7 +29,6 @@ export default function EditProfessionalPage() {
     setPosition(prof.position ?? '')
     setBio(prof.bio ?? '')
     setActive(prof.active)
-    setRole(prof.role)
     setReady(true)
   }, [prof, ready])
 
@@ -42,10 +40,10 @@ export default function EditProfessionalPage() {
         name: name.trim(),
         position: position.trim() || undefined,
         bio: bio.trim() || undefined,
+        role: 'professional',
       }
       if (isAdmin) {
         patch.active = active
-        patch.role   = role
       }
       await update.mutateAsync(patch)
       router.push(`/professionals/${id}`)
@@ -111,21 +109,7 @@ export default function EditProfessionalPage() {
           </div>
 
           {isAdmin && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Função</label>
-                <div className="relative">
-                  <select
-                    value={role}
-                    onChange={e => setRole(e.target.value)}
-                    className={selectCls}
-                  >
-                    <option value="professional">Profissional</option>
-                    <option value="tenant_admin">Administrador</option>
-                  </select>
-                  <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
-              </div>
+            <div className="max-w-[220px]">
               <div>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
                 <div className="relative">
