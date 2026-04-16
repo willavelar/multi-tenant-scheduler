@@ -65,6 +65,8 @@ export class AuthService {
           .from(clientProfiles)
           .where(eq(clientProfiles.userId, user.id));
 
+        // Perfil ausente é tratado como ativo (ex.: contas legadas sem perfil criado).
+        // Se o perfil existir e active === false, bloqueia o login.
         if (profile && !profile.active) throw new UnauthorizedException();
       }
 

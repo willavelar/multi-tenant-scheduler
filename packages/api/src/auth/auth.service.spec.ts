@@ -73,6 +73,22 @@ describe('AuthService.validateUser', () => {
       .rejects.toThrow(UnauthorizedException);
   });
 
+  it('permite login de cliente ativo', async () => {
+    const passwordHash = await bcrypt.hash('senha123', 1);
+
+    let callCount = 0;
+    const user = { id: 'user-1', email: 'a@b.com', passwordHash, role: 'client', tenantId: 'tenant-1', name: 'A', phone: null, lastLoginAt: null, createdAt: new Date() };
+    const chain = makeChain((resolve) => {
+      callCount++;
+      if (callCount === 1) return resolve([user]);
+      return resolve([{ active: true }]);
+    });
+    const service = await buildService(makeMockDb(chain));
+
+    const result = await service.validateUser('a@b.com', 'senha123', 'tenant-1');
+    expect(result).toMatchObject({ id: 'user-1', role: 'client' });
+  });
+
   it('lança UnauthorizedException quando usuário não existe', async () => {
     const service = await buildService(makeSimpleDb([]));
 
