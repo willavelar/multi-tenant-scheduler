@@ -50,14 +50,26 @@ export class AuthService {
   }
 
   async validateUser(email: string, password: string, tenantId: string) {
-    const [user] = await withTenant(this.db, tenantId, (tx) =>
-      tx.select().from(users).where(and(eq(users.email, email), eq(users.tenantId, tenantId))),
-    );
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(and(eq(users.email, email), eq(users.tenantId, tenantId)));
 
-    if (!user) throw new UnauthorizedException();
-    const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) throw new UnauthorizedException();
-    return user;
+      if (!user) throw new UnauthorizedException();
+      if (!await bcrypt.compare(password, user.passwordHash)) throw new UnauthorizedException();
+
+      if (user.role === 'client') {
+        const [profile] = await tx
+          .select({ active: clientProfiles.active })
+          .from(clientProfiles)
+          .where(eq(clientProfiles.userId, user.id));
+
+        if (profile && !profile.active) throw new UnauthorizedException();
+      }
+
+      return user;
+    });
   }
 
   async listClients(tenantId: string, q?: string) {
