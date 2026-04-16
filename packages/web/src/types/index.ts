@@ -18,6 +18,15 @@ export type Professional = {
   email: string
   phone: string | null
   role: 'tenant_admin' | 'professional' | 'client'
+  lastLoginAt: string | null
+  createdAt: string
+}
+
+export type ProfessionalPage = {
+  data: Professional[]
+  total: number
+  page: number
+  limit: number
 }
 
 export type Client = {
