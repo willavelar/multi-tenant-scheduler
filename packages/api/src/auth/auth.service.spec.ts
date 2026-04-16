@@ -59,11 +59,8 @@ describe('AuthService.validateUser', () => {
     chain['then'] = jest.fn().mockImplementation((resolve: (v: unknown) => void) => {
       callCount++;
       if (callCount === 1) {
-        // set_config (withTenant internals) — resolve com undefined
-        return resolve(undefined);
-      }
-      if (callCount === 2) {
         // SELECT users — retorna o usuário com role client
+        // (set_config usa tx.execute(), não .then, portanto não incrementa callCount)
         return resolve([{ id: 'user-1', email: 'a@b.com', passwordHash, role: 'client', tenantId: 'tenant-1', name: 'A', phone: null, lastLoginAt: null, createdAt: new Date() }]);
       }
       // SELECT client_profiles — retorna perfil inativo
