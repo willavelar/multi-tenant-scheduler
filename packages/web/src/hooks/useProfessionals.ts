@@ -1,14 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useApi } from './useApi'
 import { useTenant } from '@/providers/TenantProvider'
-import type { Professional } from '@/types'
+import type { Professional, ProfessionalPage } from '@/types'
 
 export function useProfessionals() {
   const api = useApi()
   const { slug } = useTenant()
   return useQuery<Professional[]>({
     queryKey: ['professionals', slug],
-    queryFn: async () => (await api('/professionals')).json(),
+    queryFn: async () => {
+      const r: ProfessionalPage = await (await api('/professionals?limit=100')).json()
+      return r.data
+    },
+  })
+}
+
+type ProfessionalFilters = { q?: string; active?: string }
+
+export function useProfessionalsPage(page = 1, filters: ProfessionalFilters = {}) {
+  const api = useApi()
+  const { slug } = useTenant()
+  const params = new URLSearchParams({ page: String(page), limit: '10' })
+  if (filters.q)      params.set('q', filters.q)
+  if (filters.active) params.set('active', filters.active)
+  return useQuery<ProfessionalPage>({
+    queryKey: ['professionals-page', slug, page, filters],
+    queryFn: async () => (await api(`/professionals?${params}`)).json(),
   })
 }
 

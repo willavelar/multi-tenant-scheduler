@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ProfessionalsService } from './professionals.service';
 import { CreateProfessionalDto } from './dto/create-professional.dto';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
@@ -16,8 +16,19 @@ export class ProfessionalsController {
   /** Admin sees the full list. Professionals access their own via /me. */
   @Get()
   @Roles('tenant_admin')
-  findAll(@TenantId() tenantId: string) {
-    return this.service.findAll(tenantId);
+  findAll(
+    @TenantId() tenantId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('q') q?: string,
+    @Query('active') active?: string,
+  ) {
+    return this.service.findAll(
+      tenantId,
+      Math.max(1, parseInt(page ?? '1', 10) || 1),
+      Math.min(100, parseInt(limit ?? '10', 10) || 10),
+      { q, active },
+    );
   }
 
   /** Professional (or admin) gets their own profile. */

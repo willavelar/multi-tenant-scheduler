@@ -1,5 +1,5 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, ilike, or } from 'drizzle-orm';
 import { professionals, users } from '@scheduler/shared';
 import * as bcrypt from 'bcryptjs';
 import { DB, DrizzleDB } from '../database/database.module';
@@ -8,30 +8,57 @@ import { CreateProfessionalDto } from './dto/create-professional.dto';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
 
 const PROF_FIELDS = {
-  id:        professionals.id,
-  tenantId:  professionals.tenantId,
-  userId:    professionals.userId,
-  bio:       professionals.bio,
-  avatarUrl: professionals.avatarUrl,
-  position:  professionals.position,
-  active:    professionals.active,
-  name:      users.name,
-  email:     users.email,
-  phone:     users.phone,
-  role:      users.role,
+  id:          professionals.id,
+  tenantId:    professionals.tenantId,
+  userId:      professionals.userId,
+  bio:         professionals.bio,
+  avatarUrl:   professionals.avatarUrl,
+  position:    professionals.position,
+  active:      professionals.active,
+  name:        users.name,
+  email:       users.email,
+  phone:       users.phone,
+  role:        users.role,
+  lastLoginAt: users.lastLoginAt,
+  createdAt:   users.createdAt,
 };
 
 @Injectable()
 export class ProfessionalsService {
   constructor(@Inject(DB) private readonly db: DrizzleDB) {}
 
-  findAll(tenantId: string) {
-    return withTenant(this.db, tenantId, (tx) =>
-      tx.select(PROF_FIELDS)
+  async findAll(
+    tenantId: string,
+    page = 1,
+    limit = 10,
+    filters: { q?: string; active?: string } = {},
+  ) {
+    const offset = (page - 1) * limit;
+    return withTenant(this.db, tenantId, async (tx) => {
+      const where = and(
+        eq(professionals.tenantId, tenantId),
+        filters.q ? or(ilike(users.name, `%${filters.q}%`), ilike(users.email, `%${filters.q}%`)) : undefined,
+        filters.active === 'true'  ? eq(professionals.active, true)  : undefined,
+        filters.active === 'false' ? eq(professionals.active, false) : undefined,
+      );
+
+      const [{ total }] = await tx
+        .select({ total: count() })
         .from(professionals)
         .innerJoin(users, eq(professionals.userId, users.id))
-        .where(eq(professionals.tenantId, tenantId)),
-    );
+        .where(where);
+
+      const data = await tx
+        .select(PROF_FIELDS)
+        .from(professionals)
+        .innerJoin(users, eq(professionals.userId, users.id))
+        .where(where)
+        .orderBy(users.name)
+        .limit(limit)
+        .offset(offset);
+
+      return { data, total, page, limit };
+    });
   }
 
   async findOne(id: string, tenantId: string) {

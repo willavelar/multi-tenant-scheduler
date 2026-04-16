@@ -135,7 +135,7 @@ export default function NewClientPage() {
   }
 
   return (
-    <div className="max-w-[680px]">
+    <div>
       <BackButton href="/clients" variant="ghost">Voltar para clientes</BackButton>
 
       <form onSubmit={handleSubmit} noValidate>
