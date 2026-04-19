@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { useRouter } from 'next/navigation'
 import { useCreateProfessional } from '@/hooks/useProfessionals'
+import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { BackButton } from '@/components/ui/BackButton'
 import { cn } from '@/lib/utils'
 
@@ -26,12 +28,14 @@ const inputCls = (hasError: boolean) => cn(
 export default function NewProfessionalPage() {
   const router = useRouter()
   const create = useCreateProfessional()
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setError, watch } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const nameValue = watch('name') ?? ''
 
   async function onSubmit(data: FormData) {
     try {
-      await create.mutateAsync(data)
+      await create.mutateAsync({ ...data, avatarUrl: avatarUrl ?? undefined })
       router.push('/professionals')
     } catch {
       setError('root', { message: 'Não foi possível cadastrar. Verifique os dados e tente novamente.' })
@@ -44,6 +48,10 @@ export default function NewProfessionalPage() {
 
       <div className="bg-white border border-gray-200 rounded-xl p-7 shadow-sm">
         <h2 className="text-base font-bold text-gray-900 m-0 mb-6">Dados do profissional</h2>
+
+        <div className="mb-6">
+          <AvatarCropField value={avatarUrl} onChange={setAvatarUrl} name={nameValue} />
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           {[

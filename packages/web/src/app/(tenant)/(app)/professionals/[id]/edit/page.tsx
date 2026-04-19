@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useProfessional, useUpdateProfessional } from '@/hooks/useProfessionals'
+import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { BackButton } from '@/components/ui/BackButton'
 import { cn } from '@/lib/utils'
 
@@ -21,6 +22,7 @@ export default function EditProfessionalPage() {
   const [position, setPosition] = useState('')
   const [bio, setBio]           = useState('')
   const [active, setActive]     = useState(true)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [error, setError]       = useState('')
 
   useEffect(() => {
@@ -29,6 +31,7 @@ export default function EditProfessionalPage() {
     setPosition(prof.position ?? '')
     setBio(prof.bio ?? '')
     setActive(prof.active)
+    setAvatarUrl(prof.avatarUrl ?? null)
     setReady(true)
   }, [prof, ready])
 
@@ -41,6 +44,7 @@ export default function EditProfessionalPage() {
         position: position.trim() || undefined,
         bio: bio.trim() || undefined,
         role: 'professional',
+        avatarUrl: avatarUrl ?? undefined,
       }
       if (isAdmin) {
         patch.active = active
@@ -68,6 +72,10 @@ export default function EditProfessionalPage() {
         {/* Personal data */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
+
+          <div className="mb-5">
+            <AvatarCropField value={avatarUrl} onChange={setAvatarUrl} name={name} />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
