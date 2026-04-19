@@ -9,6 +9,7 @@ export class CreateClientDto {
   @IsOptional() @IsString() @Matches(/^\d{4}-\d{2}-\d{2}$/) birthDate?: string;
   @IsOptional() @IsString() notes?: string;
   @IsOptional() @IsBoolean() active?: boolean;
+  @IsOptional() @IsString() avatarUrl?: string;
 
   @IsOptional() @IsInt() @Min(1) serviceLimitCount?: number;
   @IsOptional() @IsIn(['day', 'week', 'month']) serviceLimitPeriod?: 'day' | 'week' | 'month';
