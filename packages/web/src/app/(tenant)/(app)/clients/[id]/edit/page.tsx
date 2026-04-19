@@ -9,6 +9,7 @@ import { AvatarName } from '@/components/ui/AvatarName'
 import { BackButton } from '@/components/ui/BackButton'
 import { cn } from '@/lib/utils'
 import type { Professional, Service } from '@/types'
+import { AvatarCropField } from '@/components/ui/AvatarCropField'
 
 type FormState = {
   name: string
@@ -31,6 +32,7 @@ export default function EditClientPage() {
   const { data: allServices = [] } = useServices()
 
   const [ready, setReady] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>({
     name: '', email: '', phone: '', birthDate: '',
     notes: '', active: true, serviceLimitCount: '', serviceLimitPeriod: '',
@@ -69,6 +71,7 @@ export default function EditClientPage() {
         .filter(Boolean) as Professional[]
     )
     setSelectedServiceIds(client.linkedServices.map(s => s.serviceId))
+    setAvatarUrl(client.avatarUrl ?? null)
     setReady(true)
   }, [client, allProfessionals, ready])
 
@@ -128,7 +131,7 @@ export default function EditClientPage() {
     try {
       const patch: {
         name?: string; email?: string; phone?: string;
-        birthDate?: string; notes?: string; active?: boolean; allProfessionals?: boolean; allServices?: boolean;
+        birthDate?: string; notes?: string; active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
         serviceLimitCount?: number | null; serviceLimitPeriod?: string | null;
         professionalIds?: string[]; serviceIds?: string[];
       } = {
@@ -138,6 +141,7 @@ export default function EditClientPage() {
         birthDate: form.birthDate || undefined,
         notes: form.notes.trim() || undefined,
         active: form.active,
+        avatarUrl: avatarUrl ?? undefined,
         allProfessionals: allProfs,
         allServices: allSvcs,
         professionalIds: allProfs ? [] : selectedProfs.map(p => p.id),
@@ -172,6 +176,10 @@ export default function EditClientPage() {
         {/* Personal data */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
+
+          <div className="mb-5">
+            <AvatarCropField value={avatarUrl} onChange={setAvatarUrl} name={form.name} />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             {([
