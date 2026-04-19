@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateProfessionalDto {
   @IsString()
@@ -21,5 +21,6 @@ export class CreateProfessionalDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(200_000)
   avatarUrl?: string;
 }
