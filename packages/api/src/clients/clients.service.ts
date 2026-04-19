@@ -49,6 +49,7 @@ export class ClientsService {
         birthDate: clientProfiles.birthDate,
         notes: clientProfiles.notes,
         active: clientProfiles.active,
+        avatarUrl: clientProfiles.avatarUrl,
         allProfessionals: clientProfiles.allProfessionals,
         allServices: clientProfiles.allServices,
         serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -88,6 +89,7 @@ export class ClientsService {
           birthDate: clientProfiles.birthDate,
           notes: clientProfiles.notes,
           active: clientProfiles.active,
+          avatarUrl: clientProfiles.avatarUrl,
           allProfessionals: clientProfiles.allProfessionals,
           allServices: clientProfiles.allServices,
           serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -147,6 +149,7 @@ export class ClientsService {
           birthDate: dto.birthDate,
           notes: dto.notes,
           active: dto.active ?? true,
+          avatarUrl: dto.avatarUrl,
           allProfessionals: dto.allProfessionals ?? false,
           allServices: dto.allServices ?? false,
           serviceLimitCount: dto.serviceLimitCount,
@@ -192,6 +195,7 @@ export class ClientsService {
       if (dto.birthDate            !== undefined) profilePatch.birthDate            = dto.birthDate;
       if (dto.notes                !== undefined) profilePatch.notes                = dto.notes;
       if (dto.active               !== undefined) profilePatch.active               = dto.active;
+      if (dto.avatarUrl            !== undefined) profilePatch.avatarUrl            = dto.avatarUrl;
       if (dto.allProfessionals     !== undefined) profilePatch.allProfessionals     = dto.allProfessionals;
       if (dto.allServices          !== undefined) profilePatch.allServices          = dto.allServices;
       if (dto.serviceLimitCount    !== undefined) profilePatch.serviceLimitCount    = dto.serviceLimitCount;
