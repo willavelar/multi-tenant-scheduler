@@ -57,12 +57,16 @@ export default function ProfessionalDetailPage() {
 
       {/* Identity header */}
       <div className="flex items-center gap-4 mb-7">
-        <div
-          className="w-14 h-14 rounded-full text-white flex items-center justify-center text-xl font-bold shrink-0"
-          style={{ background: pickColor(prof.name) }}
-        >
-          {initials(prof.name)}
-        </div>
+        {prof.avatarUrl ? (
+          <img src={prof.avatarUrl} alt={prof.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
+        ) : (
+          <div
+            className="w-14 h-14 rounded-full text-white flex items-center justify-center text-xl font-bold shrink-0"
+            style={{ background: pickColor(prof.name) }}
+          >
+            {initials(prof.name)}
+          </div>
+        )}
         <div>
           <h2 className="m-0 mb-0.5 text-lg font-bold text-gray-900">{prof.name}</h2>
           <p className="m-0 mb-1 text-[13px] text-gray-500">{prof.email}</p>
