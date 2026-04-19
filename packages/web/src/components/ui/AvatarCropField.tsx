@@ -19,12 +19,16 @@ function initials(name: string) {
 async function getCroppedImg(imageSrc: string, pixelCrop: Area): Promise<string> {
   const image = new Image()
   image.src = imageSrc
-  await new Promise<void>((resolve) => { image.onload = () => resolve() })
+  await new Promise<void>((resolve, reject) => {
+    image.onload = () => resolve()
+    image.onerror = () => reject(new Error('Image failed to load'))
+  })
 
   const canvas = document.createElement('canvas')
   canvas.width = 256
   canvas.height = 256
-  const ctx = canvas.getContext('2d')!
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas 2D context unavailable')
 
   ctx.drawImage(
     image,
@@ -48,6 +52,7 @@ export function AvatarCropField({ value, onChange, name }: AvatarCropFieldProps)
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [cropError, setCropError] = useState(false)
 
   const onCropComplete = useCallback((_: Area, pixels: Area) => {
     setCroppedAreaPixels(pixels)
@@ -69,15 +74,21 @@ export function AvatarCropField({ value, onChange, name }: AvatarCropFieldProps)
 
   async function handleCrop() {
     if (!imageSrc || !croppedAreaPixels) return
-    const base64 = await getCroppedImg(imageSrc, croppedAreaPixels)
-    onChange(base64)
-    setModalOpen(false)
-    setImageSrc(null)
+    setCropError(false)
+    try {
+      const base64 = await getCroppedImg(imageSrc, croppedAreaPixels)
+      onChange(base64)
+      setModalOpen(false)
+      setImageSrc(null)
+    } catch {
+      setCropError(true)
+    }
   }
 
   function handleCancel() {
     setModalOpen(false)
     setImageSrc(null)
+    setCropError(false)
   }
 
   return (
@@ -141,6 +152,9 @@ export function AvatarCropField({ value, onChange, name }: AvatarCropFieldProps)
                 className="w-full"
               />
             </div>
+            {cropError && (
+              <p className="px-5 pb-2 text-xs text-red-500 m-0">Não foi possível processar a imagem. Tente outro arquivo.</p>
+            )}
             <div className="flex justify-end gap-3 px-5 pb-5">
               <button
                 type="button"

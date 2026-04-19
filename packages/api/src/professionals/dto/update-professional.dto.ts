@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateProfessionalDto {
   @IsString()
@@ -11,6 +11,7 @@ export class UpdateProfessionalDto {
 
   @IsString()
   @IsOptional()
+  @MaxLength(200_000)
   avatarUrl?: string;
 
   @IsString()
