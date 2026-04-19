@@ -9,6 +9,7 @@ import { AvatarName } from '@/components/ui/AvatarName'
 import { BackButton } from '@/components/ui/BackButton'
 import { cn } from '@/lib/utils'
 import type { Professional, Service } from '@/types'
+import { AvatarCropField } from '@/components/ui/AvatarCropField'
 
 type FormState = {
   name: string
@@ -25,6 +26,7 @@ type FormState = {
 export default function NewClientPage() {
   const router = useRouter()
   const create = useCreateClient()
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   const { data: allProfessionals = [] } = useProfessionals()
   const { data: allServices = [] } = useServices()
@@ -107,8 +109,9 @@ export default function NewClientPage() {
     try {
       const body: {
         name: string; email: string; password: string;
-        phone?: string; birthDate?: string; notes?: string; active?: boolean;
+        phone?: string; birthDate?: string; notes?: string; active?: boolean; avatarUrl?: string;
         serviceLimitCount?: number; serviceLimitPeriod?: 'day' | 'week' | 'month';
+        allProfessionals?: boolean; allServices?: boolean;
         professionalIds?: string[]; serviceIds?: string[];
       } = {
         name: form.name.trim(),
@@ -118,6 +121,7 @@ export default function NewClientPage() {
         birthDate: form.birthDate || undefined,
         notes: form.notes.trim() || undefined,
         active: form.active,
+        avatarUrl: avatarUrl ?? undefined,
         allProfessionals: allProfs,
         allServices: allSvcs,
         professionalIds: allProfs ? [] : selectedProfs.map(p => p.id),
@@ -143,6 +147,10 @@ export default function NewClientPage() {
         {/* Personal data */}
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
+
+          <div className="mb-5">
+            <AvatarCropField value={avatarUrl} onChange={setAvatarUrl} name={form.name} />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             {([
