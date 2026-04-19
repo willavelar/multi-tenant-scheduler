@@ -15,6 +15,7 @@ export const clientProfiles = pgTable('client_profiles', {
   allServices: boolean('all_services').notNull().default(false),
   serviceLimitCount: integer('service_limit_count'),
   serviceLimitPeriod: serviceLimitPeriodEnum('service_limit_period'),
+  avatarUrl: text('avatar_url'),
 });
 
 export type ClientProfile = typeof clientProfiles.$inferSelect;
