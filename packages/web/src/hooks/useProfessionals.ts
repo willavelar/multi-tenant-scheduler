@@ -73,6 +73,7 @@ export function useUpdateProfessional(id: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['professional', slug, id] })
       queryClient.invalidateQueries({ queryKey: ['professionals', slug] })
+      queryClient.invalidateQueries({ queryKey: ['professionals-page', slug] })
       queryClient.invalidateQueries({ queryKey: ['professional-me', slug] })
     },
   })
