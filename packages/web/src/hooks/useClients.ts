@@ -45,7 +45,7 @@ export function useCreateClient() {
     mutationFn: (body: {
       name: string; email: string; password: string;
       phone?: string; birthDate?: string; notes?: string;
-      active?: boolean; allProfessionals?: boolean; allServices?: boolean;
+      active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number; serviceLimitPeriod?: string;
       professionalIds?: string[]; serviceIds?: string[];
     }) => api('/clients', { method: 'POST', body: JSON.stringify(body) }),
@@ -60,7 +60,7 @@ export function useUpdateClient(id: string) {
   return useMutation({
     mutationFn: (body: {
       name?: string; email?: string; phone?: string;
-      birthDate?: string; notes?: string; active?: boolean; allProfessionals?: boolean; allServices?: boolean;
+      birthDate?: string; notes?: string; active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number | null; serviceLimitPeriod?: string | null;
       professionalIds?: string[]; serviceIds?: string[];
     }) => api(`/clients/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

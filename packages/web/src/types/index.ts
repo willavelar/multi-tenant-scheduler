@@ -40,6 +40,7 @@ export type Client = {
   birthDate: string | null
   notes: string | null
   active: boolean | null
+  avatarUrl: string | null
   allProfessionals: boolean | null
   allServices: boolean | null
   serviceLimitCount: number | null
