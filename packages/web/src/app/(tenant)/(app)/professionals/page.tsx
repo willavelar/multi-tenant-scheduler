@@ -126,7 +126,7 @@ export default function ProfessionalsPage() {
                           className="block w-full text-left bg-transparent border-0 p-0 cursor-pointer"
                           onClick={() => router.push(`/professionals/${prof.id}`)}
                         >
-                          <AvatarName name={prof.name} subtitle={prof.email} />
+                          <AvatarName name={prof.name} subtitle={prof.email} avatarUrl={prof.avatarUrl} />
                         </button>
                       </td>
                       <td className="px-4 py-3 text-gray-500">{prof.position ?? '—'}</td>

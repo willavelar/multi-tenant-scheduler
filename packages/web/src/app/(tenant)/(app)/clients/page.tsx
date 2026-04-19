@@ -138,7 +138,7 @@ export default function ClientsPage() {
                   {clients.map((client: Client) => (
                     <tr key={client.id} className="border-b border-gray-50 transition-colors hover:bg-gray-50">
                       <td className="px-4 py-3">
-                        <AvatarName name={client.name} size={32} />
+                        <AvatarName name={client.name} size={32} avatarUrl={client.avatarUrl} />
                       </td>
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{client.phone ?? '—'}</td>
                       <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{formatBirthDate(client.birthDate)}</td>
