@@ -58,6 +58,7 @@ async function seed() {
     role: 'tenant_admin',
     name: 'Admin Demo',
     phone: faker.phone.number(),
+    active: true,
   }).returning();
   console.log('Admin:', admin.email);
 
