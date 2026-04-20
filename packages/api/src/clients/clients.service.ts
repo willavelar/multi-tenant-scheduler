@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { alias } from 'drizzle-orm/pg-core';
 import {
@@ -34,8 +34,8 @@ export class ClientsService {
         eq(users.tenantId, tenantId),
         eq(users.role, 'client'),
         filters.q ? or(ilike(users.name, `%${filters.q}%`), ilike(users.email, `%${filters.q}%`)) : undefined,
-        filters.active === 'true'  ? eq(clientProfiles.active, true)  : undefined,
-        filters.active === 'false' ? eq(clientProfiles.active, false) : undefined,
+        filters.active === 'true'  ? eq(users.active, true)  : undefined,
+        filters.active === 'false' ? eq(users.active, false) : undefined,
       );
 
       const FIELDS = {
@@ -48,8 +48,8 @@ export class ClientsService {
         profileId: clientProfiles.id,
         birthDate: clientProfiles.birthDate,
         notes: clientProfiles.notes,
-        active: clientProfiles.active,
-        avatarUrl: clientProfiles.avatarUrl,
+        active: users.active,
+        avatarUrl: users.avatarUrl,
         allProfessionals: clientProfiles.allProfessionals,
         allServices: clientProfiles.allServices,
         serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -67,7 +67,7 @@ export class ClientsService {
         .from(users)
         .leftJoin(clientProfiles, eq(clientProfiles.userId, users.id))
         .where(where)
-        .orderBy(users.name)
+        .orderBy(desc(users.createdAt))
         .limit(limit)
         .offset(offset);
 
@@ -88,8 +88,8 @@ export class ClientsService {
           profileId: clientProfiles.id,
           birthDate: clientProfiles.birthDate,
           notes: clientProfiles.notes,
-          active: clientProfiles.active,
-          avatarUrl: clientProfiles.avatarUrl,
+          active: users.active,
+          avatarUrl: users.avatarUrl,
           allProfessionals: clientProfiles.allProfessionals,
           allServices: clientProfiles.allServices,
           serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -138,7 +138,16 @@ export class ClientsService {
 
       const [user] = await tx
         .insert(users)
-        .values({ tenantId, email: dto.email, passwordHash, role: 'client', name: dto.name, phone: dto.phone })
+        .values({
+          tenantId,
+          email: dto.email,
+          passwordHash,
+          role: 'client',
+          name: dto.name,
+          phone: dto.phone,
+          active: dto.active ?? true,
+          avatarUrl: dto.avatarUrl,
+        })
         .returning();
 
       const [profile] = await tx
@@ -148,8 +157,6 @@ export class ClientsService {
           userId: user.id,
           birthDate: dto.birthDate,
           notes: dto.notes,
-          active: dto.active ?? true,
-          avatarUrl: dto.avatarUrl,
           allProfessionals: dto.allProfessionals ?? false,
           allServices: dto.allServices ?? false,
           serviceLimitCount: dto.serviceLimitCount,
@@ -181,25 +188,23 @@ export class ClientsService {
         .where(and(eq(users.id, userId), eq(users.tenantId, tenantId), eq(users.role, 'client')));
       if (!user) throw new NotFoundException('Client not found');
 
-      // Update user fields
       const userPatch: Partial<typeof users.$inferInsert> = {};
-      if (dto.name  !== undefined) userPatch.name  = dto.name;
-      if (dto.email !== undefined) userPatch.email = dto.email;
-      if (dto.phone !== undefined) userPatch.phone = dto.phone;
+      if (dto.name      !== undefined) userPatch.name      = dto.name;
+      if (dto.email     !== undefined) userPatch.email     = dto.email;
+      if (dto.phone     !== undefined) userPatch.phone     = dto.phone;
+      if (dto.active    !== undefined) userPatch.active    = dto.active;
+      if (dto.avatarUrl !== undefined) userPatch.avatarUrl = dto.avatarUrl;
       if (Object.keys(userPatch).length) {
         await tx.update(users).set(userPatch).where(eq(users.id, userId));
       }
 
-      // Upsert profile
       const profilePatch: Partial<typeof clientProfiles.$inferInsert> = {};
-      if (dto.birthDate            !== undefined) profilePatch.birthDate            = dto.birthDate;
-      if (dto.notes                !== undefined) profilePatch.notes                = dto.notes;
-      if (dto.active               !== undefined) profilePatch.active               = dto.active;
-      if (dto.avatarUrl            !== undefined) profilePatch.avatarUrl            = dto.avatarUrl;
-      if (dto.allProfessionals     !== undefined) profilePatch.allProfessionals     = dto.allProfessionals;
-      if (dto.allServices          !== undefined) profilePatch.allServices          = dto.allServices;
-      if (dto.serviceLimitCount    !== undefined) profilePatch.serviceLimitCount    = dto.serviceLimitCount;
-      if (dto.serviceLimitPeriod   !== undefined) profilePatch.serviceLimitPeriod   = dto.serviceLimitPeriod;
+      if (dto.birthDate          !== undefined) profilePatch.birthDate          = dto.birthDate;
+      if (dto.notes              !== undefined) profilePatch.notes              = dto.notes;
+      if (dto.allProfessionals   !== undefined) profilePatch.allProfessionals   = dto.allProfessionals;
+      if (dto.allServices        !== undefined) profilePatch.allServices        = dto.allServices;
+      if (dto.serviceLimitCount  !== undefined) profilePatch.serviceLimitCount  = dto.serviceLimitCount;
+      if (dto.serviceLimitPeriod !== undefined) profilePatch.serviceLimitPeriod = dto.serviceLimitPeriod;
 
       const [existingProfile] = await tx
         .select({ id: clientProfiles.id })
@@ -215,12 +220,11 @@ export class ClientsService {
       } else {
         const [p] = await tx
           .insert(clientProfiles)
-          .values({ tenantId, userId, active: true, ...profilePatch })
+          .values({ tenantId, userId, ...profilePatch })
           .returning();
         profileId = p.id;
       }
 
-      // Sync professional links
       if (dto.professionalIds !== undefined) {
         await tx.delete(clientProfessionals).where(eq(clientProfessionals.clientProfileId, profileId));
         if (dto.professionalIds.length) {
@@ -230,7 +234,6 @@ export class ClientsService {
         }
       }
 
-      // Sync service links
       if (dto.serviceIds !== undefined) {
         await tx.delete(clientServices).where(eq(clientServices.clientProfileId, profileId));
         if (dto.serviceIds.length) {
