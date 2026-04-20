@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"role" "user_role" NOT NULL,
 	"name" text NOT NULL,
 	"phone" text,
+	"active" boolean DEFAULT true NOT NULL,
+	"avatar_url" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "users_tenant_email_unique" UNIQUE("tenant_id","email")
 );
@@ -48,9 +50,7 @@ CREATE TABLE IF NOT EXISTS "professionals" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"tenant_id" uuid NOT NULL,
 	"user_id" uuid NOT NULL,
-	"bio" text,
-	"avatar_url" text,
-	"active" boolean DEFAULT true NOT NULL
+	"bio" text
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "services" (

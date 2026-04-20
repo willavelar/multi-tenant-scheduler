@@ -80,6 +80,7 @@ async function seed() {
       role: 'professional',
       name: p.name,
       phone: faker.phone.number(),
+      active: true,
     }).returning();
 
     const [prof] = await db.insert(schema.professionals).values({
@@ -87,7 +88,6 @@ async function seed() {
       userId: u.id,
       bio: p.bio,
       position: p.position,
-      active: true,
     }).returning();
 
     profUsers.push(u);
@@ -147,13 +147,13 @@ async function seed() {
       role: 'client',
       name,
       phone: faker.phone.number(),
+      active: faker.datatype.boolean({ probability: 0.85 }),
     }).returning();
 
     await db.insert(schema.clientProfiles).values({
       tenantId: tenant.id,
       userId: u.id,
       birthDate: faker.date.birthdate({ min: 18, max: 75, mode: 'age' }).toISOString().slice(0, 10),
-      active: faker.datatype.boolean({ probability: 0.85 }),
     });
 
     clientUsers.push(u);

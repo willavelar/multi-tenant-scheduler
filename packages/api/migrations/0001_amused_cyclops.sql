@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS "client_profiles" (
 	"user_id" uuid NOT NULL,
 	"birth_date" date,
 	"notes" text,
-	"active" boolean DEFAULT true NOT NULL,
 	"all_professionals" boolean DEFAULT false NOT NULL,
 	"service_limit_count" integer,
 	"service_limit_period" "service_limit_period"

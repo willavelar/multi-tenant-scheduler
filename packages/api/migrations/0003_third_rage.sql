@@ -1,1 +1,1 @@
-ALTER TABLE "client_profiles" ADD COLUMN "avatar_url" text;
+-- avatar_url moved to users table (see 0000 migration)
