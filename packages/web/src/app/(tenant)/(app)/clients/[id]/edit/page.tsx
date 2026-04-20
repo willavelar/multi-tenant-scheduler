@@ -3,13 +3,23 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useClient, useUpdateClient } from '@/hooks/useClients'
+import { useAuth } from '@/providers/AuthProvider'
 import { useProfessionals } from '@/hooks/useProfessionals'
 import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { BackButton } from '@/components/ui/BackButton'
+import { DatePickerField } from '@/components/ui/DatePickerField'
 import { cn } from '@/lib/utils'
 import type { Professional, Service } from '@/types'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
+
+function applyPhoneMask(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 2) return digits.length ? `(${digits}` : ''
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
 
 type FormState = {
   name: string
@@ -25,6 +35,8 @@ type FormState = {
 export default function EditClientPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { user: me, updateUser } = useAuth()
+  const isOwnProfile = id === me?.id
   const { data: client, isLoading } = useClient(id)
   const update = useUpdateClient(id)
 
@@ -56,7 +68,7 @@ export default function EditClientPage() {
     setForm({
       name: client.name,
       email: client.email,
-      phone: client.phone ?? '',
+      phone: applyPhoneMask(client.phone ?? ''),
       birthDate: client.birthDate ?? '',
       notes: client.notes ?? '',
       active: client.active !== false,
@@ -155,6 +167,7 @@ export default function EditClientPage() {
         patch.serviceLimitPeriod = null
       }
       await update.mutateAsync(patch)
+      if (isOwnProfile) updateUser({ name: form.name.trim(), avatarUrl: avatarUrl ?? null })
       router.push(`/clients/${id}`)
     } catch {
       setErrors(e => ({ ...e, root: 'Não foi possível salvar as alterações. Verifique os dados e tente novamente.' }))
@@ -194,7 +207,7 @@ export default function EditClientPage() {
                 <input
                   type={type}
                   value={form[key]}
-                  onChange={e => set(key, e.target.value)}
+                  onChange={e => set(key, key === 'phone' ? applyPhoneMask(e.target.value) : e.target.value)}
                   className={cn(
                     'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
                     errors[key] ? 'border-red-400' : 'border-gray-200'
@@ -207,11 +220,10 @@ export default function EditClientPage() {
 
           <div className="mt-4">
             <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Data de nascimento</label>
-            <input
-              type="date"
+            <DatePickerField
               value={form.birthDate}
-              onChange={e => set('birthDate', e.target.value)}
-              className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 max-w-[220px]"
+              onChange={iso => set('birthDate', iso)}
+              className="max-w-[220px]"
             />
           </div>
         </div>
@@ -230,20 +242,22 @@ export default function EditClientPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
-            <div className="relative max-w-[180px]">
-              <select
-                value={form.active ? 'true' : 'false'}
-                onChange={e => set('active', e.target.value === 'true')}
-                className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-              >
-                <option value="true">Ativo</option>
-                <option value="false">Inativo</option>
-              </select>
-              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          {!isOwnProfile && (
+            <div>
+              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
+              <div className="relative max-w-[180px]">
+                <select
+                  value={form.active ? 'true' : 'false'}
+                  onChange={e => set('active', e.target.value === 'true')}
+                  className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                >
+                  <option value="true">Ativo</option>
+                  <option value="false">Inativo</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Service limits */}

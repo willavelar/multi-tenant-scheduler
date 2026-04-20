@@ -7,9 +7,18 @@ import { useProfessionals } from '@/hooks/useProfessionals'
 import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { BackButton } from '@/components/ui/BackButton'
+import { DatePickerField } from '@/components/ui/DatePickerField'
 import { cn } from '@/lib/utils'
 import type { Professional, Service } from '@/types'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
+
+function applyPhoneMask(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 11)
+  if (digits.length <= 2) return digits.length ? `(${digits}` : ''
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
+}
 
 type FormState = {
   name: string
@@ -39,14 +48,14 @@ export default function NewClientPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState | 'root', string>>>({})
 
   // Professional search
-  const [allProfs, setAllProfs] = useState(false)
+  const [allProfs, setAllProfs] = useState(true)
   const [profSearch, setProfSearch] = useState('')
   const [showProfDrop, setShowProfDrop] = useState(false)
   const [selectedProfs, setSelectedProfs] = useState<Professional[]>([])
   const profRef = useRef<HTMLDivElement>(null)
 
   // Service selection
-  const [allSvcs, setAllSvcs] = useState(false)
+  const [allSvcs, setAllSvcs] = useState(true)
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
   const set = (k: keyof FormState, v: string | boolean) => {
@@ -166,7 +175,7 @@ export default function NewClientPage() {
                 <input
                   type={type}
                   value={form[key]}
-                  onChange={e => set(key, e.target.value)}
+                  onChange={e => set(key, key === 'phone' ? applyPhoneMask(e.target.value) : e.target.value)}
                   className={cn(
                     'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
                     errors[key] ? 'border-red-400' : 'border-gray-200'
@@ -179,11 +188,10 @@ export default function NewClientPage() {
 
           <div className="mt-4">
             <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Data de nascimento</label>
-            <input
-              type="date"
+            <DatePickerField
               value={form.birthDate}
-              onChange={e => set('birthDate', e.target.value)}
-              className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 max-w-[220px]"
+              onChange={iso => set('birthDate', iso)}
+              className="max-w-[220px]"
             />
           </div>
         </div>

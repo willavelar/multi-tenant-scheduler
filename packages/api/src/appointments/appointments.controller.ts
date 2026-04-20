@@ -31,12 +31,13 @@ export class AppointmentsController {
     @Query('serviceId') serviceId?: string,
     @Query('status') status?: string,
     @Query('clientId') clientId?: string,
+    @Query('professionalId') professionalId?: string,
   ) {
     return this.service.findAll(
       tenantId, user.id, user.role,
       Math.max(1, parseInt(page)),
       Math.min(100, Math.max(1, parseInt(limit))),
-      { dateFrom, dateTo, serviceId, status, clientId },
+      { dateFrom, dateTo, serviceId, status, clientId, professionalId },
     );
   }
 

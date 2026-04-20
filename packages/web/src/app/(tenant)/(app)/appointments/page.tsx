@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAppointments, useCancelAppointment } from '@/hooks/useAppointments'
-import { useSearchClients } from '@/hooks/useClients'
 import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
+import { DatePickerField } from '@/components/ui/DatePickerField'
+import { ClientSearchField } from '@/components/ui/ClientSearchField'
+import { ProfessionalSearchField } from '@/components/ui/ProfessionalSearchField'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Appointment } from '@/types'
@@ -25,91 +28,55 @@ const STATUS_VARIANTS: Record<Appointment['status'], import('@/components/ui/Sta
   completed: 'purple',
 }
 
-// Mask dd/mm/yyyy as the user types
-function applyDateMask(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 8)
-  if (digits.length <= 2) return digits
-  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`
-  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`
-}
-
-// Convert dd/mm/yyyy → yyyy-mm-dd for the API (returns '' if incomplete/invalid)
-function toIso(masked: string): string {
-  const m = masked.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
-  if (!m) return ''
-  const [, d, mo, y] = m
-  const date = new Date(`${y}-${mo}-${d}`)
-  if (isNaN(date.getTime())) return ''
-  return `${y}-${mo}-${d}`
-}
-
 export default function AppointmentsPage() {
   const router = useRouter()
   const [page, setPage] = useState(1)
   const [cancelId, setCancelId] = useState<string | null>(null)
 
   // Filters
-  const [dateFromMask, setDateFromMask] = useState('')  // display: dd/mm/yyyy
-  const [dateToMask,   setDateToMask]   = useState('')  // display: dd/mm/yyyy
-  const [dateFrom,     setDateFrom]     = useState('')  // API: yyyy-mm-dd
-  const [dateTo,       setDateTo]       = useState('')  // API: yyyy-mm-dd
+  const [dateFrom, setDateFrom] = useState('')  // ISO: yyyy-mm-dd
+  const [dateTo,   setDateTo]   = useState('')  // ISO: yyyy-mm-dd
   const [serviceId,    setServiceId]    = useState('')
   const [status,       setStatus]       = useState('')
-  const [clientId,     setClientId]     = useState('')
+  const [clientId,       setClientId]       = useState('')
+  const [professionalId, setProfessionalId] = useState('')
 
   // Client autocomplete
-  const [clientQuery,        setClientQuery]        = useState('')
   const [clientDisplayValue, setClientDisplayValue] = useState('')
-  const [clientDropOpen,     setClientDropOpen]     = useState(false)
-  const clientRef = useRef<HTMLDivElement>(null)
 
-  const { data: clientResults = [], isFetching: searchingClients } = useSearchClients(clientQuery)
+  // Professional autocomplete
+  const [professionalDisplayValue, setProfessionalDisplayValue] = useState('')
+
   const { data: servicesList = [] } = useServices()
 
-  const filters = { dateFrom, dateTo, serviceId, status, clientId }
+  const filters = { dateFrom, dateTo, serviceId, status, clientId, professionalId }
   const { data, isLoading } = useAppointments(page, filters)
   const cancel = useCancelAppointment()
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1) }, [dateFrom, dateTo, serviceId, status, clientId])
-
-  // Close client dropdown on outside click
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (clientRef.current && !clientRef.current.contains(e.target as Node)) {
-        setClientDropOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
+  useEffect(() => { setPage(1) }, [dateFrom, dateTo, serviceId, status, clientId, professionalId])
 
   const appointments = data?.data ?? []
   const total = data?.total ?? 0
   const limit = data?.limit ?? 10
   const totalPages = Math.max(1, Math.ceil(total / limit))
 
-  const hasFilters = !!(dateFrom || dateTo || serviceId || status || clientId)
+  const hasFilters = !!(dateFrom || dateTo || serviceId || status || clientId || professionalId)
 
   function clearFilters() {
-    setDateFromMask(''); setDateToMask('')
-    setDateFrom('');     setDateTo('')
-    setServiceId('');    setStatus('');    setClientId('')
-    setClientQuery('');  setClientDisplayValue('')
+    setDateFrom('');  setDateTo('')
+    setServiceId(''); setStatus('');  setClientId(''); setProfessionalId('')
+    setClientDisplayValue(''); setProfessionalDisplayValue('')
   }
 
   function selectClient(id: string, name: string) {
     setClientId(id)
     setClientDisplayValue(name)
-    setClientQuery('')
-    setClientDropOpen(false)
   }
 
   function handleClientInput(value: string) {
     setClientDisplayValue(value)
-    if (clientId) { setClientId(''); }
-    setClientQuery(value)
-    setClientDropOpen(value.length >= 3)
+    if (clientId) setClientId('')
   }
 
   function confirmCancel() {
@@ -141,34 +108,20 @@ export default function AppointmentsPage() {
             {/* Date From */}
             <div className="min-w-[140px] flex-[1_1_140px]">
               <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">De</label>
-              <input
-                type="text"
-                className="h-9 w-full px-3 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
-                placeholder="dd/mm/aaaa"
-                value={dateFromMask}
-                onChange={e => {
-                  const masked = applyDateMask(e.target.value)
-                  setDateFromMask(masked)
-                  setDateFrom(toIso(masked))
-                }}
-                maxLength={10}
+              <DatePickerField
+                value={dateFrom}
+                onChange={setDateFrom}
+                inputClassName="h-9 text-[13px]"
               />
             </div>
 
             {/* Date To */}
             <div className="min-w-[140px] flex-[1_1_140px]">
               <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Até</label>
-              <input
-                type="text"
-                className="h-9 w-full px-3 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
-                placeholder="dd/mm/aaaa"
-                value={dateToMask}
-                onChange={e => {
-                  const masked = applyDateMask(e.target.value)
-                  setDateToMask(masked)
-                  setDateTo(toIso(masked))
-                }}
-                maxLength={10}
+              <DatePickerField
+                value={dateTo}
+                onChange={setDateTo}
+                inputClassName="h-9 text-[13px]"
               />
             </div>
 
@@ -209,54 +162,32 @@ export default function AppointmentsPage() {
               </div>
             </div>
 
-            {/* Client search */}
-            <div className="min-w-[200px] flex-[2_1_200px] relative" ref={clientRef}>
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Cliente</label>
-              <div className="relative">
-                <svg
-                  width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
-                >
-                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input
-                  type="text"
-                  className="h-9 w-full pl-[30px] pr-[30px] text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
-                  placeholder="Buscar por nome ou e-mail…"
-                  value={clientDisplayValue}
-                  onChange={e => handleClientInput(e.target.value)}
-                  onFocus={() => { if (clientQuery.length >= 3) setClientDropOpen(true) }}
-                />
-                {clientId && (
-                  <button
-                    onClick={() => { setClientId(''); setClientDisplayValue(''); setClientQuery('') }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-transparent border-0 cursor-pointer text-gray-400 flex p-0.5"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                  </button>
-                )}
-              </div>
+            {/* Professional search */}
+            <div className="min-w-[180px] flex-[2_1_180px]">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Profissional</label>
+              <ProfessionalSearchField
+                value={professionalDisplayValue}
+                onChange={v => { setProfessionalDisplayValue(v); if (professionalId) setProfessionalId('') }}
+                onSelect={(id, name) => { setProfessionalId(id); setProfessionalDisplayValue(name) }}
+                selectedId={professionalId}
+                onClear={() => { setProfessionalId(''); setProfessionalDisplayValue('') }}
+                showSearchIcon
+                inputClassName="h-9 text-[13px] focus:ring-2 focus:ring-indigo-500/10"
+              />
+            </div>
 
-              {/* Dropdown */}
-              {clientDropOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1.5 duration-150">
-                  {searchingClients ? (
-                    <p className="px-3 py-2.5 text-[13px] text-gray-400 m-0">Buscando...</p>
-                  ) : clientResults.length === 0 ? (
-                    <p className="px-3 py-2.5 text-[13px] text-gray-400 m-0">Nenhum cliente encontrado</p>
-                  ) : clientResults.map(c => (
-                    <button
-                      key={c.id}
-                      className="flex items-center gap-2 px-3 py-2 cursor-pointer border-0 bg-transparent w-full text-left hover:bg-gray-50 transition-colors"
-                      onClick={() => selectClient(c.id, c.name)}
-                    >
-                      <AvatarName name={c.name} subtitle={c.email} size={28} />
-                    </button>
-                  ))}
-                </div>
-              )}
+            {/* Client search */}
+            <div className="min-w-[200px] flex-[2_1_200px]">
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Cliente</label>
+              <ClientSearchField
+                value={clientDisplayValue}
+                onChange={handleClientInput}
+                onSelect={selectClient}
+                selectedId={clientId}
+                onClear={() => { setClientId(''); setClientDisplayValue('') }}
+                showSearchIcon
+                inputClassName="h-9 text-[13px] focus:ring-2 focus:ring-indigo-500/10"
+              />
             </div>
 
             {/* Clear */}
@@ -302,10 +233,14 @@ export default function AppointmentsPage() {
                           <DateTimeCell iso={appt.startsAt} />
                         </td>
                         <td className="px-4 py-3.5">
-                          <AvatarName name={appt.clientName} />
+                          <Link href={`/clients/${appt.clientId}`} className="hover:opacity-75 transition-opacity">
+                            <AvatarName name={appt.clientName} avatarUrl={appt.clientAvatarUrl} />
+                          </Link>
                         </td>
                         <td className="px-4 py-3.5">
-                          <AvatarName name={appt.professionalName} />
+                          <Link href={`/professionals/${appt.professionalId}`} className="hover:opacity-75 transition-opacity">
+                            <AvatarName name={appt.professionalName} avatarUrl={appt.professionalAvatarUrl} />
+                          </Link>
                         </td>
                         <td className="px-4 py-3.5 whitespace-nowrap text-gray-500">
                           {appt.serviceName}

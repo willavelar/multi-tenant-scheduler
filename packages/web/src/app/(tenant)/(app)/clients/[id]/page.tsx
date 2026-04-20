@@ -37,6 +37,7 @@ export default function ClientDetailPage() {
   const router = useRouter()
   const { user: me } = useAuth()
   const isAdmin = me?.role === 'tenant_admin'
+  const isOwnProfile = id === me?.id
 
   const { data: client, isLoading } = useClient(id)
   const del = useDeleteClient()
@@ -97,7 +98,7 @@ export default function ClientDetailPage() {
         <FieldRow label="Telefone" value={client.phone ?? '—'} />
         <FieldRow label="Data de nascimento" value={formatBirthDate(client.birthDate)} />
         <FieldRow label="Observações" value={<span className="whitespace-pre-wrap">{client.notes || '—'}</span>} />
-        <FieldRow label="Status" value={<ClientStatusBadge active={client.active} />} />
+        {!isOwnProfile && <FieldRow label="Status" value={<ClientStatusBadge active={client.active} />} />}
         <FieldRow label="Limite de serviços" value={limitText} />
         <FieldRow label="Profissionais vinculados" value={
           client.allProfessionals ? (
@@ -132,7 +133,7 @@ export default function ClientDetailPage() {
       </DetailCard>
 
       {/* Danger zone */}
-      {isAdmin && (
+      {isAdmin && !isOwnProfile && (
         <DangerZone
           title="Excluir cliente"
           description="Esta ação excluirá permanentemente o cliente e todos os seus agendamentos. Não pode ser desfeita."
