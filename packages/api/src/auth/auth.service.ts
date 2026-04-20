@@ -58,17 +58,7 @@ export class AuthService {
 
       if (!user) throw new UnauthorizedException();
       if (!await bcrypt.compare(password, user.passwordHash)) throw new UnauthorizedException();
-
-      if (user.role === 'client') {
-        const [profile] = await tx
-          .select({ active: clientProfiles.active })
-          .from(clientProfiles)
-          .where(eq(clientProfiles.userId, user.id));
-
-        // Perfil ausente é tratado como ativo (ex.: contas legadas sem perfil criado).
-        // Se o perfil existir e active === false, bloqueia o login.
-        if (profile && !profile.active) throw new UnauthorizedException();
-      }
+      if (!user.active) throw new UnauthorizedException();
 
       return user;
     });
@@ -81,7 +71,7 @@ export class AuthService {
         ? and(base, or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`)))
         : base;
       return tx
-        .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, createdAt: users.createdAt })
+        .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, createdAt: users.createdAt, avatarUrl: users.avatarUrl })
         .from(users)
         .where(where)
         .limit(20);
