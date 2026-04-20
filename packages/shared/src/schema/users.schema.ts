@@ -1,19 +1,20 @@
-import { pgEnum, pgTable, text, timestamp, uuid, unique } from 'drizzle-orm/pg-core';
-
+import { boolean, pgEnum, pgTable, text, timestamp, uuid, unique } from 'drizzle-orm/pg-core';
 import { tenants } from './tenants.schema';
 
 export const roleEnum = pgEnum('user_role', ['super_admin', 'tenant_admin', 'professional', 'client']);
 
 export const users = pgTable('users', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
-  email: text('email').notNull(),
+  id:           uuid('id').primaryKey().defaultRandom(),
+  tenantId:     uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  email:        text('email').notNull(),
   passwordHash: text('password_hash').notNull(),
-  role: roleEnum('role').notNull(),
-  name: text('name').notNull(),
-  phone: text('phone'),
-  lastLoginAt: timestamp('last_login_at'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
+  role:         roleEnum('role').notNull(),
+  name:         text('name').notNull(),
+  phone:        text('phone'),
+  active:       boolean('active').notNull().default(true),
+  avatarUrl:    text('avatar_url'),
+  lastLoginAt:  timestamp('last_login_at'),
+  createdAt:    timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   uniqueEmailPerTenant: unique('users_tenant_email_unique').on(table.tenantId, table.email),
 }));
