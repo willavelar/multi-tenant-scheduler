@@ -4,6 +4,7 @@ export type User = {
   name: string
   role: 'tenant_admin' | 'professional' | 'client'
   tenantId: string | null
+  avatarUrl?: string | null
 }
 
 export type Professional = {
@@ -39,7 +40,7 @@ export type Client = {
   profileId: string | null
   birthDate: string | null
   notes: string | null
-  active: boolean | null
+  active: boolean
   avatarUrl: string | null
   allProfessionals: boolean | null
   allServices: boolean | null
@@ -78,12 +79,30 @@ export type Appointment = {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
   createdAt: string
   clientName: string
+  clientAvatarUrl: string | null
   serviceName: string
   professionalName: string
+  professionalAvatarUrl: string | null
 }
 
 export type AppointmentPage = {
   data: Appointment[]
+  total: number
+  page: number
+  limit: number
+}
+
+export type Admin = {
+  id: string
+  name: string
+  email: string
+  avatarUrl: string | null
+  active: boolean
+  createdAt: string
+}
+
+export type AdminPage = {
+  data: Admin[]
   total: number
   page: number
   limit: number
