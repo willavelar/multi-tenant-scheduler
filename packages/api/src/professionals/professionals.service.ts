@@ -1,5 +1,5 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { professionals, users } from '@scheduler/shared';
 import * as bcrypt from 'bcryptjs';
 import { DB, DrizzleDB } from '../database/database.module';
@@ -12,9 +12,9 @@ const PROF_FIELDS = {
   tenantId:    professionals.tenantId,
   userId:      professionals.userId,
   bio:         professionals.bio,
-  avatarUrl:   professionals.avatarUrl,
+  avatarUrl:   users.avatarUrl,
   position:    professionals.position,
-  active:      professionals.active,
+  active:      users.active,
   name:        users.name,
   email:       users.email,
   phone:       users.phone,
@@ -38,8 +38,8 @@ export class ProfessionalsService {
       const where = and(
         eq(professionals.tenantId, tenantId),
         filters.q ? or(ilike(users.name, `%${filters.q}%`), ilike(users.email, `%${filters.q}%`)) : undefined,
-        filters.active === 'true'  ? eq(professionals.active, true)  : undefined,
-        filters.active === 'false' ? eq(professionals.active, false) : undefined,
+        filters.active === 'true'  ? eq(users.active, true)  : undefined,
+        filters.active === 'false' ? eq(users.active, false) : undefined,
       );
 
       const [{ total }] = await tx
@@ -53,7 +53,7 @@ export class ProfessionalsService {
         .from(professionals)
         .innerJoin(users, eq(professionals.userId, users.id))
         .where(where)
-        .orderBy(users.name)
+        .orderBy(desc(users.createdAt))
         .limit(limit)
         .offset(offset);
 
@@ -98,17 +98,27 @@ export class ProfessionalsService {
         passwordHash,
         role: 'professional',
         name: dto.name,
+        avatarUrl: dto.avatarUrl,
       }).returning();
 
       const [prof] = await tx.insert(professionals).values({
         tenantId,
         userId: user.id,
         bio: dto.bio,
-        avatarUrl: dto.avatarUrl,
         position: dto.position,
       }).returning();
 
-      return { ...prof, name: user.name, email: user.email, phone: null, role: user.role };
+      return {
+        ...prof,
+        name: user.name,
+        email: user.email,
+        phone: null,
+        role: user.role,
+        avatarUrl: user.avatarUrl ?? null,
+        active: user.active,
+        lastLoginAt: null,
+        createdAt: user.createdAt,
+      };
     });
   }
 
@@ -136,20 +146,20 @@ export class ProfessionalsService {
         throw new ForbiddenException('Only admins can change role and status');
       }
 
-      // Update users table (name, role)
+      // Update users table (name, role, avatarUrl, active)
       const userPatch: Record<string, unknown> = {};
-      if (dto.name !== undefined) userPatch.name = dto.name;
-      if (dto.role !== undefined && isAdmin) userPatch.role = dto.role;
+      if (dto.name      !== undefined) userPatch.name      = dto.name;
+      if (dto.role      !== undefined && isAdmin) userPatch.role = dto.role;
+      if (dto.avatarUrl !== undefined) userPatch.avatarUrl = dto.avatarUrl;
+      if (dto.active    !== undefined && isAdmin) userPatch.active = dto.active;
       if (Object.keys(userPatch).length) {
         await tx.update(users).set(userPatch).where(eq(users.id, prof.userId));
       }
 
-      // Update professionals table
+      // Update professionals table (bio, position only)
       const profPatch: Record<string, unknown> = {};
-      if (dto.bio       !== undefined) profPatch.bio       = dto.bio;
-      if (dto.avatarUrl !== undefined) profPatch.avatarUrl = dto.avatarUrl;
-      if (dto.position  !== undefined) profPatch.position  = dto.position;
-      if (dto.active    !== undefined && isAdmin) profPatch.active = dto.active;
+      if (dto.bio      !== undefined) profPatch.bio      = dto.bio;
+      if (dto.position !== undefined) profPatch.position = dto.position;
       if (Object.keys(profPatch).length) {
         await tx.update(professionals).set(profPatch)
           .where(and(eq(professionals.id, id), eq(professionals.tenantId, tenantId)));
