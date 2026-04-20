@@ -69,6 +69,7 @@ export class AppointmentsService {
       serviceId?: string;
       status?: string;
       clientId?: string;
+      professionalId?: string;
     } = {},
   ) {
     const offset = (page - 1) * limit;
@@ -77,17 +78,19 @@ export class AppointmentsService {
 
     return withTenant(this.db, tenantId, async (tx) => {
       const FIELDS = {
-        id:               appointments.id,
-        startsAt:         appointments.startsAt,
-        endsAt:           appointments.endsAt,
-        status:           appointments.status,
-        createdAt:        appointments.createdAt,
-        professionalId:   appointments.professionalId,
-        serviceId:        appointments.serviceId,
-        clientId:         appointments.clientId,
-        clientName:       users.name,
-        serviceName:      services.name,
-        professionalName: profUsers.name,
+        id:                    appointments.id,
+        startsAt:              appointments.startsAt,
+        endsAt:                appointments.endsAt,
+        status:                appointments.status,
+        createdAt:             appointments.createdAt,
+        professionalId:        appointments.professionalId,
+        serviceId:             appointments.serviceId,
+        clientId:              appointments.clientId,
+        clientName:            users.name,
+        clientAvatarUrl:       users.avatarUrl,
+        serviceName:           services.name,
+        professionalName:      profUsers.name,
+        professionalAvatarUrl: profUsers.avatarUrl,
       };
 
       let roleWhere;
@@ -109,8 +112,9 @@ export class AppointmentsService {
         filters.dateFrom ? gte(appointments.startsAt, new Date(filters.dateFrom + 'T00:00:00.000Z')) : undefined,
         filters.dateTo   ? lte(appointments.startsAt, new Date(filters.dateTo   + 'T23:59:59.999Z')) : undefined,
         filters.serviceId ? eq(appointments.serviceId, filters.serviceId) : undefined,
-        filters.status    ? eq(appointments.status, filters.status as any) : undefined,
-        filters.clientId  ? eq(appointments.clientId, filters.clientId)   : undefined,
+        filters.status         ? eq(appointments.status, filters.status as any)               : undefined,
+        filters.clientId       ? eq(appointments.clientId, filters.clientId)                  : undefined,
+        filters.professionalId ? eq(appointments.professionalId, filters.professionalId)      : undefined,
       );
 
       const [{ total }] = await tx
@@ -126,7 +130,7 @@ export class AppointmentsService {
         .innerJoin(professionals, eq(appointments.professionalId, professionals.id))
         .innerJoin(profUsers, eq(professionals.userId, profUsers.id))
         .where(where)
-        .orderBy(desc(appointments.startsAt))
+        .orderBy(desc(appointments.createdAt))
         .limit(limit)
         .offset(offset);
 
