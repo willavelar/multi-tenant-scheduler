@@ -14,6 +14,8 @@ type JwtPayload = {
   exp: number
 }
 
+type UserProfileUpdate = { name?: string; avatarUrl?: string | null }
+
 type AuthContextValue = {
   user: User | null
   accessToken: string | null
@@ -23,6 +25,7 @@ type AuthContextValue = {
     slug: string
   ) => Promise<string>
   logout: () => void
+  updateUser: (updates: UserProfileUpdate) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -61,8 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem('accessToken')
     if (stored) {
       try {
+        const decoded = tokenToUser(stored)
+        const override: UserProfileUpdate = JSON.parse(localStorage.getItem('userProfileOverride') || '{}')
         setAccessToken(stored)
-        setUser(tokenToUser(stored))
+        setUser({ ...decoded, ...override })
       } catch {
         clearTokens()
       }
@@ -101,14 +106,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     []
   )
 
+  const updateUser = useCallback((updates: UserProfileUpdate) => {
+    setUser(u => {
+      if (!u) return u
+      const current: UserProfileUpdate = JSON.parse(localStorage.getItem('userProfileOverride') || '{}')
+      localStorage.setItem('userProfileOverride', JSON.stringify({ ...current, ...updates }))
+      return { ...u, ...updates }
+    })
+  }, [])
+
   const logout = useCallback(() => {
     clearTokens()
+    localStorage.removeItem('userProfileOverride')
     setUser(null)
     setAccessToken(null)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, register, logout }}>
+    <AuthContext.Provider value={{ user, accessToken, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   )

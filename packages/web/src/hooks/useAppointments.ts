@@ -9,6 +9,7 @@ type AppointmentFilters = {
   serviceId?: string
   status?: string
   clientId?: string
+  professionalId?: string
 }
 
 export function useAppointments(page = 1, filters: AppointmentFilters = {}) {
@@ -22,7 +23,8 @@ export function useAppointments(page = 1, filters: AppointmentFilters = {}) {
       if (filters.dateTo)    params.set('dateTo',    filters.dateTo)
       if (filters.serviceId) params.set('serviceId', filters.serviceId)
       if (filters.status)    params.set('status',    filters.status)
-      if (filters.clientId)  params.set('clientId',  filters.clientId)
+      if (filters.clientId)       params.set('clientId',       filters.clientId)
+      if (filters.professionalId) params.set('professionalId', filters.professionalId)
       const res = await api(`/appointments?${params}`)
       return res.json()
     },

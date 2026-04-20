@@ -11,10 +11,11 @@ import { cn } from '@/lib/utils'
 export default function EditProfessionalPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
-  const { user: me } = useAuth()
+  const { user: me, updateUser } = useAuth()
   const isAdmin = me?.role === 'tenant_admin'
 
   const { data: prof, isLoading } = useProfessional(id)
+  const isOwnProfile = !!prof && prof.userId === me?.id
   const update = useUpdateProfessional(id)
 
   const [ready, setReady] = useState(false)
@@ -50,6 +51,7 @@ export default function EditProfessionalPage() {
         patch.active = active
       }
       await update.mutateAsync(patch)
+      if (isOwnProfile) updateUser({ name: name.trim(), avatarUrl: avatarUrl ?? null })
       router.push(`/professionals/${id}`)
     } catch {
       setError('Não foi possível salvar as alterações. Verifique os dados e tente novamente.')
@@ -116,7 +118,7 @@ export default function EditProfessionalPage() {
             />
           </div>
 
-          {isAdmin && (
+          {isAdmin && !isOwnProfile && (
             <div className="max-w-[220px]">
               <div>
                 <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>

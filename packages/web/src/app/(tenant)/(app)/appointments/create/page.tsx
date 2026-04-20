@@ -6,10 +6,11 @@ import { useProfessionals } from '@/hooks/useProfessionals'
 import { useServices } from '@/hooks/useServices'
 import { useSlots } from '@/hooks/useSlots'
 import { useCreateAppointment } from '@/hooks/useAppointments'
-import { useClients, useClient, useSearchClients } from '@/hooks/useClients'
+import { useClients, useClient } from '@/hooks/useClients'
 import { useAuth } from '@/providers/AuthProvider'
 import { BackButton } from '@/components/ui/BackButton'
-import { AvatarName } from '@/components/ui/AvatarName'
+import { DatePickerField } from '@/components/ui/DatePickerField'
+import { ClientSearchField } from '@/components/ui/ClientSearchField'
 import { cn } from '@/lib/utils'
 import type { Professional, Service, ClientDetail } from '@/types'
 
@@ -107,7 +108,6 @@ export default function CreateAppointmentPage() {
   const [clientId,     setClientId]     = useState<string | null>(null)
   const [clientName,   setClientName]   = useState('')
   const [clientSearch, setClientSearch] = useState('')
-  const [showDropdown, setShowDropdown] = useState(false)
   const [serviceId,      setServiceId]      = useState<string | null>(null)
   const [professionalId, setProfessionalId] = useState<string | null>(null)
   const [date,      setDate]      = useState(today())
@@ -122,7 +122,6 @@ export default function CreateAppointmentPage() {
   // For auto-selecting the only client (admin/prof flow)
   const { data: clientsPage } = useClients(1, {})
 
-  const { data: clientResults = [] } = useSearchClients(clientSearch)
   const { data: slots = [], isLoading: loadingSlots } = useSlots(professionalId, date)
   const create = useCreateAppointment()
 
@@ -183,10 +182,9 @@ export default function CreateAppointmentPage() {
   }
 
   function selectClient(id: string, name: string) {
-    // Clear downstream when client changes
     setServiceId(null); setProfessionalId(null); setStartTime(null)
     setClientId(id); setClientName(name)
-    setClientSearch(''); setShowDropdown(false)
+    setClientSearch('')
   }
 
   return (
@@ -204,29 +202,13 @@ export default function CreateAppointmentPage() {
                 <p className="text-[13px] text-gray-500 mb-3">
                   Busque pelo nome ou e-mail do cliente (mínimo 3 caracteres).
                 </p>
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Buscar cliente..."
-                    value={clientSearch}
-                    onChange={e => { setClientSearch(e.target.value); setShowDropdown(true) }}
-                    onFocus={() => clientSearch.length >= 3 && setShowDropdown(true)}
-                    className="w-full h-10 px-3 text-sm text-gray-900 bg-white border-[1.5px] border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] transition-[border-color,box-shadow] box-border"
-                  />
-                  {showDropdown && clientResults.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-10 bg-white border border-gray-200 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.08)] mt-1 p-1">
-                      {clientResults.map(c => (
-                        <div
-                          key={c.id}
-                          className="px-3.5 py-2.5 cursor-pointer text-[13.5px] text-gray-900 rounded-md transition-colors hover:bg-indigo-50"
-                          onMouseDown={() => selectClient(c.id, c.name)}
-                        >
-                          <AvatarName name={c.name} size={28} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <ClientSearchField
+                  value={clientSearch}
+                  onChange={setClientSearch}
+                  onSelect={selectClient}
+                  placeholder="Buscar cliente..."
+                  inputClassName="h-10 text-[13px] border-[1.5px] focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] focus:ring-0"
+                />
               </div>
             ) : step > 1 ? (
               <SelectionSummary label={clientName} onClear={clearClient} />
@@ -285,9 +267,13 @@ export default function CreateAppointmentPage() {
                       professionalId === prof.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white',
                     )}
                   >
-                    <div className="w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[13px] font-bold mb-2">
-                      {prof.name.slice(0, 2).toUpperCase()}
-                    </div>
+                    {prof.avatarUrl ? (
+                      <img src={prof.avatarUrl} alt={prof.name} className="w-9 h-9 rounded-full object-cover mb-2" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[13px] font-bold mb-2">
+                        {prof.name.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
                     <p className="m-0 text-[13.5px] font-semibold text-gray-900">{prof.name}</p>
                     {prof.position && <p className="mt-0.5 m-0 text-xs text-gray-400">{prof.position}</p>}
                   </button>
@@ -307,12 +293,12 @@ export default function CreateAppointmentPage() {
                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-[0.06em]">
                   Data
                 </label>
-                <input
-                  type="date"
+                <DatePickerField
                   value={date}
-                  min={today()}
-                  onChange={e => { setDate(e.target.value); setStartTime(null) }}
-                  className="h-10 px-3 text-sm border-[1.5px] border-gray-200 rounded-lg outline-none bg-white text-gray-900 cursor-pointer focus:border-indigo-500 transition-[border-color]"
+                  onChange={iso => { if (iso) { setDate(iso); setStartTime(null) } }}
+                  min={new Date(today() + 'T00:00:00')}
+                  className="max-w-[200px]"
+                  inputClassName="h-10 border-[1.5px]"
                 />
               </div>
 

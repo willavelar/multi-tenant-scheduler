@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/providers/AuthProvider'
 import { cn } from '@/lib/utils'
 
@@ -101,9 +102,17 @@ export function Header() {
           onClick={() => setOpen(v => !v)}
           className="flex items-center gap-2 bg-transparent border-0 cursor-pointer px-2 py-1.5 rounded-lg transition-colors hover:bg-gray-100"
         >
-          <div className="w-[34px] h-[34px] rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
-            {user ? initials(user.name) : '??'}
-          </div>
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={user.name}
+              className="w-[34px] h-[34px] rounded-full object-cover shrink-0"
+            />
+          ) : (
+            <div className="w-[34px] h-[34px] rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
+              {user ? initials(user.name) : '??'}
+            </div>
+          )}
 
           <div className="text-left">
             <p className="text-[13px] font-semibold text-gray-900 m-0 leading-[1.3]">
@@ -134,20 +143,31 @@ export function Header() {
             </div>
 
             <div className="py-1">
-              <button
-                className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 bg-transparent border-0 cursor-pointer w-full text-left transition-colors hover:bg-gray-100 disabled:opacity-50"
-                onClick={() => setOpen(false)}
-                disabled
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-                Perfil
-                <span className="ml-auto text-[10px] text-gray-300 bg-gray-50 px-1.5 py-0.5 rounded">
-                  Em breve
-                </span>
-              </button>
+              {user?.role === 'professional' || user?.role === 'client' ? (
+                <Link
+                  href={user.role === 'professional' ? '/professionals/me' : `/clients/${user.id}`}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 no-underline transition-colors hover:bg-gray-100"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  Perfil
+                </Link>
+              ) : (
+                <button
+                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 bg-transparent border-0 cursor-default w-full text-left opacity-50"
+                  disabled
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  Perfil
+                  <span className="ml-auto text-[10px] text-gray-300 bg-gray-50 px-1.5 py-0.5 rounded">Em breve</span>
+                </button>
+              )}
             </div>
 
             <div className="border-t border-gray-100 py-1">
