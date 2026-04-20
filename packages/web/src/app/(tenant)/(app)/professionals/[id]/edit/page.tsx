@@ -43,10 +43,11 @@ export default function EditProfessionalPage() {
       <ProfessionalForm
         mode="edit"
         defaultValues={{
-          ...prof,
+          name:      prof.name,
           position:  prof.position  ?? undefined,
           bio:       prof.bio       ?? undefined,
           avatarUrl: prof.avatarUrl ?? undefined,
+          active:    prof.active,
         }}
         isAdmin={isAdmin}
         isOwnProfile={isOwnProfile}
