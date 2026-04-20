@@ -45,6 +45,14 @@ function UserIcon() {
   )
 }
 
+function ShieldIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-2-8 2v7c0 6 8 10 8 10z"/>
+    </svg>
+  )
+}
+
 type NavItem = {
   label: string
   href: string
@@ -56,6 +64,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Agendamentos', href: '/appointments',     icon: <CalendarIcon />, roles: ['tenant_admin', 'professional', 'client'] },
   { label: 'Clientes',     href: '/clients',          icon: <UsersIcon />,    roles: ['tenant_admin', 'professional'] },
   { label: 'Profissionais',href: '/professionals',    icon: <BriefcaseIcon />,roles: ['tenant_admin'] },
+  { label: 'Administradores', href: '/admins', icon: <ShieldIcon />, roles: ['tenant_admin'] },
   { label: 'Meu perfil',   href: '/professionals/me', icon: <UserIcon />,     roles: ['professional'] },
 ]
 
