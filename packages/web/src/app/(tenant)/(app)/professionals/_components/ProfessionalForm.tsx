@@ -117,36 +117,39 @@ export function ProfessionalForm({
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="prof-name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
               Nome completo <span className="text-red-500">*</span>
             </label>
-            <input type="text" {...register('name')} className={inputCls(!!errors.name)} />
+            <input id="prof-name" type="text" {...register('name')} className={inputCls(!!errors.name)} />
             {errors.name && (
               <p className="mt-1 text-xs text-red-500 m-0">{errors.name.message}</p>
             )}
           </div>
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Cargo</label>
-            <input type="text" {...register('position')} className={inputCls()} />
+            <label htmlFor="prof-position" className="block text-[13px] font-medium text-gray-700 mb-1.5">Cargo</label>
+            <input id="prof-position" type="text" {...register('position')} className={inputCls(!!errors.position)} />
+            {errors.position && (
+              <p className="mt-1 text-xs text-red-500 m-0">{errors.position.message}</p>
+            )}
           </div>
         </div>
 
         {mode === 'create' && (
           <>
             <div className="mb-4">
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="prof-email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                 E-mail <span className="text-red-500">*</span>
               </label>
-              <input type="email" {...register('email')} className={inputCls(!!errors.email)} />
+              <input id="prof-email" type="email" {...register('email')} className={inputCls(!!errors.email)} />
               {errors.email && (
                 <p className="mt-1 text-xs text-red-500 m-0">{errors.email.message}</p>
               )}
             </div>
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="prof-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
                 Senha inicial <span className="text-red-500">*</span>
               </label>
-              <input type="password" {...register('password')} className={inputCls(!!errors.password)} />
+              <input id="prof-password" type="password" {...register('password')} className={inputCls(!!errors.password)} />
               {errors.password && (
                 <p className="mt-1 text-xs text-red-500 m-0">{errors.password.message}</p>
               )}
@@ -160,8 +163,9 @@ export function ProfessionalForm({
         <p className="text-sm font-bold text-gray-900 m-0 mb-5">Perfil</p>
 
         <div className="mb-4">
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Observações</label>
+          <label htmlFor="prof-bio" className="block text-[13px] font-medium text-gray-700 mb-1.5">Observações</label>
           <textarea
+            id="prof-bio"
             {...register('bio')}
             rows={3}
             className="w-full px-3 py-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
@@ -170,9 +174,10 @@ export function ProfessionalForm({
 
         {showStatus && (
           <div className="max-w-[220px]">
-            <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
+            <label htmlFor="prof-active" className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
             <div className="relative">
               <select
+                id="prof-active"
                 value={activeValue ? 'true' : 'false'}
                 onChange={(e) => setValue('active', e.target.value === 'true')}
                 className={cn(inputCls(), 'appearance-none cursor-pointer')}
