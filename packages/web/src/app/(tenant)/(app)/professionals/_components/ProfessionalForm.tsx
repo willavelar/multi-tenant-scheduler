@@ -1,6 +1,6 @@
 'use client'
 
-import { useForm } from 'react-hook-form'
+import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
@@ -66,7 +66,9 @@ export function ProfessionalForm({
   isAdmin,
   isOwnProfile,
 }: ProfessionalFormProps) {
-  const schema = mode === 'create' ? createSchema : editSchema
+  const resolver = (mode === 'create'
+    ? zodResolver(createSchema)
+    : zodResolver(editSchema)) as Resolver<FormValues>
 
   const {
     register,
@@ -76,7 +78,7 @@ export function ProfessionalForm({
     formState: { errors, isSubmitting },
     setError,
   } = useForm<FormValues>({
-    resolver: zodResolver(schema as any),
+    resolver,
     defaultValues: {
       name:      defaultValues?.name      ?? '',
       position:  defaultValues?.position  ?? '',
@@ -96,7 +98,10 @@ export function ProfessionalForm({
     try {
       await onSubmit(data)
     } catch {
-      setError('root', { message: 'Não foi possível salvar. Verifique os dados e tente novamente.' })
+      setError('root', { message: mode === 'create'
+        ? 'Não foi possível cadastrar. Verifique os dados e tente novamente.'
+        : 'Não foi possível salvar as alterações. Verifique os dados e tente novamente.',
+      })
     }
   }
 
