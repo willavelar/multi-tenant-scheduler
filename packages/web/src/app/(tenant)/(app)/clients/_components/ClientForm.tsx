@@ -67,8 +67,8 @@ const inputCls = (hasError = false) => cn(
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfile }: ClientFormProps) {
-  const { data: allProfessionals = [] } = useProfessionals()
-  const { data: allServices = [] } = useServices()
+  const { data: allProfessionals = [], isSuccess: profsReady } = useProfessionals()
+  const { data: services = [] } = useServices()
 
   const [initialized, setInitialized] = useState(mode === 'create')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -92,7 +92,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
   // Initialize edit form once both defaultValues and allProfessionals are ready
   useEffect(() => {
-    if (mode !== 'edit' || !defaultValues || initialized || allProfessionals.length === 0) return
+    if (mode !== 'edit' || !defaultValues || initialized || !profsReady) return
     setForm({
       name:               defaultValues.name,
       email:              defaultValues.email,
@@ -458,7 +458,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       </div>
 
       {/* ── Card 5: Serviços permitidos ── */}
-      {allServices.length > 0 && (
+      {services.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Serviços permitidos</p>
           <p className="text-[13px] text-gray-500 m-0 mb-4">
@@ -481,7 +481,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
           {!allSvcs && (
             <div>
-              {allServices.map((svc: Service) => (
+              {services.map((svc: Service) => (
                 <div
                   key={svc.id}
                   className="flex items-center gap-2.5 py-2.5 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 -mx-3 px-3 rounded-md transition-colors"
