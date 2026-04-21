@@ -115,7 +115,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     )
     setSelectedServiceIds(defaultValues.linkedServices.map(s => s.serviceId))
     setInitialized(true)
-  }, [mode, defaultValues, allProfessionals, initialized])
+  }, [mode, defaultValues, allProfessionals, profsReady, initialized])
 
   // Close professional dropdown on outside click
   useEffect(() => {
