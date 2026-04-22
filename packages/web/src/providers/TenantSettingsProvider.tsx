@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect } from 'react'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
+import { useAuth } from '@/providers/AuthProvider'
 
 type TenantSettingsContextValue = {
   tenantName:    string
@@ -14,7 +15,10 @@ const TenantSettingsContext = createContext<TenantSettingsContextValue>({
 })
 
 export function TenantSettingsProvider({ children }: { children: React.ReactNode }) {
-  const { data } = useTenantSettings()
+  const { user } = useAuth()
+  const isAdmin = user?.role === 'tenant_admin'
+
+  const { data } = useTenantSettings({ enabled: isAdmin })
 
   const tenantName    = data?.name    ?? ''
   const tenantLogoUrl = data?.logoUrl ?? null
