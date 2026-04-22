@@ -9,12 +9,13 @@ export type TenantSettings = {
   logoUrl: string | null
 }
 
-export function useTenantSettings() {
+export function useTenantSettings(options?: { enabled?: boolean }) {
   const api = useApi()
   const { slug } = useTenant()
   return useQuery<TenantSettings>({
     queryKey: ['tenant-settings', slug],
     queryFn:  async () => (await api('/tenants/me')).json(),
+    enabled:  options?.enabled ?? true,
   })
 }
 
