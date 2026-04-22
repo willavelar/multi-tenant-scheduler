@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Client } from 'pg';
+import Redis from 'ioredis';
 import * as bcrypt from 'bcryptjs';
 import { faker } from '@faker-js/faker/locale/pt_BR';
 import * as schema from '@scheduler/shared';
@@ -7,6 +8,10 @@ import * as schema from '@scheduler/shared';
 // Weekday slots 09:00–17:00 (1h each, 8 slots)
 const SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
 const STATUSES: schema.Appointment['status'][] = ['pending', 'confirmed', 'cancelled', 'completed'];
+
+function avatarUrl(name: string): string {
+  return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+}
 
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -32,10 +37,15 @@ async function seed() {
   await client.connect();
   const db = drizzle(client, { schema });
 
+  const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379');
+
   // ── Reset ────────────────────────────────────────────────────────────────
   console.log('Resetting data...');
   // TRUNCATE bypasses RLS and cascades FK-dependent tables in one shot
   await client.query('TRUNCATE tenants CASCADE');
+  // Flush tenant slug cache so stale IDs don't survive across seeds
+  const cachedKeys = await redis.keys('tenant:slug:*');
+  if (cachedKeys.length) await redis.del(...cachedKeys);
   console.log('Tables cleared.');
 
   // ── Tenant ───────────────────────────────────────────────────────────────
@@ -59,6 +69,7 @@ async function seed() {
     name: 'Admin Demo',
     phone: faker.phone.number(),
     active: true,
+    avatarUrl: avatarUrl('Admin Demo'),
   }).returning();
   console.log('Admin:', admin.email);
 
@@ -82,6 +93,7 @@ async function seed() {
       name: p.name,
       phone: faker.phone.number(),
       active: true,
+      avatarUrl: avatarUrl(p.name),
     }).returning();
 
     const [prof] = await db.insert(schema.professionals).values({
@@ -149,6 +161,7 @@ async function seed() {
       name,
       phone: faker.phone.number(),
       active: faker.datatype.boolean({ probability: 0.85 }),
+      avatarUrl: avatarUrl(name),
     }).returning();
 
     await db.insert(schema.clientProfiles).values({
@@ -211,6 +224,7 @@ async function seed() {
 
   console.log(`${created} appointments created`);
   console.log('\nSeed complete!');
+  await redis.quit();
   await client.end();
 }
 
