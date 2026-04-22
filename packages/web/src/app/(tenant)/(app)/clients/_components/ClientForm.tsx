@@ -375,8 +375,10 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             <button
               type="button"
               onClick={() => { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }}
-              className="h-[42px] px-3 bg-transparent border border-gray-200 rounded-lg text-xs text-gray-500 cursor-pointer hover:bg-gray-50 transition-colors"
-              style={{ marginBottom: errors.serviceLimitCount || errors.serviceLimitPeriod ? 22 : 0 }}
+              className={cn(
+                'h-[42px] px-3 bg-transparent border border-gray-200 rounded-lg text-xs text-gray-500 cursor-pointer hover:bg-gray-50 transition-colors',
+                errors.serviceLimitCount || errors.serviceLimitPeriod ? 'mb-[22px]' : 'mb-0'
+              )}
             >
               Remover limite
             </button>
