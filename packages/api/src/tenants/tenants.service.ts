@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import { tenants } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
@@ -42,13 +42,18 @@ export class TenantsService {
       .from(tenants)
       .where(eq(tenants.id, tenantId));
 
-    return tenant ?? null;
+    if (!tenant) throw new NotFoundException('Tenant not found');
+    return tenant;
   }
 
   async update(tenantId: string, dto: UpdateTenantDto) {
     const patch: Partial<typeof tenants.$inferInsert> = {};
     if (dto.name    !== undefined) patch.name    = dto.name;
     if (dto.logoUrl !== undefined) patch.logoUrl = dto.logoUrl;
+
+    if (Object.keys(patch).length === 0) {
+      throw new BadRequestException('No updatable fields provided');
+    }
 
     const [updated] = await this.db
       .update(tenants)
@@ -61,6 +66,7 @@ export class TenantsService {
         logoUrl: tenants.logoUrl,
       });
 
+    if (!updated) throw new NotFoundException('Tenant not found');
     return updated;
   }
 }
