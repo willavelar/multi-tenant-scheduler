@@ -20,6 +20,8 @@ function getBreadcrumbs(pathname: string): Crumb[] {
     '/professionals':       [{ label: 'Profissionais' }],
     '/professionals/new':   [{ label: 'Profissionais', href: '/professionals' }, { label: 'Novo profissional' }],
     '/professionals/me':    [{ label: 'Meu perfil' }],
+    '/me':                  [{ label: 'Meu perfil' }],
+    '/settings/general':    [{ label: 'Configurações' }, { label: 'Gerais' }],
   }
 
   if (STATIC[path]) return STATIC[path]
@@ -143,31 +145,17 @@ export function Header() {
             </div>
 
             <div className="py-1">
-              {user?.role === 'professional' || user?.role === 'client' ? (
-                <Link
-                  href={user.role === 'professional' ? '/professionals/me' : `/clients/${user.id}`}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 no-underline transition-colors hover:bg-gray-100"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  Perfil
-                </Link>
-              ) : (
-                <button
-                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 bg-transparent border-0 cursor-default w-full text-left opacity-50"
-                  disabled
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  Perfil
-                  <span className="ml-auto text-[10px] text-gray-300 bg-gray-50 px-1.5 py-0.5 rounded">Em breve</span>
-                </button>
-              )}
+              <Link
+                href="/me"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-gray-700 no-underline transition-colors hover:bg-gray-100"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Perfil
+              </Link>
             </div>
 
             <div className="border-t border-gray-100 py-1">
