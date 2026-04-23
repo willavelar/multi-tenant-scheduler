@@ -1,3 +1,5 @@
+'use client'
+
 import { AvatarCropField } from './AvatarCropField'
 
 interface LogoCropFieldProps {
