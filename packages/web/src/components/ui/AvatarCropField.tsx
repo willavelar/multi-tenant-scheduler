@@ -123,7 +123,7 @@ export function AvatarCropField({
             alt="Imagem"
             className={cn(
               'object-cover',
-              isRect ? 'h-10 w-auto max-w-[180px] rounded-lg' : 'w-20 h-20 rounded-full',
+              isRect ? 'w-[180px] h-10 object-cover rounded-lg' : 'w-20 h-20 rounded-full',
             )}
           />
         ) : isRect ? (
