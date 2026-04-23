@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTenant } from '@/providers/TenantProvider'
 import { useAuth } from '@/providers/AuthProvider'
+import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { cn } from '@/lib/utils'
 
 function CalendarIcon() {
@@ -53,29 +54,42 @@ function ShieldIcon() {
   )
 }
 
+function SettingsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  )
+}
+
 type NavItem = {
   label: string
-  href: string
-  icon: React.ReactNode
+  href:  string
+  icon:  React.ReactNode
   roles: Array<'tenant_admin' | 'professional' | 'client'>
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Agendamentos', href: '/appointments',     icon: <CalendarIcon />, roles: ['tenant_admin', 'professional', 'client'] },
-  { label: 'Clientes',     href: '/clients',          icon: <UsersIcon />,    roles: ['tenant_admin', 'professional'] },
-  { label: 'Profissionais',href: '/professionals',    icon: <BriefcaseIcon />,roles: ['tenant_admin'] },
-  { label: 'Administradores', href: '/admins', icon: <ShieldIcon />, roles: ['tenant_admin'] },
-  { label: 'Meu perfil',   href: '/professionals/me', icon: <UserIcon />,     roles: ['professional'] },
+  { label: 'Agendamentos',    href: '/appointments',  icon: <CalendarIcon />,  roles: ['tenant_admin', 'professional', 'client'] },
+  { label: 'Clientes',        href: '/clients',       icon: <UsersIcon />,     roles: ['tenant_admin', 'professional'] },
+  { label: 'Profissionais',   href: '/professionals', icon: <BriefcaseIcon />, roles: ['tenant_admin'] },
+  { label: 'Administradores', href: '/admins',        icon: <ShieldIcon />,    roles: ['tenant_admin'] },
+]
+
+const SETTINGS_ITEMS: NavItem[] = [
+  { label: 'Gerais', href: '/settings/general', icon: <SettingsIcon />, roles: ['tenant_admin'] },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const { slug } = useTenant()
   const { user } = useAuth()
+  const { tenantName, tenantLogoUrl } = useTenantSettingsContext()
 
-  const items = NAV_ITEMS.filter(item =>
-    user ? item.roles.includes(user.role) : false
-  )
+  const role = user?.role
+  const items = NAV_ITEMS.filter(item => role && item.roles.includes(role))
+  const settingsItems = SETTINGS_ITEMS.filter(item => role && item.roles.includes(role))
 
   return (
     <aside className="w-[260px] min-h-screen bg-slate-900 fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-white/[0.05]">
@@ -83,15 +97,25 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-5 pt-5 pb-4 border-b border-white/[0.07]">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" strokeWidth="2"/>
-              <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <span className="text-[15px] font-bold text-slate-100 tracking-[-0.01em]">
-            Scheduler
-          </span>
+          {tenantLogoUrl ? (
+            <img
+              src={tenantLogoUrl}
+              alt={tenantName}
+              className="h-9 w-auto max-w-full object-contain"
+            />
+          ) : (
+            <>
+              <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shrink-0">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" strokeWidth="2"/>
+                  <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              <span className="text-[15px] font-bold text-slate-100 tracking-[-0.01em]">
+                {tenantName || 'Scheduler'}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
@@ -118,6 +142,32 @@ export function Sidebar() {
             </Link>
           )
         })}
+
+        {settingsItems.length > 0 && (
+          <>
+            <p className="text-[10px] font-semibold text-slate-500 tracking-[0.08em] uppercase px-3 mb-2 mt-5">
+              Configurações
+            </p>
+            {settingsItems.map(item => {
+              const active = pathname === item.href || pathname.startsWith(item.href + '/')
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
+                    active
+                      ? 'bg-indigo-500/[0.18] text-indigo-300'
+                      : 'text-slate-400 hover:bg-white/[0.07] hover:text-slate-100'
+                  )}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       {/* Footer */}
