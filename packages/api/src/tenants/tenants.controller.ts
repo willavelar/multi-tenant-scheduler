@@ -8,7 +8,6 @@ import { TenantId } from '../common/decorators/tenant-id.decorator';
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
-@Roles('tenant_admin')
 export class TenantsController {
   constructor(private readonly service: TenantsService) {}
 
@@ -18,6 +17,7 @@ export class TenantsController {
   }
 
   @Patch('me')
+  @Roles('tenant_admin')
   update(@TenantId() tenantId: string, @Body() dto: UpdateTenantDto) {
     return this.service.update(tenantId, dto);
   }
