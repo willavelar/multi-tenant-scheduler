@@ -54,7 +54,7 @@ export function TenantGeneralForm() {
         <p className="text-[13px] text-gray-500 m-0 mb-4">
           Aparece no topo do menu lateral. Proporção 3:1 (horizontal).
         </p>
-        <LogoCropField value={logoUrl} onChange={setLogoUrl} />
+        <LogoCropField value={logoUrl} onChange={(v) => { setLogoUrl(v); setSuccess(false) }} />
         {logoUrl && (
           <button
             type="button"
