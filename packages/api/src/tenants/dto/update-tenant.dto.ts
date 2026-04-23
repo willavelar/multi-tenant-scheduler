@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
 
 export class UpdateTenantDto {
   @IsOptional()
@@ -7,6 +7,7 @@ export class UpdateTenantDto {
   name?: string;
 
   @IsOptional()
+  @ValidateIf((o) => o.logoUrl !== null)
   @IsString()
   @MaxLength(200_000)
   logoUrl?: string | null;
