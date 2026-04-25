@@ -1,16 +1,23 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { users } from '@scheduler/shared';
+import * as bcrypt from 'bcryptjs';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import { UpdateAdminDto } from './dto/update-admin.dto';
 
 const ADMIN_FIELDS = {
-  id:        users.id,
-  name:      users.name,
-  email:     users.email,
-  avatarUrl: users.avatarUrl,
-  active:    users.active,
-  createdAt: users.createdAt,
+  id:          users.id,
+  name:        users.name,
+  email:       users.email,
+  phone:       users.phone,
+  avatarUrl:   users.avatarUrl,
+  active:      users.active,
+  timezone:    users.timezone,
+  timeFormat:  users.timeFormat,
+  lastLoginAt: users.lastLoginAt,
+  createdAt:   users.createdAt,
 };
 
 @Injectable()
@@ -45,6 +52,73 @@ export class AdminsService {
         .offset(offset);
 
       return { data, total, page, limit };
+    });
+  }
+
+  async findOne(tenantId: string, id: string) {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [admin] = await tx
+        .select(ADMIN_FIELDS)
+        .from(users)
+        .where(and(eq(users.id, id), eq(users.tenantId, tenantId), eq(users.role, 'tenant_admin')));
+      if (!admin) throw new NotFoundException('Administrador não encontrado');
+      return admin;
+    });
+  }
+
+  async create(dto: CreateAdminDto, tenantId: string) {
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [existing] = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.email, dto.email), eq(users.tenantId, tenantId)));
+      if (existing) throw new ConflictException('E-mail já está em uso');
+
+      const [user] = await tx.insert(users).values({
+        tenantId,
+        email:        dto.email,
+        passwordHash,
+        role:         'tenant_admin',
+        name:         dto.name,
+        avatarUrl:    dto.avatarUrl,
+      }).returning();
+
+      return {
+        id:          user.id,
+        name:        user.name,
+        email:       user.email,
+        phone:       user.phone,
+        avatarUrl:   user.avatarUrl ?? null,
+        active:      user.active,
+        lastLoginAt: null,
+        createdAt:   user.createdAt,
+      };
+    });
+  }
+
+  async update(id: string, dto: UpdateAdminDto, tenantId: string) {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [admin] = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.id, id), eq(users.tenantId, tenantId), eq(users.role, 'tenant_admin')));
+      if (!admin) throw new NotFoundException('Administrador não encontrado');
+
+      const patch: Record<string, unknown> = {};
+      if (dto.name       !== undefined) patch.name       = dto.name;
+      if (dto.avatarUrl  !== undefined) patch.avatarUrl  = dto.avatarUrl;
+      if (dto.active     !== undefined) patch.active     = dto.active;
+      if (dto.timezone   !== undefined) patch.timezone   = dto.timezone;
+      if (dto.timeFormat !== undefined) patch.timeFormat = dto.timeFormat;
+
+      if (Object.keys(patch).length) {
+        await tx.update(users).set(patch).where(eq(users.id, id));
+      }
+
+      const [updated] = await tx.select(ADMIN_FIELDS).from(users).where(eq(users.id, id));
+      if (!updated) throw new NotFoundException('Administrador não encontrado');
+      return updated;
     });
   }
 }

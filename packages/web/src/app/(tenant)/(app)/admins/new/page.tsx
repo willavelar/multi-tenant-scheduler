@@ -1,0 +1,28 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useCreateAdmin } from '@/hooks/useAdmins'
+import { BackButton } from '@/components/ui/BackButton'
+import { AdminForm, type AdminFormData } from '../_components/AdminForm'
+
+export default function NewAdminPage() {
+  const router = useRouter()
+  const { mutateAsync } = useCreateAdmin()
+
+  async function handleSubmit(data: AdminFormData) {
+    await mutateAsync({
+      name:      data.name,
+      email:     data.email!,
+      password:  data.password!,
+      avatarUrl: data.avatarUrl ?? undefined,
+    })
+    router.push('/admins')
+  }
+
+  return (
+    <div>
+      <BackButton href="/admins" variant="ghost">Voltar para administradores</BackButton>
+      <AdminForm mode="create" onSubmit={handleSubmit} />
+    </div>
+  )
+}

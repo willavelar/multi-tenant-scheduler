@@ -24,6 +24,8 @@ export default function NewClientPage() {
             notes:            data.notes,
             active:           data.active,
             avatarUrl:        data.avatarUrl,
+            timezone:         data.timezone,
+            timeFormat:       data.timeFormat,
             allProfessionals: data.allProfessionals,
             allServices:      data.allServices,
             professionalIds:  data.professionalIds,

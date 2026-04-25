@@ -13,6 +13,8 @@ export const users = pgTable('users', {
   phone:        text('phone'),
   active:       boolean('active').notNull().default(true),
   avatarUrl:    text('avatar_url'),
+  timezone:     text('timezone').notNull().default('America/Sao_Paulo'),
+  timeFormat:   text('time_format').notNull().default('24h'),
   lastLoginAt:  timestamp('last_login_at'),
   createdAt:    timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({

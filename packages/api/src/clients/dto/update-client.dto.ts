@@ -1,5 +1,6 @@
 import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min } from 'class-validator';
 
+
 export class UpdateClientDto {
   @IsOptional() @IsString() name?: string;
   @IsOptional() @IsEmail() email?: string;
@@ -16,4 +17,8 @@ export class UpdateClientDto {
   @IsOptional() @IsBoolean() allServices?: boolean;
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) professionalIds?: string[];
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) serviceIds?: string[];
+
+  @IsOptional() @IsString() timezone?: string;
+
+  @IsOptional() @IsString() @IsIn(['12h', '24h']) timeFormat?: string;
 }
