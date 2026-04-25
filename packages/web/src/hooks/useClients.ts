@@ -48,6 +48,7 @@ export function useCreateClient() {
       active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number; serviceLimitPeriod?: string;
       professionalIds?: string[]; serviceIds?: string[];
+      timezone?: string; timeFormat?: '12h' | '24h';
     }) => api('/clients', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clients', slug] }),
   })
@@ -63,6 +64,7 @@ export function useUpdateClient(id: string) {
       birthDate?: string; notes?: string; active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number | null; serviceLimitPeriod?: string | null;
       professionalIds?: string[]; serviceIds?: string[];
+      timezone?: string; timeFormat?: '12h' | '24h';
     }) => api(`/clients/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client', slug, id] })

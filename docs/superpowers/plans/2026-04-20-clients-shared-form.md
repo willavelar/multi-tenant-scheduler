@@ -1,3 +1,35 @@
+# Clients Shared Form Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Extract a shared `ClientForm` component from the duplicate form code in `clients/new/page.tsx` and `clients/[id]/edit/page.tsx`, so any change to the form is automatically reflected in both flows.
+
+**Architecture:** Create `clients/_components/ClientForm.tsx` that owns all form state, validation, and JSX. The two page files become thin wrappers that fetch their data and pass it down via `mode`, `defaultValues`, `onSubmit`, and `onCancel` props. The pages themselves do not change routes or loading patterns.
+
+**Tech Stack:** React (`useState`, `useRef`, `useEffect`), TanStack Query hooks (`useProfessionals`, `useServices`), existing UI components (`AvatarCropField`, `DatePickerField`, `BackButton`, `AvatarName`), Tailwind + `cn()`.
+
+---
+
+## File Map
+
+| Action | Path |
+|--------|------|
+| **Create** | `packages/web/src/app/(tenant)/(app)/clients/_components/ClientForm.tsx` |
+| **Replace** | `packages/web/src/app/(tenant)/(app)/clients/new/page.tsx` |
+| **Replace** | `packages/web/src/app/(tenant)/(app)/clients/[id]/edit/page.tsx` |
+
+---
+
+### Task 1: Create `ClientForm.tsx`
+
+**Files:**
+- Create: `packages/web/src/app/(tenant)/(app)/clients/_components/ClientForm.tsx`
+
+- [ ] **Step 1: Create the `_components` directory and write `ClientForm.tsx`**
+
+Write the full file at `packages/web/src/app/(tenant)/(app)/clients/_components/ClientForm.tsx`:
+
+```tsx
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
@@ -6,7 +38,6 @@ import { useServices } from '@/hooks/useServices'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DatePickerField } from '@/components/ui/DatePickerField'
-import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { cn } from '@/lib/utils'
 import type { Professional, Service, ClientDetail } from '@/types'
 
@@ -21,8 +52,6 @@ export type ClientFormData = {
   notes?: string
   active: boolean
   avatarUrl?: string
-  timezone: string
-  timeFormat: '12h' | '24h'
   allProfessionals: boolean
   allServices: boolean
   professionalIds: string[]
@@ -70,14 +99,12 @@ const inputCls = (hasError = false) => cn(
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfile }: ClientFormProps) {
-  const { data: allProfessionals = [], isSuccess: profsReady } = useProfessionals()
-  const { data: services = [] } = useServices()
+  const { data: allProfessionals = [] } = useProfessionals()
+  const { data: allServices = [] } = useServices()
 
   const [initialized, setInitialized] = useState(mode === 'create')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [timezone,   setTimezone]   = useState(defaultValues?.timezone   ?? 'America/Sao_Paulo')
-  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>(defaultValues?.timeFormat ?? '24h')
 
   const [form, setForm] = useState<FormState>({
     name: '', email: '', password: '', phone: '',
@@ -97,7 +124,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
   // Initialize edit form once both defaultValues and allProfessionals are ready
   useEffect(() => {
-    if (mode !== 'edit' || !defaultValues || initialized || !profsReady) return
+    if (mode !== 'edit' || !defaultValues || initialized || allProfessionals.length === 0) return
     setForm({
       name:               defaultValues.name,
       email:              defaultValues.email,
@@ -111,8 +138,6 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       serviceLimitPeriod: defaultValues.serviceLimitPeriod ?? '',
     })
     setAvatarUrl(defaultValues.avatarUrl ?? null)
-    setTimezone(defaultValues.timezone ?? 'America/Sao_Paulo')
-    setTimeFormat(defaultValues.timeFormat ?? '24h')
     setAllProfs(defaultValues.allProfessionals === true)
     setAllSvcs(defaultValues.allServices === true)
     setSelectedProfs(
@@ -122,7 +147,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     )
     setSelectedServiceIds(defaultValues.linkedServices.map(s => s.serviceId))
     setInitialized(true)
-  }, [mode, defaultValues, allProfessionals, profsReady, initialized])
+  }, [mode, defaultValues, allProfessionals, initialized])
 
   // Close professional dropdown on outside click
   useEffect(() => {
@@ -197,8 +222,6 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         notes:            form.notes.trim() || undefined,
         active:           form.active,
         avatarUrl:        avatarUrl ?? undefined,
-        timezone,
-        timeFormat,
         allProfessionals: allProfs,
         allServices:      allSvcs,
         professionalIds:  allProfs ? [] : selectedProfs.map(p => p.id),
@@ -336,15 +359,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         )}
       </div>
 
-      {/* ── Card 3: Preferências ── */}
-      <PreferencesCard
-        timezone={timezone}
-        timeFormat={timeFormat}
-        onTimezoneChange={setTimezone}
-        onTimeFormatChange={setTimeFormat}
-      />
-
-      {/* ── Card 4: Limite de serviços ── */}
+      {/* ── Card 3: Limite de serviços ── */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
         <p className="text-sm font-bold text-gray-900 m-0 mb-5">Limite de serviços</p>
         <p className="text-[13px] text-gray-500 m-0 mb-4">
@@ -392,10 +407,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             <button
               type="button"
               onClick={() => { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }}
-              className={cn(
-                'h-[42px] px-3 bg-transparent border border-gray-200 rounded-lg text-xs text-gray-500 cursor-pointer hover:bg-gray-50 transition-colors',
-                errors.serviceLimitCount || errors.serviceLimitPeriod ? 'mb-[22px]' : 'mb-0'
-              )}
+              className="h-[42px] px-3 bg-transparent border border-gray-200 rounded-lg text-xs text-gray-500 cursor-pointer hover:bg-gray-50 transition-colors"
+              style={{ marginBottom: errors.serviceLimitCount || errors.serviceLimitPeriod ? 22 : 0 }}
             >
               Remover limite
             </button>
@@ -403,7 +416,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         </div>
       </div>
 
-      {/* ── Card 5: Profissionais vinculados ── */}
+      {/* ── Card 4: Profissionais vinculados ── */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm relative">
         <p className="text-sm font-bold text-gray-900 m-0 mb-5">Profissionais vinculados</p>
         <p className="text-[13px] text-gray-500 m-0 mb-4">
@@ -476,8 +489,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         )}
       </div>
 
-      {/* ── Card 6: Serviços permitidos ── */}
-      {services.length > 0 && (
+      {/* ── Card 5: Serviços permitidos ── */}
+      {allServices.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Serviços permitidos</p>
           <p className="text-[13px] text-gray-500 m-0 mb-4">
@@ -500,7 +513,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
           {!allSvcs && (
             <div>
-              {services.map((svc: Service) => (
+              {allServices.map((svc: Service) => (
                 <div
                   key={svc.id}
                   className="flex items-center gap-2.5 py-2.5 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 -mx-3 px-3 rounded-md transition-colors"
@@ -558,3 +571,217 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     </form>
   )
 }
+```
+
+- [ ] **Step 2: Verify TypeScript compiles without errors**
+
+Run from the monorepo root:
+```bash
+cd packages/web && npx tsc --noEmit 2>&1 | head -40
+```
+
+Expected: no errors related to `ClientForm.tsx`. If there are errors, fix them before continuing.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add packages/web/src/app/\(tenant\)/\(app\)/clients/_components/ClientForm.tsx
+git commit -m "feat: extract shared ClientForm component for clients module"
+```
+
+---
+
+### Task 2: Simplify `new/page.tsx`
+
+**Files:**
+- Modify: `packages/web/src/app/(tenant)/(app)/clients/new/page.tsx`
+
+- [ ] **Step 1: Replace the entire file**
+
+Replace `packages/web/src/app/(tenant)/(app)/clients/new/page.tsx` with:
+
+```tsx
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useCreateClient } from '@/hooks/useClients'
+import { BackButton } from '@/components/ui/BackButton'
+import { ClientForm, type ClientFormData } from '../_components/ClientForm'
+
+export default function NewClientPage() {
+  const router = useRouter()
+  const { mutateAsync } = useCreateClient()
+
+  return (
+    <div>
+      <BackButton href="/clients" variant="ghost">Voltar para clientes</BackButton>
+      <ClientForm
+        mode="create"
+        onSubmit={async (data: ClientFormData) => {
+          await mutateAsync({
+            name:             data.name,
+            email:            data.email,
+            password:         data.password!,
+            phone:            data.phone,
+            birthDate:        data.birthDate,
+            notes:            data.notes,
+            active:           data.active,
+            avatarUrl:        data.avatarUrl,
+            allProfessionals: data.allProfessionals,
+            allServices:      data.allServices,
+            professionalIds:  data.professionalIds,
+            serviceIds:       data.serviceIds,
+            ...(data.serviceLimitCount != null
+              ? { serviceLimitCount: data.serviceLimitCount, serviceLimitPeriod: data.serviceLimitPeriod }
+              : {}),
+          })
+          router.push('/clients')
+        }}
+        onCancel={() => router.push('/clients')}
+      />
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: Verify TypeScript**
+
+```bash
+cd packages/web && npx tsc --noEmit 2>&1 | head -40
+```
+
+Expected: no new errors.
+
+- [ ] **Step 3: Verify create flow manually**
+
+Start the dev server if not already running:
+```bash
+pnpm dev:web
+```
+
+Navigate to `/clients/new`, fill in name + email + password, submit. Confirm the client appears in the list.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/web/src/app/\(tenant\)/\(app\)/clients/new/page.tsx
+git commit -m "refactor: simplify new client page to delegate to ClientForm"
+```
+
+---
+
+### Task 3: Simplify `[id]/edit/page.tsx`
+
+**Files:**
+- Modify: `packages/web/src/app/(tenant)/(app)/clients/[id]/edit/page.tsx`
+
+- [ ] **Step 1: Replace the entire file**
+
+Replace `packages/web/src/app/(tenant)/(app)/clients/[id]/edit/page.tsx` with:
+
+```tsx
+'use client'
+
+import { useRouter, useParams } from 'next/navigation'
+import { useAuth } from '@/providers/AuthProvider'
+import { useClient, useUpdateClient } from '@/hooks/useClients'
+import { BackButton } from '@/components/ui/BackButton'
+import { ClientForm, type ClientFormData } from '../../_components/ClientForm'
+
+export default function EditClientPage() {
+  const { id } = useParams<{ id: string }>()
+  const router = useRouter()
+  const { user: me, updateUser } = useAuth()
+  const isOwnProfile = id === me?.id
+
+  const { data: client, isLoading } = useClient(id)
+  const { mutateAsync } = useUpdateClient(id)
+
+  if (isLoading || !client) {
+    return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
+  }
+
+  return (
+    <div>
+      <div className="mb-7">
+        <BackButton href={`/clients/${id}`}>Voltar para cliente</BackButton>
+      </div>
+      <ClientForm
+        mode="edit"
+        defaultValues={client}
+        isOwnProfile={isOwnProfile}
+        onSubmit={async (data: ClientFormData) => {
+          await mutateAsync({
+            name:             data.name,
+            email:            data.email,
+            phone:            data.phone,
+            birthDate:        data.birthDate,
+            notes:            data.notes,
+            active:           data.active,
+            avatarUrl:        data.avatarUrl,
+            allProfessionals: data.allProfessionals,
+            allServices:      data.allServices,
+            professionalIds:  data.professionalIds,
+            serviceIds:       data.serviceIds,
+            serviceLimitCount:  data.serviceLimitCount ?? null,
+            serviceLimitPeriod: data.serviceLimitCount
+              ? data.serviceLimitPeriod ?? null
+              : null,
+          })
+          if (isOwnProfile) updateUser({ name: data.name, avatarUrl: data.avatarUrl ?? null })
+          router.push(`/clients/${id}`)
+        }}
+        onCancel={() => router.push(`/clients/${id}`)}
+      />
+    </div>
+  )
+}
+```
+
+**Note on `serviceLimitCount: null`:** The edit mutation accepts `number | null`. Passing `null` explicitly clears the limit in the database. The create mutation does not support null — it simply omits the field. This difference is handled here in the page's `onSubmit`, not inside `ClientForm`.
+
+- [ ] **Step 2: Verify TypeScript**
+
+```bash
+cd packages/web && npx tsc --noEmit 2>&1 | head -40
+```
+
+Expected: no errors.
+
+- [ ] **Step 3: Verify edit flow manually**
+
+Navigate to an existing client's edit page. Verify:
+1. Form pre-populates with existing data (name, email, phone, linked professionals, linked services, service limit)
+2. "Status" field is visible when editing as admin, hidden when editing own profile
+3. Submitting saves changes and redirects to the client detail page
+4. Clearing the service limit count and saving correctly clears it (the API receives `serviceLimitCount: null`)
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/web/src/app/\(tenant\)/\(app\)/clients/\[id\]/edit/page.tsx
+git commit -m "refactor: simplify edit client page to delegate to ClientForm"
+```
+
+---
+
+## Self-Review
+
+**Spec coverage:**
+
+| Requirement | Covered in |
+|---|---|
+| `ClientForm` with `mode`, `defaultValues`, `onSubmit`, `onCancel`, `isOwnProfile` props | Task 1 |
+| `ClientFormData` type exported | Task 1 |
+| `applyPhoneMask` in one place only | Task 1 — removed from both page files, lives only in `ClientForm.tsx` |
+| Edit initializes from `defaultValues` + waits for `allProfessionals` | Task 1 — `useEffect` guard: `allProfessionals.length === 0` |
+| `initialized` starts `true` for create, waits for edit | Task 1 — `useState(mode === 'create')` |
+| Five-card layout | Task 1 |
+| Password field create-only | Task 1 — `{mode === 'create' && ...}` |
+| Status hidden for own profile in edit | Task 1 — `showStatus = mode === 'create' || !isOwnProfile` |
+| `serviceLimitCount: null` sent by edit to clear | Task 3 — in page's `onSubmit` |
+| `new/page.tsx` simplified | Task 2 |
+| `[id]/edit/page.tsx` simplified | Task 3 |
+| `updateUser` called after own profile edit | Task 3 |
+
+All spec requirements covered. No placeholders.

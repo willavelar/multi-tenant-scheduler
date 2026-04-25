@@ -50,6 +50,8 @@ export class ClientsService {
         notes: clientProfiles.notes,
         active: users.active,
         avatarUrl: users.avatarUrl,
+        timezone: users.timezone,
+        timeFormat: users.timeFormat,
         allProfessionals: clientProfiles.allProfessionals,
         allServices: clientProfiles.allServices,
         serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -90,6 +92,8 @@ export class ClientsService {
           notes: clientProfiles.notes,
           active: users.active,
           avatarUrl: users.avatarUrl,
+          timezone: users.timezone,
+          timeFormat: users.timeFormat,
           allProfessionals: clientProfiles.allProfessionals,
           allServices: clientProfiles.allServices,
           serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -147,6 +151,8 @@ export class ClientsService {
           phone: dto.phone,
           active: dto.active ?? true,
           avatarUrl: dto.avatarUrl,
+          timezone: dto.timezone,
+          timeFormat: dto.timeFormat,
         })
         .returning();
 
@@ -189,11 +195,13 @@ export class ClientsService {
       if (!user) throw new NotFoundException('Client not found');
 
       const userPatch: Partial<typeof users.$inferInsert> = {};
-      if (dto.name      !== undefined) userPatch.name      = dto.name;
-      if (dto.email     !== undefined) userPatch.email     = dto.email;
-      if (dto.phone     !== undefined) userPatch.phone     = dto.phone;
-      if (dto.active    !== undefined) userPatch.active    = dto.active;
-      if (dto.avatarUrl !== undefined) userPatch.avatarUrl = dto.avatarUrl;
+      if (dto.name       !== undefined) userPatch.name       = dto.name;
+      if (dto.email      !== undefined) userPatch.email      = dto.email;
+      if (dto.phone      !== undefined) userPatch.phone      = dto.phone;
+      if (dto.active     !== undefined) userPatch.active     = dto.active;
+      if (dto.avatarUrl  !== undefined) userPatch.avatarUrl  = dto.avatarUrl;
+      if (dto.timezone   !== undefined) userPatch.timezone   = dto.timezone;
+      if (dto.timeFormat !== undefined) userPatch.timeFormat = dto.timeFormat;
       if (Object.keys(userPatch).length) {
         await tx.update(users).set(userPatch).where(eq(users.id, userId));
       }

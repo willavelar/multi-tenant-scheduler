@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
-import { professionals, users } from '@scheduler/shared';
+import { professionals, users, weeklyAvailability } from '@scheduler/shared';
 import * as bcrypt from 'bcryptjs';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
@@ -14,6 +14,8 @@ const PROF_FIELDS = {
   bio:         professionals.bio,
   avatarUrl:   users.avatarUrl,
   position:    professionals.position,
+  timezone:    users.timezone,
+  timeFormat:  users.timeFormat,
   active:      users.active,
   name:        users.name,
   email:       users.email,
@@ -94,19 +96,34 @@ export class ProfessionalsService {
 
       const [user] = await tx.insert(users).values({
         tenantId,
-        email: dto.email,
+        email:      dto.email,
         passwordHash,
-        role: 'professional',
-        name: dto.name,
-        avatarUrl: dto.avatarUrl,
+        role:       'professional',
+        name:       dto.name,
+        avatarUrl:  dto.avatarUrl,
+        timezone:   dto.timezone ?? 'America/Sao_Paulo',
+        timeFormat: dto.timeFormat ?? '24h',
       }).returning();
 
       const [prof] = await tx.insert(professionals).values({
         tenantId,
-        userId: user.id,
-        bio: dto.bio,
+        userId:   user.id,
+        bio:      dto.bio,
         position: dto.position,
+        timezone: dto.timezone ?? 'America/Sao_Paulo',
       }).returning();
+
+      if (dto.schedule?.length) {
+        await tx.insert(weeklyAvailability).values(
+          dto.schedule.map(s => ({
+            professionalId:      prof.id,
+            dayOfWeek:           s.dayOfWeek,
+            startTime:           s.startTime,
+            endTime:             s.endTime,
+            slotDurationMinutes: s.slotDurationMinutes ?? 60,
+          })),
+        );
+      }
 
       return {
         ...prof,
@@ -148,15 +165,17 @@ export class ProfessionalsService {
 
       // Update users table (name, role, avatarUrl, active)
       const userPatch: Record<string, unknown> = {};
-      if (dto.name      !== undefined) userPatch.name      = dto.name;
-      if (dto.role      !== undefined && isAdmin) userPatch.role = dto.role;
-      if (dto.avatarUrl !== undefined) userPatch.avatarUrl = dto.avatarUrl;
-      if (dto.active    !== undefined && isAdmin) userPatch.active = dto.active;
+      if (dto.name       !== undefined) userPatch.name       = dto.name;
+      if (dto.role       !== undefined && isAdmin) userPatch.role = dto.role;
+      if (dto.avatarUrl  !== undefined) userPatch.avatarUrl  = dto.avatarUrl;
+      if (dto.active     !== undefined && isAdmin) userPatch.active = dto.active;
+      if (dto.timezone   !== undefined) userPatch.timezone   = dto.timezone;
+      if (dto.timeFormat !== undefined) userPatch.timeFormat = dto.timeFormat;
       if (Object.keys(userPatch).length) {
         await tx.update(users).set(userPatch).where(eq(users.id, prof.userId));
       }
 
-      // Update professionals table (bio, position only)
+      // Update professionals table (bio, position)
       const profPatch: Record<string, unknown> = {};
       if (dto.bio      !== undefined) profPatch.bio      = dto.bio;
       if (dto.position !== undefined) profPatch.position = dto.position;

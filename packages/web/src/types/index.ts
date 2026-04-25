@@ -14,6 +14,8 @@ export type Professional = {
   bio: string | null
   avatarUrl: string | null
   position: string | null
+  timezone: string
+  timeFormat: '12h' | '24h'
   active: boolean
   name: string
   email: string
@@ -42,6 +44,8 @@ export type Client = {
   notes: string | null
   active: boolean
   avatarUrl: string | null
+  timezone: string
+  timeFormat: '12h' | '24h'
   allProfessionals: boolean | null
   allServices: boolean | null
   serviceLimitCount: number | null
@@ -96,8 +100,12 @@ export type Admin = {
   id: string
   name: string
   email: string
+  phone: string | null
   avatarUrl: string | null
   active: boolean
+  timezone: string
+  timeFormat: '12h' | '24h'
+  lastLoginAt: string | null
   createdAt: string
 }
 

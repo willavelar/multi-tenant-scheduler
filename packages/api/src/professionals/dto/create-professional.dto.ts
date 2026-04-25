@@ -1,4 +1,23 @@
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsEmail, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class ScheduleSlotDto {
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  dayOfWeek: number;
+
+  @IsString()
+  startTime: string;
+
+  @IsString()
+  endTime: string;
+
+  @IsInt()
+  @Min(15)
+  @IsOptional()
+  slotDurationMinutes?: number;
+}
 
 export class CreateProfessionalDto {
   @IsString()
@@ -23,4 +42,19 @@ export class CreateProfessionalDto {
   @IsOptional()
   @MaxLength(200_000)
   avatarUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  timezone?: string;
+
+  @IsString()
+  @IsIn(['12h', '24h'])
+  @IsOptional()
+  timeFormat?: string;
+
+  @IsArray()
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => ScheduleSlotDto)
+  schedule?: ScheduleSlotDto[];
 }

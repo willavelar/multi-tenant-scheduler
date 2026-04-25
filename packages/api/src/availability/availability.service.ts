@@ -1,6 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
-import { weeklyAvailability, scheduleExceptions, appointments, AppointmentStatus } from '@scheduler/shared';
+import { weeklyAvailability, scheduleExceptions, appointments, professionals, AppointmentStatus } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { SlotsService } from './slots.service';
@@ -20,17 +20,48 @@ export class AvailabilityService {
     );
   }
 
-  async createWeeklyAvailability(dto: CreateWeeklyAvailabilityDto, tenantId: string) {
+  async createWeeklyAvailability(
+    dto: CreateWeeklyAvailabilityDto,
+    tenantId: string,
+    requestingUserId: string,
+    requestingRole: string,
+  ) {
+    if (requestingRole === 'professional') {
+      await this.assertOwnsProfessional(dto.professionalId, requestingUserId, tenantId);
+    }
     const [record] = await withTenant(this.db, tenantId, (tx) =>
       tx.insert(weeklyAvailability).values(dto).returning(),
     );
     return record;
   }
 
-  deleteWeeklyAvailability(id: string, tenantId: string) {
+  async deleteWeeklyAvailability(
+    id: string,
+    tenantId: string,
+    requestingUserId: string,
+    requestingRole: string,
+  ) {
+    if (requestingRole === 'professional') {
+      const [record] = await withTenant(this.db, tenantId, (tx) =>
+        tx.select({ professionalId: weeklyAvailability.professionalId })
+          .from(weeklyAvailability)
+          .where(eq(weeklyAvailability.id, id)),
+      );
+      if (!record) throw new NotFoundException('Availability record not found');
+      await this.assertOwnsProfessional(record.professionalId, requestingUserId, tenantId);
+    }
     return withTenant(this.db, tenantId, (tx) =>
       tx.delete(weeklyAvailability).where(eq(weeklyAvailability.id, id)),
     );
+  }
+
+  private async assertOwnsProfessional(professionalId: string, userId: string, tenantId: string) {
+    const [prof] = await withTenant(this.db, tenantId, (tx) =>
+      tx.select({ id: professionals.id })
+        .from(professionals)
+        .where(and(eq(professionals.id, professionalId), eq(professionals.userId, userId))),
+    );
+    if (!prof) throw new ForbiddenException('You can only manage your own availability');
   }
 
   getExceptions(professionalId: string, tenantId: string) {
@@ -39,14 +70,36 @@ export class AvailabilityService {
     );
   }
 
-  async createException(dto: CreateExceptionDto, tenantId: string) {
+  async createException(
+    dto: CreateExceptionDto,
+    tenantId: string,
+    requestingUserId: string,
+    requestingRole: string,
+  ) {
+    if (requestingRole === 'professional') {
+      await this.assertOwnsProfessional(dto.professionalId, requestingUserId, tenantId);
+    }
     const [record] = await withTenant(this.db, tenantId, (tx) =>
       tx.insert(scheduleExceptions).values(dto).returning(),
     );
     return record;
   }
 
-  deleteException(id: string, tenantId: string) {
+  async deleteException(
+    id: string,
+    tenantId: string,
+    requestingUserId: string,
+    requestingRole: string,
+  ) {
+    if (requestingRole === 'professional') {
+      const [record] = await withTenant(this.db, tenantId, (tx) =>
+        tx.select({ professionalId: scheduleExceptions.professionalId })
+          .from(scheduleExceptions)
+          .where(eq(scheduleExceptions.id, id)),
+      );
+      if (!record) throw new NotFoundException('Exception not found');
+      await this.assertOwnsProfessional(record.professionalId, requestingUserId, tenantId);
+    }
     return withTenant(this.db, tenantId, (tx) =>
       tx.delete(scheduleExceptions).where(eq(scheduleExceptions.id, id)),
     );

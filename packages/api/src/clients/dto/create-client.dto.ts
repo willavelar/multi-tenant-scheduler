@@ -18,4 +18,7 @@ export class CreateClientDto {
   @IsOptional() @IsBoolean() allServices?: boolean;
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) professionalIds?: string[];
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) serviceIds?: string[];
+
+  @IsOptional() @IsString() timezone?: string;
+  @IsOptional() @IsString() @IsIn(['12h', '24h']) timeFormat?: string;
 }

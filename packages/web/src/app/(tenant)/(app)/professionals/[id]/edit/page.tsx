@@ -22,11 +22,13 @@ export default function EditProfessionalPage() {
 
   async function handleSubmit(data: ProfessionalFormData) {
     await mutateAsync({
-      name:      data.name,
-      position:  data.position,
-      bio:       data.bio,
-      avatarUrl: data.avatarUrl ?? undefined,
-      role:      'professional',
+      name:       data.name,
+      position:   data.position,
+      bio:        data.bio,
+      avatarUrl:  data.avatarUrl ?? undefined,
+      timezone:   data.timezone,
+      timeFormat: data.timeFormat,
+      role:       'professional',
       ...(isAdmin ? { active: data.active } : {}),
     })
     if (isOwnProfile) {
@@ -42,12 +44,15 @@ export default function EditProfessionalPage() {
       </div>
       <ProfessionalForm
         mode="edit"
+        professionalId={prof.id}
         defaultValues={{
           name:      prof.name,
           position:  prof.position  ?? undefined,
           bio:       prof.bio       ?? undefined,
           avatarUrl: prof.avatarUrl ?? undefined,
-          active:    prof.active,
+          timezone:   prof.timezone,
+          timeFormat: prof.timeFormat,
+          active:     prof.active,
         }}
         isAdmin={isAdmin}
         isOwnProfile={isOwnProfile}

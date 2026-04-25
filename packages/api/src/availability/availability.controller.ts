@@ -6,6 +6,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { RolesGuard, Roles } from '../common/guards/roles.guard';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('availability')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
@@ -30,15 +31,23 @@ export class AvailabilityController {
   }
 
   @Post('weekly')
-  @Roles('tenant_admin')
-  createWeekly(@Body() dto: CreateWeeklyAvailabilityDto, @TenantId() tenantId: string) {
-    return this.service.createWeeklyAvailability(dto, tenantId);
+  @Roles('tenant_admin', 'professional')
+  createWeekly(
+    @Body() dto: CreateWeeklyAvailabilityDto,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.createWeeklyAvailability(dto, tenantId, user.id, user.role);
   }
 
   @Delete('weekly/:id')
-  @Roles('tenant_admin')
-  deleteWeekly(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.deleteWeeklyAvailability(id, tenantId);
+  @Roles('tenant_admin', 'professional')
+  deleteWeekly(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.deleteWeeklyAvailability(id, tenantId, user.id, user.role);
   }
 
   @Get('exceptions/:professionalId')
@@ -50,14 +59,22 @@ export class AvailabilityController {
   }
 
   @Post('exceptions')
-  @Roles('tenant_admin')
-  createException(@Body() dto: CreateExceptionDto, @TenantId() tenantId: string) {
-    return this.service.createException(dto, tenantId);
+  @Roles('tenant_admin', 'professional')
+  createException(
+    @Body() dto: CreateExceptionDto,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.createException(dto, tenantId, user.id, user.role);
   }
 
   @Delete('exceptions/:id')
-  @Roles('tenant_admin')
-  deleteException(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.deleteException(id, tenantId);
+  @Roles('tenant_admin', 'professional')
+  deleteException(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.deleteException(id, tenantId, user.id, user.role);
   }
 }
