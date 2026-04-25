@@ -42,17 +42,25 @@ function Spinner() {
   )
 }
 
+function resolveReturnTo(searchParams: ReturnType<typeof useSearchParams>): string {
+  const stored = typeof window !== 'undefined' ? sessionStorage.getItem('session.returnTo') : null
+  if (stored) sessionStorage.removeItem('session.returnTo')
+  const urlFrom = searchParams.get('from')
+  const candidate = stored ?? urlFrom ?? '/appointments'
+  return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/appointments'
+}
+
 export default function LoginPage() {
   const { login, user } = useAuth()
   const { slug } = useTenant()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const reason = searchParams.get('reason')
 
   useEffect(() => {
     if (user) router.replace('/appointments')
   }, [user, router])
-  const raw = searchParams.get('from') ?? '/'
-  const from = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/'
+
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -65,7 +73,7 @@ export default function LoginPage() {
   async function onSubmit(data: FormData) {
     try {
       await login(data.email, data.password, slug)
-      router.push('/appointments')
+      router.push(resolveReturnTo(searchParams))
     } catch {
       setError('root', { message: 'E-mail ou senha incorretos' })
     }
@@ -84,6 +92,18 @@ export default function LoginPage() {
             Acesse sua conta para continuar
           </p>
         </div>
+
+        {/* Banner de sessão expirada */}
+        {reason === 'session_expired' && (
+          <div className="mb-5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-[13px] text-amber-800 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0 text-amber-500">
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Sua sessão expirou. Faça login para continuar.
+          </div>
+        )}
 
         {/* Card */}
         <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
