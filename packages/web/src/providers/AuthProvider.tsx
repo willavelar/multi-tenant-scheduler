@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setAccessToken(null)
     const returnTo = window.location.pathname + window.location.search
+    // Skip saving returnTo when already on /login to avoid a redirect loop after re-login
     if (!returnTo.startsWith('/login')) {
       sessionStorage.setItem('session.returnTo', returnTo)
     }
