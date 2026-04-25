@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
 import { apiFetch } from '@/lib/api'
 import type { User } from '@/types'
@@ -26,6 +26,7 @@ type AuthContextValue = {
   ) => Promise<string>
   logout: () => void
   updateUser: (updates: UserProfileUpdate) => void
+  signalExpired: () => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -58,34 +59,53 @@ function clearTokens() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
+  const expiryFiredRef = useRef(false)
 
-  // Rehydrate from localStorage on mount
+  const signalExpired = useCallback(() => {
+    if (expiryFiredRef.current) return
+    expiryFiredRef.current = true
+    clearTokens()
+    localStorage.removeItem('userProfileOverride')
+    setUser(null)
+    setAccessToken(null)
+    const returnTo = window.location.pathname + window.location.search
+    if (!returnTo.startsWith('/login')) {
+      sessionStorage.setItem('session.returnTo', returnTo)
+    }
+    window.location.replace('/login?reason=session_expired')
+  }, [])
+
   useEffect(() => {
     const stored = localStorage.getItem('accessToken')
     if (stored) {
       try {
         const decoded = tokenToUser(stored)
-        const override: UserProfileUpdate = JSON.parse(localStorage.getItem('userProfileOverride') || '{}')
+        const override: UserProfileUpdate = JSON.parse(
+          localStorage.getItem('userProfileOverride') || '{}'
+        )
         setAccessToken(stored)
         setUser({ ...decoded, ...override })
       } catch {
-        clearTokens()
+        signalExpired()
       }
     }
-  }, [])
+  }, [signalExpired])
 
-  const login = useCallback(async (email: string, password: string, slug: string): Promise<string> => {
-    const res = await apiFetch('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-      slug,
-    })
-    const { accessToken: at, refreshToken: rt } = await res.json()
-    persistTokens(at, rt)
-    setAccessToken(at)
-    setUser(tokenToUser(at))
-    return at
-  }, [])
+  const login = useCallback(
+    async (email: string, password: string, slug: string): Promise<string> => {
+      const res = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+        slug,
+      })
+      const { accessToken: at, refreshToken: rt } = await res.json()
+      persistTokens(at, rt)
+      setAccessToken(at)
+      setUser(tokenToUser(at))
+      return at
+    },
+    []
+  )
 
   const register = useCallback(
     async (
@@ -109,7 +129,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUser = useCallback((updates: UserProfileUpdate) => {
     setUser(u => {
       if (!u) return u
-      const current: UserProfileUpdate = JSON.parse(localStorage.getItem('userProfileOverride') || '{}')
+      const current: UserProfileUpdate = JSON.parse(
+        localStorage.getItem('userProfileOverride') || '{}'
+      )
       localStorage.setItem('userProfileOverride', JSON.stringify({ ...current, ...updates }))
       return { ...u, ...updates }
     })
@@ -123,7 +145,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, accessToken, login, register, logout, updateUser }}>
+    <AuthContext.Provider
+      value={{ user, accessToken, login, register, logout, updateUser, signalExpired }}
+    >
       {children}
     </AuthContext.Provider>
   )
