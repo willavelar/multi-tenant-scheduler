@@ -43,7 +43,7 @@ function Spinner() {
 }
 
 function resolveReturnTo(searchParams: ReturnType<typeof useSearchParams>): string {
-  const stored = typeof window !== 'undefined' ? sessionStorage.getItem('session.returnTo') : null
+  const stored = sessionStorage.getItem('session.returnTo')
   if (stored) sessionStorage.removeItem('session.returnTo')
   const urlFrom = searchParams.get('from')
   const candidate = stored ?? urlFrom ?? '/appointments'
