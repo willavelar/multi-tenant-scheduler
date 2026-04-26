@@ -92,3 +92,16 @@ export function useDeleteProfessional() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['professionals', slug] }),
   })
 }
+
+export function useForceDeleteProfessional() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+  const { slug } = useTenant()
+  return useMutation({
+    mutationFn: (id: string) => api(`/professionals/${id}?cancelFuture=true`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['professionals', slug] })
+      queryClient.invalidateQueries({ queryKey: ['professionals-page', slug] })
+    },
+  })
+}

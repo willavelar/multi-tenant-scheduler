@@ -21,14 +21,15 @@ function initials(name: string) {
 }
 
 type Props = {
-  prof:         Professional
-  isAdmin:      boolean
-  isOwnProfile: boolean
-  profilePage?: boolean
-  onDelete?:    () => void
+  prof:           Professional
+  isAdmin:        boolean
+  isOwnProfile:   boolean
+  profilePage?:   boolean
+  onDelete?:      () => Promise<void>
+  onForceDelete?: () => Promise<void>
 }
 
-export function ProfessionalDetailView({ prof, isAdmin, isOwnProfile, profilePage, onDelete }: Props) {
+export function ProfessionalDetailView({ prof, isAdmin, isOwnProfile, profilePage, onDelete, onForceDelete }: Props) {
   const router = useRouter()
 
   const showEdit   = isAdmin || profilePage
@@ -95,6 +96,7 @@ export function ProfessionalDetailView({ prof, isAdmin, isOwnProfile, profilePag
           title="Excluir profissional"
           description="Esta ação excluirá permanentemente o profissional e todos os seus dados. Não pode ser desfeita."
           onDelete={onDelete}
+          onForceDelete={onForceDelete}
           deleteLabel="Excluir profissional"
         />
       )}

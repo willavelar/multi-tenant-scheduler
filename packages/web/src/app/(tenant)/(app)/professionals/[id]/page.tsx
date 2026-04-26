@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
-import { useProfessional, useDeleteProfessional } from '@/hooks/useProfessionals'
+import { useProfessional, useDeleteProfessional, useForceDeleteProfessional } from '@/hooks/useProfessionals'
 import { ProfessionalDetailView } from '../_components/ProfessionalDetailView'
 
 export default function ProfessionalDetailPage() {
@@ -12,15 +12,22 @@ export default function ProfessionalDetailPage() {
   const isAdmin = me?.role === 'tenant_admin'
 
   const { data: prof, isLoading } = useProfessional(id)
-  const del = useDeleteProfessional()
+  const del      = useDeleteProfessional()
+  const forceDel = useForceDeleteProfessional()
 
   if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
   if (!prof)     return <div className="p-12 text-gray-400 text-sm">Profissional não encontrado.</div>
 
   const isOwnProfile = prof.userId === me?.id
+  const canDelete    = isAdmin && !isOwnProfile
 
   async function handleDelete() {
     await del.mutateAsync(prof!.id)
+    router.push('/professionals')
+  }
+
+  async function handleForceDelete() {
+    await forceDel.mutateAsync(prof!.id)
     router.push('/professionals')
   }
 
@@ -29,7 +36,8 @@ export default function ProfessionalDetailPage() {
       prof={prof}
       isAdmin={isAdmin}
       isOwnProfile={isOwnProfile}
-      onDelete={handleDelete}
+      onDelete={canDelete ? handleDelete : undefined}
+      onForceDelete={canDelete ? handleForceDelete : undefined}
     />
   )
 }
