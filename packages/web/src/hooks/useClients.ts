@@ -82,3 +82,13 @@ export function useDeleteClient() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clients', slug] }),
   })
 }
+
+export function useForceDeleteClient() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+  const { slug } = useTenant()
+  return useMutation({
+    mutationFn: (id: string) => api(`/clients/${id}?cancelFuture=true`, { method: 'DELETE' }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clients', slug] }),
+  })
+}

@@ -27,14 +27,15 @@ function formatBirthDate(dateStr: string | null) {
 const PERIOD_LABELS: Record<string, string> = { day: 'dia', week: 'semana', month: 'mês' }
 
 type Props = {
-  client:       ClientDetail
-  isAdmin:      boolean
-  isOwnProfile: boolean
-  profilePage?: boolean
-  onDelete?:    () => void
+  client:         ClientDetail
+  isAdmin:        boolean
+  isOwnProfile:   boolean
+  profilePage?:   boolean
+  onDelete?:      () => Promise<void>
+  onForceDelete?: () => Promise<void>
 }
 
-export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, onDelete }: Props) {
+export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, onDelete, onForceDelete }: Props) {
   const router = useRouter()
 
   const showEdit  = isAdmin || profilePage
@@ -129,8 +130,9 @@ export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, o
       {canDelete && onDelete && (
         <DangerZone
           title="Excluir cliente"
-          description="Esta ação excluirá permanentemente o cliente e todos os seus agendamentos. Não pode ser desfeita."
+          description="Esta ação excluirá permanentemente o cliente e todos os seus dados. Não pode ser desfeita."
           onDelete={onDelete}
+          onForceDelete={onForceDelete}
           deleteLabel="Excluir cliente"
         />
       )}
