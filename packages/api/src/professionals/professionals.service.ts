@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
-import { professionals, users, weeklyAvailability } from '@scheduler/shared';
+import { and, count, desc, eq, gt, ilike, notInArray, or } from 'drizzle-orm';
+import { appointments, professionals, services, users, weeklyAvailability } from '@scheduler/shared';
 import * as bcrypt from 'bcryptjs';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
@@ -194,7 +194,7 @@ export class ProfessionalsService {
     });
   }
 
-  async remove(id: string, tenantId: string, requestingUserId: string) {
+  async remove(id: string, tenantId: string, requestingUserId: string, cancelFuture = false) {
     return withTenant(this.db, tenantId, async (tx) => {
       const [prof] = await tx
         .select({ id: professionals.id, userId: professionals.userId })
@@ -203,7 +203,42 @@ export class ProfessionalsService {
       if (!prof) throw new NotFoundException('Professional not found');
       if (prof.userId === requestingUserId) throw new ForbiddenException('Cannot delete your own account');
 
-      // Delete user first — FK cascade on professionals.userId removes the professional row automatically
+      const now = new Date();
+      const blocking = await tx
+        .select({
+          id:          appointments.id,
+          startsAt:    appointments.startsAt,
+          endsAt:      appointments.endsAt,
+          status:      appointments.status,
+          serviceName: services.name,
+          clientName:  users.name,
+        })
+        .from(appointments)
+        .innerJoin(services, eq(appointments.serviceId, services.id))
+        .innerJoin(users, eq(appointments.clientId, users.id))
+        .where(and(
+          eq(appointments.professionalId, prof.id),
+          gt(appointments.startsAt, now),
+          notInArray(appointments.status, ['cancelled', 'completed']),
+        ));
+
+      if (blocking.length > 0) {
+        if (!cancelFuture) {
+          throw new ConflictException({
+            message: 'Existem agendamentos futuros vinculados a este profissional.',
+            blockingAppointments: blocking,
+          });
+        }
+        await tx
+          .update(appointments)
+          .set({ status: 'cancelled' })
+          .where(and(
+            eq(appointments.professionalId, prof.id),
+            gt(appointments.startsAt, now),
+            notInArray(appointments.status, ['cancelled', 'completed']),
+          ));
+      }
+
       await tx.delete(users).where(eq(users.id, prof.userId));
     });
   }
