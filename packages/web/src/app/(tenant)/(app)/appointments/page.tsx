@@ -47,23 +47,45 @@ export default function AppointmentsPage() {
   // Professional autocomplete
   const [professionalDisplayValue, setProfessionalDisplayValue] = useState('')
 
+  const [timeRange, setTimeRange] = useState<'' | 'future' | 'past'>('')
+
+  function localDateStr(d: Date) {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
   const { data: servicesList = [] } = useServices()
 
-  const filters = { dateFrom, dateTo, serviceId, status, clientId, professionalId }
+  let effectiveDateFrom = dateFrom
+  let effectiveDateTo   = dateTo
+  if (timeRange === 'future') {
+    effectiveDateFrom = localDateStr(new Date())
+    effectiveDateTo   = ''
+  } else if (timeRange === 'past') {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    effectiveDateFrom = ''
+    effectiveDateTo   = localDateStr(yesterday)
+  }
+
+  const filters = { dateFrom: effectiveDateFrom, dateTo: effectiveDateTo, serviceId, status, clientId, professionalId }
   const { data, isLoading } = useAppointments(page, filters)
   const cancel = useCancelAppointment()
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1) }, [dateFrom, dateTo, serviceId, status, clientId, professionalId])
+  useEffect(() => { setPage(1) }, [timeRange, dateFrom, dateTo, serviceId, status, clientId, professionalId])
 
   const appointments = data?.data ?? []
   const total = data?.total ?? 0
   const limit = data?.limit ?? 10
   const totalPages = Math.max(1, Math.ceil(total / limit))
 
-  const hasFilters = !!(dateFrom || dateTo || serviceId || status || clientId || professionalId)
+  const hasFilters = !!(timeRange || dateFrom || dateTo || serviceId || status || clientId || professionalId)
 
   function clearFilters() {
+    setTimeRange('')
     setDateFrom('');  setDateTo('')
     setServiceId(''); setStatus('');  setClientId(''); setProfessionalId('')
     setClientDisplayValue(''); setProfessionalDisplayValue('')
@@ -105,25 +127,45 @@ export default function AppointmentsPage() {
         <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-4 shadow-sm">
           <div className="flex flex-wrap gap-3 items-end">
 
-            {/* Date From */}
+            {/* Period */}
             <div className="min-w-[140px] flex-[1_1_140px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">De</label>
-              <DatePickerField
-                value={dateFrom}
-                onChange={setDateFrom}
-                inputClassName="h-9 text-[13px]"
-              />
+              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Período</label>
+              <div className="relative">
+                <select
+                  className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+                  value={timeRange}
+                  onChange={e => setTimeRange(e.target.value as '' | 'future' | 'past')}
+                >
+                  <option value="">Todos</option>
+                  <option value="future">Futuros</option>
+                  <option value="past">Passados</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
             </div>
 
-            {/* Date To */}
-            <div className="min-w-[140px] flex-[1_1_140px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Até</label>
-              <DatePickerField
-                value={dateTo}
-                onChange={setDateTo}
-                inputClassName="h-9 text-[13px]"
-              />
-            </div>
+            {/* Date pickers — hidden when a period is active */}
+            {timeRange === '' && (
+              <>
+                <div className="min-w-[140px] flex-[1_1_140px]">
+                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">De</label>
+                  <DatePickerField
+                    value={dateFrom}
+                    onChange={setDateFrom}
+                    inputClassName="h-9 text-[13px]"
+                  />
+                </div>
+
+                <div className="min-w-[140px] flex-[1_1_140px]">
+                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Até</label>
+                  <DatePickerField
+                    value={dateTo}
+                    onChange={setDateTo}
+                    inputClassName="h-9 text-[13px]"
+                  />
+                </div>
+              </>
+            )}
 
             {/* Service */}
             <div className="min-w-[160px] flex-[1_1_160px]">
