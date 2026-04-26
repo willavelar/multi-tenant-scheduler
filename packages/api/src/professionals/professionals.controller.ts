@@ -80,7 +80,8 @@ export class ProfessionalsController {
     @Param('id') id: string,
     @TenantId() tenantId: string,
     @CurrentUser() user: { id: string; role: string },
+    @Query('cancelFuture') cancelFuture?: string,
   ) {
-    return this.service.remove(id, tenantId, user.id);
+    return this.service.remove(id, tenantId, user.id, cancelFuture === 'true');
   }
 }
