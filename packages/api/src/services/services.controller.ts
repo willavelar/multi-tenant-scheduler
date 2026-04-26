@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
@@ -36,7 +36,11 @@ export class ServicesController {
 
   @Delete(':id')
   @Roles('tenant_admin')
-  remove(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.remove(id, tenantId);
+  remove(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @Query('cancelFuture') cancelFuture?: string,
+  ) {
+    return this.service.remove(id, tenantId, cancelFuture === 'true');
   }
 }
