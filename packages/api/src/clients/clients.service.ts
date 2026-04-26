@@ -1,8 +1,9 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
+import { and, count, desc, eq, gt, ilike, notInArray, or } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { alias } from 'drizzle-orm/pg-core';
 import {
+  appointments,
   clientProfiles,
   clientProfessionals,
   clientServices,
@@ -255,13 +256,50 @@ export class ClientsService {
     });
   }
 
-  async remove(id: string, tenantId: string) {
+  async remove(id: string, tenantId: string, cancelFuture = false) {
     return withTenant(this.db, tenantId, async (tx) => {
       const [user] = await tx
         .select({ id: users.id })
         .from(users)
         .where(and(eq(users.id, id), eq(users.tenantId, tenantId), eq(users.role, 'client')));
       if (!user) throw new NotFoundException('Client not found');
+
+      const now = new Date();
+      const blocking = await tx
+        .select({
+          id:               appointments.id,
+          startsAt:         appointments.startsAt,
+          endsAt:           appointments.endsAt,
+          status:           appointments.status,
+          serviceName:      services.name,
+          professionalName: profUsers.name,
+        })
+        .from(appointments)
+        .innerJoin(services, eq(appointments.serviceId, services.id))
+        .innerJoin(professionals, eq(appointments.professionalId, professionals.id))
+        .innerJoin(profUsers, eq(professionals.userId, profUsers.id))
+        .where(and(
+          eq(appointments.clientId, id),
+          gt(appointments.startsAt, now),
+          notInArray(appointments.status, ['cancelled', 'completed']),
+        ));
+
+      if (blocking.length > 0) {
+        if (!cancelFuture) {
+          throw new ConflictException({
+            message: 'Existem agendamentos futuros vinculados a este cliente.',
+            blockingAppointments: blocking,
+          });
+        }
+        await tx
+          .update(appointments)
+          .set({ status: 'cancelled' })
+          .where(and(
+            eq(appointments.clientId, id),
+            gt(appointments.startsAt, now),
+            notInArray(appointments.status, ['cancelled', 'completed']),
+          ));
+      }
 
       await tx.delete(users).where(eq(users.id, id));
       return { deleted: true };
