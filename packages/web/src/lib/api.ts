@@ -1,7 +1,7 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(public status: number, message: string, public body?: unknown) {
     super(message)
   }
 }
@@ -29,7 +29,7 @@ export async function apiFetch(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: res.statusText }))
-    throw new ApiError(res.status, body.message ?? res.statusText)
+    throw new ApiError(res.status, body.message ?? res.statusText, body)
   }
 
   return res
