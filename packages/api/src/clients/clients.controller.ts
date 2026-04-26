@@ -49,7 +49,11 @@ export class ClientsController {
 
   @Delete(':id')
   @Roles('tenant_admin')
-  remove(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.remove(id, tenantId);
+  remove(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @Query('cancelFuture') cancelFuture?: string,
+  ) {
+    return this.service.remove(id, tenantId, cancelFuture === 'true');
   }
 }
