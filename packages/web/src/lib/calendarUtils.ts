@@ -97,8 +97,8 @@ export function formatWeekTitle(start: Date, end: Date): string {
     return s.charAt(0).toUpperCase() + s.slice(1)
   }
   const s = start.toLocaleDateString('pt-BR', { month: 'short' })
-  const e = end.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
-  return `${s} – ${e}`
+  const eMonth = end.toLocaleDateString('pt-BR', { month: 'short' })
+  return `${s} – ${eMonth} ${end.getFullYear()}`
 }
 
 export function formatDayTitle(date: Date): string {
