@@ -154,4 +154,15 @@ export class AppointmentsService {
       return updated;
     });
   }
+
+  async remove(id: string, tenantId: string) {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [appt] = await tx
+        .select({ id: appointments.id })
+        .from(appointments)
+        .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)));
+      if (!appt) throw new NotFoundException('Appointment not found');
+      await tx.delete(appointments).where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)));
+    });
+  }
 }

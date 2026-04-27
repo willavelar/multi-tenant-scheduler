@@ -36,7 +36,7 @@ describe('Appointments (e2e)', () => {
       .get('/professionals')
       .set('x-tenant-slug', 'clinica-demo')
       .set('Authorization', `Bearer ${adminToken}`);
-    const profId = profsRes.body[0].id;
+    const profId = profsRes.body.data[0].id;
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -52,12 +52,106 @@ describe('Appointments (e2e)', () => {
       });
   });
 
+  it('DELETE /appointments/:id — admin can hard-delete an appointment', async () => {
+    const profsRes = await request(app.getHttpServer())
+      .get('/professionals')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const profId = profsRes.body.data[0].id;
+
+    const svcsRes = await request(app.getHttpServer())
+      .get('/services')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const svcId = svcsRes.body[0].id;
+
+    let date: string | undefined;
+    let startTime: string | undefined;
+    for (let offset = 1; offset <= 14; offset++) {
+      const candidate = new Date();
+      candidate.setDate(candidate.getDate() + offset);
+      const candidateDate = candidate.toISOString().split('T')[0];
+      const slotsRes = await request(app.getHttpServer())
+        .get(`/availability/slots?professionalId=${profId}&date=${candidateDate}`)
+        .set('x-tenant-slug', 'clinica-demo')
+        .set('Authorization', `Bearer ${adminToken}`);
+      if (Array.isArray(slotsRes.body) && slotsRes.body.length > 0) {
+        date = candidateDate;
+        startTime = slotsRes.body[0];
+        break;
+      }
+    }
+
+    const createRes = await request(app.getHttpServer())
+      .post('/appointments')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ professionalId: profId, serviceId: svcId, date, startTime });
+    const apptId = createRes.body.id;
+
+    await request(app.getHttpServer())
+      .delete(`/appointments/${apptId}`)
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const listRes = await request(app.getHttpServer())
+      .get('/appointments')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(listRes.body.data.find((a: any) => a.id === apptId)).toBeUndefined();
+  });
+
+  it('DELETE /appointments/:id — client cannot delete (403)', async () => {
+    const profsRes = await request(app.getHttpServer())
+      .get('/professionals')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const profId = profsRes.body.data[0].id;
+
+    const svcsRes = await request(app.getHttpServer())
+      .get('/services')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const svcId = svcsRes.body[0].id;
+
+    let date: string | undefined;
+    let startTime: string | undefined;
+    for (let offset = 1; offset <= 14; offset++) {
+      const candidate = new Date();
+      candidate.setDate(candidate.getDate() + offset);
+      const candidateDate = candidate.toISOString().split('T')[0];
+      const slotsRes = await request(app.getHttpServer())
+        .get(`/availability/slots?professionalId=${profId}&date=${candidateDate}`)
+        .set('x-tenant-slug', 'clinica-demo')
+        .set('Authorization', `Bearer ${clientToken}`);
+      if (Array.isArray(slotsRes.body) && slotsRes.body.length > 0) {
+        date = candidateDate;
+        startTime = slotsRes.body[0];
+        break;
+      }
+    }
+
+    const createRes = await request(app.getHttpServer())
+      .post('/appointments')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${clientToken}`)
+      .send({ professionalId: profId, serviceId: svcId, date, startTime });
+    const apptId = createRes.body.id;
+
+    await request(app.getHttpServer())
+      .delete(`/appointments/${apptId}`)
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${clientToken}`)
+      .expect(403);
+  });
+
   it('POST /appointments — client can book an appointment', async () => {
     const profsRes = await request(app.getHttpServer())
       .get('/professionals')
       .set('x-tenant-slug', 'clinica-demo')
       .set('Authorization', `Bearer ${adminToken}`);
-    const profId = profsRes.body[0].id;
+    const profId = profsRes.body.data[0].id;
 
     const svcsRes = await request(app.getHttpServer())
       .get('/services')
