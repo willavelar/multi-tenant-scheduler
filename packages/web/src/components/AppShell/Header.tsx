@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 type Crumb = { label: string; href?: string }
 
 function getBreadcrumbs(pathname: string): Crumb[] {
-  const segments = pathname.split('/').slice(2)
+  const segments = pathname.split('/').slice(1)
   const path = '/' + segments.join('/')
 
   const STATIC: Record<string, Crumb[]> = {
@@ -22,9 +22,17 @@ function getBreadcrumbs(pathname: string): Crumb[] {
     '/professionals/me':    [{ label: 'Meu perfil' }],
     '/me':                  [{ label: 'Meu perfil' }],
     '/settings/general':    [{ label: 'Configurações' }, { label: 'Gerais' }],
+    '/settings/services':     [{ label: 'Configurações' }, { label: 'Serviços' }],
+    '/settings/services/new': [{ label: 'Configurações' }, { label: 'Serviços', href: '/settings/services' }, { label: 'Novo serviço' }],
   }
 
   if (STATIC[path]) return STATIC[path]
+
+  if (segments[0] === 'settings' && segments[1] === 'services' && segments.length === 3)
+    return [{ label: 'Configurações' }, { label: 'Serviços', href: '/settings/services' }, { label: 'Detalhes do serviço' }]
+
+  if (segments[0] === 'settings' && segments[1] === 'services' && segments.length === 4 && segments[3] === 'edit')
+    return [{ label: 'Configurações' }, { label: 'Serviços', href: '/settings/services' }, { label: 'Editar serviço' }]
 
   if (segments[0] === 'clients' && segments.length === 2)
     return [{ label: 'Clientes', href: '/clients' }, { label: 'Visualizar cliente' }]
