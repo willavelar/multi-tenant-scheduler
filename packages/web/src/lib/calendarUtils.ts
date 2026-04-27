@@ -25,6 +25,7 @@ export function getMonthCells(anchor: Date): Date[] {
   return eachDayOfInterval({ start: gridStart, end: gridEnd })
 }
 
+// Timestamps are interpreted as local time — the API returns datetimes in the tenant's local timezone.
 export function blockPosition(startsAt: string, endsAt: string): { top: number; height: number } {
   const start = new Date(startsAt)
   const end = new Date(endsAt)
@@ -41,38 +42,63 @@ export function layoutAppointments(appts: Appointment[]): LayoutItem[] {
   const sorted = [...appts].sort(
     (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime()
   )
-  const colEnds: string[] = []
-  const assigned: { appointment: Appointment; colIdx: number }[] = []
 
-  for (const appt of sorted) {
-    const start = new Date(appt.startsAt).getTime()
+  // Pre-compute timestamps once to avoid repeated date parsing.
+  const times = sorted.map(a => ({
+    appointment: a,
+    startMs: new Date(a.startsAt).getTime(),
+    endMs: new Date(a.endsAt).getTime(),
+  }))
+
+  // Greedy interval graph coloring: assign each appointment to the first column
+  // whose previous occupant has ended.
+  const colEnds: number[] = []
+  const assigned: { appointment: Appointment; colIdx: number; startMs: number; endMs: number }[] = []
+
+  for (const { appointment, startMs, endMs } of times) {
     let placed = false
     for (let c = 0; c < colEnds.length; c++) {
-      if (start >= new Date(colEnds[c]).getTime()) {
-        colEnds[c] = appt.endsAt
-        assigned.push({ appointment: appt, colIdx: c })
+      if (startMs >= colEnds[c]) {
+        colEnds[c] = endMs
+        assigned.push({ appointment, colIdx: c, startMs, endMs })
         placed = true
         break
       }
     }
     if (!placed) {
-      colEnds.push(appt.endsAt)
-      assigned.push({ appointment: appt, colIdx: colEnds.length - 1 })
+      colEnds.push(endMs)
+      assigned.push({ appointment, colIdx: colEnds.length - 1, startMs, endMs })
     }
   }
 
-  return assigned.map(({ appointment, colIdx }) => {
-    const aStart = new Date(appointment.startsAt).getTime()
-    const aEnd = new Date(appointment.endsAt).getTime()
-    const maxCol = assigned
-      .filter(({ appointment: other }) => {
-        const oStart = new Date(other.startsAt).getTime()
-        const oEnd = new Date(other.endsAt).getTime()
-        return aStart < oEnd && aEnd > oStart
-      })
-      .reduce((m, { colIdx: c }) => Math.max(m, c), colIdx)
-    return { appointment, columnIndex: colIdx, columnCount: maxCol + 1 }
-  })
+  // Union-Find to group overlapping appointments into connected components.
+  // Without this, two sequential clusters that reuse the same column indices
+  // would compute different columnCounts, causing inconsistent block widths.
+  const parent = assigned.map((_, i) => i)
+  function find(x: number): number {
+    if (parent[x] !== x) parent[x] = find(parent[x])
+    return parent[x]
+  }
+  for (let i = 0; i < assigned.length; i++) {
+    for (let j = i + 1; j < assigned.length; j++) {
+      if (assigned[i].startMs < assigned[j].endMs && assigned[i].endMs > assigned[j].startMs) {
+        parent[find(i)] = find(j)
+      }
+    }
+  }
+
+  // Each group's columnCount = max(colIdx) + 1 across all members.
+  const groupMaxCol = new Map<number, number>()
+  for (let i = 0; i < assigned.length; i++) {
+    const root = find(i)
+    groupMaxCol.set(root, Math.max(groupMaxCol.get(root) ?? 0, assigned[i].colIdx))
+  }
+
+  return assigned.map(({ appointment, colIdx }, i) => ({
+    appointment,
+    columnIndex: colIdx,
+    columnCount: (groupMaxCol.get(find(i)) ?? colIdx) + 1,
+  }))
 }
 
 export function formatISOTime(iso: string): string {
@@ -96,9 +122,13 @@ export function formatWeekTitle(start: Date, end: Date): string {
     const s = start.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
     return s.charAt(0).toUpperCase() + s.slice(1)
   }
-  const s = start.toLocaleDateString('pt-BR', { month: 'short' })
+  const sMonth = start.toLocaleDateString('pt-BR', { month: 'short' })
   const eMonth = end.toLocaleDateString('pt-BR', { month: 'short' })
-  return `${s} – ${eMonth} ${end.getFullYear()}`
+  const sYear = start.getFullYear()
+  const eYear = end.getFullYear()
+  return sYear === eYear
+    ? `${sMonth} – ${eMonth} ${eYear}`
+    : `${sMonth} ${sYear} – ${eMonth} ${eYear}`
 }
 
 export function formatDayTitle(date: Date): string {
