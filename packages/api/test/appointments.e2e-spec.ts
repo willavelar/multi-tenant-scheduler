@@ -82,6 +82,10 @@ describe('Appointments (e2e)', () => {
       }
     }
 
+    if (!date || !startTime) {
+      throw new Error('No available slots found in the next 14 days');
+    }
+
     const createRes = await request(app.getHttpServer())
       .post('/appointments')
       .set('x-tenant-slug', 'clinica-demo')
@@ -130,6 +134,10 @@ describe('Appointments (e2e)', () => {
         startTime = slotsRes.body[0];
         break;
       }
+    }
+
+    if (!date || !startTime) {
+      throw new Error('No available slots found in the next 14 days');
     }
 
     const createRes = await request(app.getHttpServer())
