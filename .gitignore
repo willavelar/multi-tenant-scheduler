@@ -16,3 +16,6 @@ coverage/
 
 # Brainstorm sessions (local only)
 .superpowers/
+
+# Git worktrees
+.worktrees/
