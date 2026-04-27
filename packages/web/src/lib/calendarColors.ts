@@ -7,6 +7,6 @@ export const CALENDAR_COLORS = [
 
 export function clientColor(clientId: string): string {
   let hash = 0
-  for (const ch of clientId) hash = (hash * 31 + ch.charCodeAt(0)) & 0xffffffff
-  return CALENDAR_COLORS[Math.abs(hash) % CALENDAR_COLORS.length]
+  for (const ch of clientId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+  return CALENDAR_COLORS[hash % CALENDAR_COLORS.length]
 }
