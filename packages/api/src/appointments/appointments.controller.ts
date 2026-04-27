@@ -1,13 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
+import { RolesGuard, Roles } from '../common/guards/roles.guard';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('appointments')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class AppointmentsController {
   constructor(private readonly service: AppointmentsService) {}
 
@@ -36,7 +37,7 @@ export class AppointmentsController {
     return this.service.findAll(
       tenantId, user.id, user.role,
       Math.max(1, parseInt(page)),
-      Math.min(100, Math.max(1, parseInt(limit))),
+      Math.min(500, Math.max(1, parseInt(limit))),
       { dateFrom, dateTo, serviceId, status, clientId, professionalId },
     );
   }
@@ -54,5 +55,11 @@ export class AppointmentsController {
   @Patch(':id/complete')
   complete(@Param('id') id: string, @TenantId() tenantId: string) {
     return this.service.updateStatus(id, 'completed', tenantId);
+  }
+
+  @Delete(':id')
+  @Roles('tenant_admin')
+  remove(@Param('id') id: string, @TenantId() tenantId: string) {
+    return this.service.remove(id, tenantId);
   }
 }
