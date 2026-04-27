@@ -9,6 +9,7 @@ dist/
 
 # Editor
 .DS_Store
+.idea/
 
 # Test coverage
 coverage/
