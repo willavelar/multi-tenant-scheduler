@@ -8,7 +8,7 @@ type BlockingAppointment = {
   startsAt: string
   endsAt: string
   status: string
-  serviceName: string
+  serviceName?: string
   clientName?: string
   professionalName?: string
 }
@@ -90,7 +90,7 @@ export function DangerZone({ title, description, onDelete, onForceDelete, delete
             {blocking.map(apt => (
               <li key={apt.id} className="text-[13px] text-gray-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
                 <span className="font-medium">{formatDateTime(apt.startsAt)}</span>
-                {' — '}{apt.serviceName}
+                {apt.serviceName && <>{' — '}{apt.serviceName}</>}
                 {apt.clientName       && <span className="text-gray-500"> · {apt.clientName}</span>}
                 {apt.professionalName && <span className="text-gray-500"> · {apt.professionalName}</span>}
               </li>
