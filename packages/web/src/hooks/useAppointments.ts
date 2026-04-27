@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useApi } from './useApi'
 import { useTenant } from '@/providers/TenantProvider'
-import type { AppointmentPage } from '@/types'
+import type { Appointment, AppointmentPage } from '@/types'
 
 type AppointmentFilters = {
   dateFrom?: string
@@ -72,5 +72,49 @@ export function useCompleteAppointment() {
     mutationFn: (id: string) =>
       api(`/appointments/${id}/complete`, { method: 'PATCH' }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
+  })
+}
+
+type CalendarFilters = {
+  serviceId?: string
+  status?: string
+  clientId?: string
+  professionalId?: string
+}
+
+export function useAppointmentsCalendar(
+  dateFrom: string,
+  dateTo: string,
+  filters: CalendarFilters = {},
+) {
+  const api = useApi()
+  const { slug } = useTenant()
+  return useQuery<Appointment[]>({
+    queryKey: ['appointments-calendar', slug, dateFrom, dateTo, filters],
+    queryFn: async () => {
+      const params = new URLSearchParams({ dateFrom, dateTo, limit: '500' })
+      if (filters.serviceId)      params.set('serviceId',      filters.serviceId)
+      if (filters.status)         params.set('status',         filters.status)
+      if (filters.clientId)       params.set('clientId',       filters.clientId)
+      if (filters.professionalId) params.set('professionalId', filters.professionalId)
+      const res = await api(`/appointments?${params}`)
+      const page = await res.json()
+      return page.data as Appointment[]
+    },
+    enabled: !!dateFrom && !!dateTo,
+  })
+}
+
+export function useDeleteAppointment() {
+  const api = useApi()
+  const queryClient = useQueryClient()
+  const { slug } = useTenant()
+  return useMutation({
+    mutationFn: (id: string) =>
+      api(`/appointments/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', slug] })
+      queryClient.invalidateQueries({ queryKey: ['appointments-calendar', slug] })
+    },
   })
 }
