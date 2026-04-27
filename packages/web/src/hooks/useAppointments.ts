@@ -90,7 +90,7 @@ export function useAppointmentsCalendar(
   const api = useApi()
   const { slug } = useTenant()
   return useQuery<Appointment[]>({
-    queryKey: ['appointments-calendar', slug, dateFrom, dateTo, filters],
+    queryKey: ['appointments-calendar', slug, dateFrom, dateTo, filters.serviceId, filters.status, filters.clientId, filters.professionalId],
     queryFn: async () => {
       const params = new URLSearchParams({ dateFrom, dateTo, limit: '500' })
       if (filters.serviceId)      params.set('serviceId',      filters.serviceId)
