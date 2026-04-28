@@ -102,3 +102,45 @@ describe('AuthService.validateUser', () => {
       .rejects.toThrow(UnauthorizedException);
   });
 });
+
+describe('AuthService.generateTokens (via login)', () => {
+  async function buildService(db: unknown) {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: db },
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('signed-token') } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    return module.get(AuthService);
+  }
+
+  it('persists refresh token hash to DB on login', async () => {
+    const user = {
+      id: 'user-1', email: 'a@b.com', passwordHash: 'hash', role: 'client' as const,
+      tenantId: 'tenant-1', name: 'A', phone: null, active: true,
+      avatarUrl: null, timezone: 'America/Sao_Paulo', timeFormat: '24h',
+      lastLoginAt: null, createdAt: new Date(),
+    };
+    const insertChain = makeChain((resolve) => resolve([{ id: 'rt-1' }]));
+    const loginChain = makeChain((resolve) => resolve(undefined)); // update lastLoginAt
+    let callCount = 0;
+    const db: Record<string, unknown> = {};
+    QUERY_METHODS.forEach((m) => {
+      db[m] = jest.fn().mockImplementation(() => {
+        callCount++;
+        return callCount <= 0 ? loginChain : insertChain;
+      });
+    });
+    db['transaction'] = jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(loginChain));
+    const insertSpy = db['insert'] as jest.Mock;
+
+    const service = await buildService(db);
+    const result = await service.login(user);
+
+    expect(result).toHaveProperty('accessToken');
+    expect(result).toHaveProperty('refreshToken');
+    expect(insertSpy).toHaveBeenCalled();
+  });
+});

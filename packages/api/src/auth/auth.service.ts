@@ -2,8 +2,9 @@ import { ConflictException, Inject, Injectable, UnauthorizedException } from '@n
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import { createHash } from 'crypto';
 import { eq, and, or, ilike } from 'drizzle-orm';
-import { users, clientProfiles } from '@scheduler/shared';
+import { users, clientProfiles, refreshTokens } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { RegisterDto } from './dto/register.dto';
@@ -45,7 +46,7 @@ export class AuthService {
 
       await tx.insert(clientProfiles).values({ tenantId, userId: user.id });
 
-      return this.generateTokens(user);
+      return this.generateTokens(user, tx);
     });
   }
 
@@ -87,7 +88,7 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  private generateTokens(user: typeof users.$inferSelect) {
+  private signTokens(user: typeof users.$inferSelect) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -102,5 +103,29 @@ export class AuthService {
         expiresIn: '7d',
       }),
     };
+  }
+
+  private async persistRefreshToken(
+    rawToken: string,
+    userId: string,
+    tenantId: string | null,
+    db: DrizzleDB = this.db,
+  ): Promise<string> {
+    const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const [record] = await db
+      .insert(refreshTokens)
+      .values({ userId, tenantId, tokenHash, expiresAt })
+      .returning({ id: refreshTokens.id });
+    return record.id;
+  }
+
+  private async generateTokens(
+    user: typeof users.$inferSelect,
+    db: DrizzleDB = this.db,
+  ) {
+    const { accessToken, refreshToken } = this.signTokens(user);
+    await this.persistRefreshToken(refreshToken, user.id, user.tenantId, db);
+    return { accessToken, refreshToken };
   }
 }
