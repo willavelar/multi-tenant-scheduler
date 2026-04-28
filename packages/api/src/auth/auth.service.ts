@@ -88,6 +88,72 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
+  async refresh(rawRefreshToken: string) {
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(rawRefreshToken, {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+      }) as JwtPayload;
+    } catch {
+      throw new UnauthorizedException();
+    }
+
+    const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+    const [record] = await this.db
+      .select()
+      .from(refreshTokens)
+      .where(eq(refreshTokens.tokenHash, tokenHash));
+
+    if (!record) throw new UnauthorizedException();
+
+    if (record.revokedAt) {
+      await this.revokeChain(record.id);
+      throw new UnauthorizedException();
+    }
+
+    if (!payload.tenantId) throw new UnauthorizedException();
+    const user = await withTenant(this.db, payload.tenantId, (tx) =>
+      tx
+        .select()
+        .from(users)
+        .where(and(eq(users.id, payload.sub), eq(users.tenantId, payload.tenantId!)))
+        .then((rows) => rows[0]),
+    );
+    if (!user || !user.active) throw new UnauthorizedException();
+
+    const { accessToken, refreshToken } = this.signTokens(user);
+    const newTokenId = await this.persistRefreshToken(refreshToken, user.id, user.tenantId);
+
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date(), replacedById: newTokenId })
+      .where(eq(refreshTokens.id, record.id));
+
+    return { accessToken, refreshToken };
+  }
+
+  private async revokeChain(tokenId: string, depth = 0): Promise<void> {
+    if (depth > 20) return;
+    const [record] = await this.db
+      .select({
+        id: refreshTokens.id,
+        revokedAt: refreshTokens.revokedAt,
+        replacedById: refreshTokens.replacedById,
+      })
+      .from(refreshTokens)
+      .where(eq(refreshTokens.id, tokenId));
+    if (!record) return;
+    if (!record.revokedAt) {
+      await this.db
+        .update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(eq(refreshTokens.id, tokenId));
+    }
+    if (record.replacedById) {
+      await this.revokeChain(record.replacedById, depth + 1);
+    }
+  }
+
   private signTokens(user: typeof users.$inferSelect) {
     const payload: JwtPayload = {
       sub: user.id,

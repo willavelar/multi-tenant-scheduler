@@ -4,6 +4,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
+import { createHash } from 'crypto';
 import { AuthService } from './auth.service';
 import { DB } from '../database/database.module';
 
@@ -140,5 +141,94 @@ describe('AuthService.generateTokens (via login)', () => {
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
     expect(insertSpy).toHaveBeenCalled();
+  });
+});
+
+describe('AuthService.refresh', () => {
+  const rawRt = 'raw.refresh.token';
+  const tokenHash = createHash('sha256').update(rawRt).digest('hex');
+
+  async function buildService(db: unknown) {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: db },
+        {
+          provide: JwtService,
+          useValue: {
+            sign: jest.fn().mockReturnValue('new-token'),
+            verify: jest.fn().mockReturnValue({
+              sub: 'user-1', email: 'a@b.com', name: 'A',
+              role: 'client', tenantId: 'tenant-1', exp: Math.floor(Date.now() / 1000) + 900,
+            }),
+          },
+        },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    return module.get(AuthService);
+  }
+
+  it('returns new token pair for valid refresh token', async () => {
+    const rtRecord = { id: 'rt-old', tokenHash, revokedAt: null, replacedById: null };
+    const user = {
+      id: 'user-1', email: 'a@b.com', passwordHash: 'hash', role: 'client' as const,
+      tenantId: 'tenant-1', name: 'A', phone: null, active: true,
+      avatarUrl: null, timezone: 'America/Sao_Paulo', timeFormat: '24h',
+      lastLoginAt: null, createdAt: new Date(),
+    };
+    let queryCount = 0;
+    const chain = makeChain((resolve) => {
+      queryCount++;
+      if (queryCount === 1) return resolve([rtRecord]);      // SELECT refresh_tokens
+      if (queryCount === 2) return resolve([user]);           // SELECT users (inside withTenant)
+      return resolve([{ id: 'rt-new' }]);                    // INSERT refresh_tokens
+    });
+    const db = makeMockDb(chain);
+    const service = await buildService(db);
+
+    const result = await service.refresh(rawRt);
+    expect(result).toHaveProperty('accessToken');
+    expect(result).toHaveProperty('refreshToken');
+  });
+
+  it('throws UnauthorizedException when JWT verification fails', async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: makeSimpleDb([]) },
+        {
+          provide: JwtService,
+          useValue: {
+            sign: jest.fn(),
+            verify: jest.fn().mockImplementation(() => { throw new Error('invalid'); }),
+          },
+        },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    const service = module.get(AuthService);
+
+    await expect(service.refresh(rawRt)).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('throws UnauthorizedException when token hash not found in DB', async () => {
+    const service = await buildService(makeSimpleDb([]));
+    await expect(service.refresh(rawRt)).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('throws UnauthorizedException and revokes chain on replay', async () => {
+    const revokedRecord = { id: 'rt-old', tokenHash, revokedAt: new Date(), replacedById: 'rt-child' };
+    const childRecord = { id: 'rt-child', revokedAt: null, replacedById: null };
+    let queryCount = 0;
+    const chain = makeChain((resolve) => {
+      queryCount++;
+      if (queryCount === 1) return resolve([revokedRecord]); // first SELECT → revoked token
+      if (queryCount === 2) return resolve([childRecord]);   // SELECT for child in revokeChain
+      return resolve([]);
+    });
+    const service = await buildService(makeMockDb(chain));
+
+    await expect(service.refresh(rawRt)).rejects.toThrow(UnauthorizedException);
   });
 });

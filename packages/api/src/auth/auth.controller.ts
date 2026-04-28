@@ -24,6 +24,13 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
+  @Post('refresh')
+  @HttpCode(200)
+  refresh(@Body('refreshToken') refreshToken: string) {
+    if (!refreshToken) throw new BadRequestException('refreshToken is required');
+    return this.authService.refresh(refreshToken);
+  }
+
   @Get('clients')
   @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
   @Roles('tenant_admin', 'professional')
