@@ -7,12 +7,11 @@ import { useAppointments, useCancelAppointment } from '@/hooks/useAppointments'
 import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { DatePickerField } from '@/components/ui/DatePickerField'
-import { ClientSearchField } from '@/components/ui/ClientSearchField'
-import { ProfessionalSearchField } from '@/components/ui/ProfessionalSearchField'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Appointment } from '@/types'
+import { AppointmentFilters } from './_components/AppointmentFilters'
+import { CalendarView } from './_components/CalendarView'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
   pending:   'Agendado',
@@ -32,6 +31,7 @@ export default function AppointmentsPage() {
   const router = useRouter()
   const [page, setPage] = useState(1)
   const [cancelId, setCancelId] = useState<string | null>(null)
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
 
   // Filters
   const [dateFrom, setDateFrom] = useState('')  // ISO: yyyy-mm-dd
@@ -110,8 +110,37 @@ export default function AppointmentsPage() {
     <>
       <div>
 
-        {/* Page header */}
-        <div className="flex justify-end mb-4">
+        {/* Page header: toggle left + "Novo agendamento" right */}
+        <div className="flex items-center justify-between mb-4">
+          {/* View mode toggle */}
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex">
+            <button
+              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors ${viewMode === 'calendar' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              onClick={() => setViewMode('calendar')}
+            >
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+              </svg>
+              Calendário
+            </button>
+            <button
+              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors ${viewMode === 'list' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              onClick={() => setViewMode('list')}
+            >
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/>
+              </svg>
+              Listagem
+            </button>
+          </div>
+
+          {/* Novo agendamento */}
           <button
             className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
             onClick={() => router.push('/appointments/create')}
@@ -123,226 +152,136 @@ export default function AppointmentsPage() {
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-4 shadow-sm">
-          <div className="flex flex-wrap gap-3 items-end">
+        {/* Filters — always visible, viewMode controls what's shown inside */}
+        <AppointmentFilters
+          viewMode={viewMode}
+          timeRange={timeRange}
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          serviceId={serviceId}
+          status={status}
+          clientId={clientId}
+          professionalId={professionalId}
+          clientDisplayValue={clientDisplayValue}
+          professionalDisplayValue={professionalDisplayValue}
+          servicesList={servicesList}
+          hasFilters={hasFilters}
+          onTimeRangeChange={setTimeRange}
+          onDateFromChange={setDateFrom}
+          onDateToChange={setDateTo}
+          onServiceIdChange={setServiceId}
+          onStatusChange={setStatus}
+          onClientInput={handleClientInput}
+          onClientSelect={selectClient}
+          onClientClear={() => { setClientId(''); setClientDisplayValue('') }}
+          onProfessionalInput={v => { setProfessionalDisplayValue(v); if (professionalId) setProfessionalId('') }}
+          onProfessionalSelect={(id, name) => { setProfessionalId(id); setProfessionalDisplayValue(name) }}
+          onProfessionalClear={() => { setProfessionalId(''); setProfessionalDisplayValue('') }}
+          onClearFilters={clearFilters}
+        />
 
-            {/* Period */}
-            <div className="min-w-[140px] flex-[1_1_140px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Período</label>
-              <div className="relative">
-                <select
-                  className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
-                  value={timeRange}
-                  onChange={e => setTimeRange(e.target.value as '' | 'future' | 'past')}
-                >
-                  <option value="">Todos</option>
-                  <option value="future">Futuros</option>
-                  <option value="past">Passados</option>
-                </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
-
-            {/* Date pickers — hidden when a period is active */}
-            {timeRange === '' && (
+        {/* Content */}
+        {viewMode === 'calendar' ? (
+          <CalendarView filters={{ serviceId, status, clientId, professionalId }} />
+        ) : (
+          /* List view — table + pagination */
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            {isLoading ? (
+              <div className="p-12 text-center text-gray-400 text-sm">Carregando...</div>
+            ) : !appointments.length ? (
+              <EmptyState
+                title="Nenhum agendamento"
+                description={hasFilters ? 'Nenhum agendamento encontrado para os filtros aplicados.' : 'Nenhum agendamento cadastrado.'}
+              />
+            ) : (
               <>
-                <div className="min-w-[140px] flex-[1_1_140px]">
-                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">De</label>
-                  <DatePickerField
-                    value={dateFrom}
-                    onChange={setDateFrom}
-                    inputClassName="h-9 text-[13px]"
-                  />
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-[13px]">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        {['Agendado em', 'Cliente', 'Profissional', 'Serviço', 'Status', 'Cadastrado em', 'Ação'].map(col => (
+                          <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.06em] whitespace-nowrap">
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appointments.map((appt: Appointment) => (
+                        <tr key={appt.id} className="border-b border-gray-50 transition-colors hover:bg-gray-50">
+                          <td className="px-4 py-3.5">
+                            <DateTimeCell iso={appt.startsAt} />
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <Link href={`/clients/${appt.clientId}`} className="hover:opacity-75 transition-opacity">
+                              <AvatarName name={appt.clientName} avatarUrl={appt.clientAvatarUrl} />
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <Link href={`/professionals/${appt.professionalId}`} className="hover:opacity-75 transition-opacity">
+                              <AvatarName name={appt.professionalName} avatarUrl={appt.professionalAvatarUrl} />
+                            </Link>
+                          </td>
+                          <td className="px-4 py-3.5 whitespace-nowrap text-gray-500">
+                            {appt.serviceName}
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <StatusBadge
+                              label={STATUS_LABELS[appt.status]}
+                              variant={STATUS_VARIANTS[appt.status]}
+                            />
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <DateTimeCell iso={appt.createdAt} />
+                          </td>
+                          <td className="px-4 py-3.5">
+                            {(appt.status === 'pending' || appt.status === 'confirmed') && (
+                              <button
+                                className="px-3 py-[5px] border border-red-200 bg-white text-red-600 rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                onClick={() => setCancelId(appt.id)}
+                              >
+                                Cancelar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <div className="min-w-[140px] flex-[1_1_140px]">
-                  <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Até</label>
-                  <DatePickerField
-                    value={dateTo}
-                    onChange={setDateTo}
-                    inputClassName="h-9 text-[13px]"
-                  />
+                {/* Pagination */}
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                  <p className="text-[13px] text-gray-500 m-0">
+                    Página {page} de {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      onClick={() => setPage(p => p - 1)}
+                      disabled={page <= 1}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                      </svg>
+                      Anterior
+                    </button>
+                    <button
+                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      onClick={() => setPage(p => p + 1)}
+                      disabled={page >= totalPages}
+                    >
+                      Próxima
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </>
             )}
-
-            {/* Service */}
-            <div className="min-w-[160px] flex-[1_1_160px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Serviço</label>
-              <div className="relative">
-                <select
-                  className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
-                  value={serviceId}
-                  onChange={e => setServiceId(e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {servicesList.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
-
-            {/* Status */}
-            <div className="min-w-[140px] flex-[1_1_140px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Status</label>
-              <div className="relative">
-                <select
-                  className="h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
-                  value={status}
-                  onChange={e => setStatus(e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  <option value="pending">Agendado</option>
-                  <option value="confirmed">Confirmado</option>
-                  <option value="cancelled">Cancelado</option>
-                  <option value="completed">Pago</option>
-                </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
-
-            {/* Professional search */}
-            <div className="min-w-[180px] flex-[2_1_180px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Profissional</label>
-              <ProfessionalSearchField
-                value={professionalDisplayValue}
-                onChange={v => { setProfessionalDisplayValue(v); if (professionalId) setProfessionalId('') }}
-                onSelect={(id, name) => { setProfessionalId(id); setProfessionalDisplayValue(name) }}
-                selectedId={professionalId}
-                onClear={() => { setProfessionalId(''); setProfessionalDisplayValue('') }}
-                showSearchIcon
-                inputClassName="h-9 text-[13px] focus:ring-2 focus:ring-indigo-500/10"
-              />
-            </div>
-
-            {/* Client search */}
-            <div className="min-w-[200px] flex-[2_1_200px]">
-              <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">Cliente</label>
-              <ClientSearchField
-                value={clientDisplayValue}
-                onChange={handleClientInput}
-                onSelect={selectClient}
-                selectedId={clientId}
-                onClear={() => { setClientId(''); setClientDisplayValue('') }}
-                showSearchIcon
-                inputClassName="h-9 text-[13px] focus:ring-2 focus:ring-indigo-500/10"
-              />
-            </div>
-
-            {/* Clear */}
-            {hasFilters && (
-              <div className="flex items-end">
-                <button
-                  className="h-9 px-3.5 border border-gray-200 bg-white text-gray-500 rounded-lg text-[13px] font-medium cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors whitespace-nowrap"
-                  onClick={clearFilters}
-                >
-                  Limpar filtros
-                </button>
-              </div>
-            )}
           </div>
-        </div>
-
-        {/* Table card */}
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-          {isLoading ? (
-            <div className="p-12 text-center text-gray-400 text-sm">Carregando...</div>
-          ) : !appointments.length ? (
-            <EmptyState
-              title="Nenhum agendamento"
-              description={hasFilters ? 'Nenhum agendamento encontrado para os filtros aplicados.' : 'Nenhum agendamento cadastrado.'}
-            />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[13px]">
-                  <thead>
-                    <tr className="border-b border-gray-100">
-                      {['Agendado em', 'Cliente', 'Profissional', 'Serviço', 'Status', 'Cadastrado em', 'Ação'].map(col => (
-                        <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.06em] whitespace-nowrap">
-                          {col}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {appointments.map((appt: Appointment) => (
-                      <tr key={appt.id} className="border-b border-gray-50 transition-colors hover:bg-gray-50">
-                        <td className="px-4 py-3.5">
-                          <DateTimeCell iso={appt.startsAt} />
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <Link href={`/clients/${appt.clientId}`} className="hover:opacity-75 transition-opacity">
-                            <AvatarName name={appt.clientName} avatarUrl={appt.clientAvatarUrl} />
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <Link href={`/professionals/${appt.professionalId}`} className="hover:opacity-75 transition-opacity">
-                            <AvatarName name={appt.professionalName} avatarUrl={appt.professionalAvatarUrl} />
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-gray-500">
-                          {appt.serviceName}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <StatusBadge
-                            label={STATUS_LABELS[appt.status]}
-                            variant={STATUS_VARIANTS[appt.status]}
-                          />
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <DateTimeCell iso={appt.createdAt} />
-                        </td>
-                        <td className="px-4 py-3.5">
-                          {(appt.status === 'pending' || appt.status === 'confirmed') && (
-                            <button
-                              className="px-3 py-[5px] border border-red-200 bg-white text-red-600 rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                              onClick={() => setCancelId(appt.id)}
-                            >
-                              Cancelar
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Pagination */}
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-                <p className="text-[13px] text-gray-500 m-0">
-                  Página {page} de {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    onClick={() => setPage(p => p - 1)}
-                    disabled={page <= 1}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <polyline points="15 18 9 12 15 6"/>
-                    </svg>
-                    Anterior
-                  </button>
-                  <button
-                    className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    onClick={() => setPage(p => p + 1)}
-                    disabled={page >= totalPages}
-                  >
-                    Próxima
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Cancel confirmation modal */}
