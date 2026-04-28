@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './users.schema';
 
 export const refreshTokens = pgTable('refresh_tokens', {
@@ -10,4 +10,9 @@ export const refreshTokens = pgTable('refresh_tokens', {
   revokedAt:     timestamp('revoked_at'),
   replacedById:  uuid('replaced_by_id'),
   createdAt:     timestamp('created_at').notNull().defaultNow(),
-});
+}, (table) => ({
+  userIdIdx: index('refresh_tokens_user_id_idx').on(table.userId),
+}));
+
+export type RefreshToken = typeof refreshTokens.$inferSelect;
+export type NewRefreshToken = typeof refreshTokens.$inferInsert;
