@@ -170,7 +170,7 @@ describe('AuthService.refresh', () => {
   }
 
   it('returns new token pair for valid refresh token', async () => {
-    const rtRecord = { id: 'rt-old', tokenHash, revokedAt: null, replacedById: null };
+    const rtRecord = { id: 'rt-old', tokenHash, revokedAt: new Date(), replacedById: null };
     const user = {
       id: 'user-1', email: 'a@b.com', passwordHash: 'hash', role: 'client' as const,
       tenantId: 'tenant-1', name: 'A', phone: null, active: true,
@@ -180,16 +180,18 @@ describe('AuthService.refresh', () => {
     let queryCount = 0;
     const chain = makeChain((resolve) => {
       queryCount++;
-      if (queryCount === 1) return resolve([rtRecord]);      // SELECT refresh_tokens
-      if (queryCount === 2) return resolve([user]);           // SELECT users (inside withTenant)
-      return resolve([{ id: 'rt-new' }]);                    // INSERT refresh_tokens
+      if (queryCount === 1) return resolve([rtRecord]);  // UPDATE refresh_tokens (atomic revoke)
+      if (queryCount === 2) return resolve([user]);        // SELECT users (inside withTenant)
+      return resolve([{ id: 'rt-new' }]);                 // INSERT refresh_tokens
     });
     const db = makeMockDb(chain);
+    const updateSpy = db['update'] as jest.Mock;
     const service = await buildService(db);
 
     const result = await service.refresh(rawRt);
     expect(result).toHaveProperty('accessToken');
     expect(result).toHaveProperty('refreshToken');
+    expect(updateSpy).toHaveBeenCalled(); // old token was atomically revoked
   });
 
   it('throws UnauthorizedException when JWT verification fails', async () => {
@@ -218,17 +220,21 @@ describe('AuthService.refresh', () => {
   });
 
   it('throws UnauthorizedException and revokes chain on replay', async () => {
-    const revokedRecord = { id: 'rt-old', tokenHash, revokedAt: new Date(), replacedById: 'rt-child' };
+    const existingRecord = { id: 'rt-old', revokedAt: new Date() };
     const childRecord = { id: 'rt-child', revokedAt: null, replacedById: null };
     let queryCount = 0;
     const chain = makeChain((resolve) => {
       queryCount++;
-      if (queryCount === 1) return resolve([revokedRecord]); // first SELECT → revoked token
-      if (queryCount === 2) return resolve([childRecord]);   // SELECT for child in revokeChain
+      if (queryCount === 1) return resolve([]);              // UPDATE → 0 rows (already revoked)
+      if (queryCount === 2) return resolve([existingRecord]); // SELECT by hash → found, already revoked
+      if (queryCount === 3) return resolve([childRecord]);   // revokeChain: SELECT child
       return resolve([]);
     });
-    const service = await buildService(makeMockDb(chain));
+    const db = makeMockDb(chain);
+    const updateSpy = db['update'] as jest.Mock;
+    const service = await buildService(db);
 
     await expect(service.refresh(rawRt)).rejects.toThrow(UnauthorizedException);
+    expect(updateSpy).toHaveBeenCalled(); // revokeChain updated the child token
   });
 });

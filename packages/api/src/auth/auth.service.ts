@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
-import { eq, and, or, ilike } from 'drizzle-orm';
+import { eq, and, or, ilike, isNull } from 'drizzle-orm';
 import { users, clientProfiles, refreshTokens } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
@@ -99,15 +99,21 @@ export class AuthService {
     }
 
     const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+
+    // Atomic claim: only succeeds once even under concurrent requests
     const [record] = await this.db
-      .select()
-      .from(refreshTokens)
-      .where(eq(refreshTokens.tokenHash, tokenHash));
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.tokenHash, tokenHash), isNull(refreshTokens.revokedAt)))
+      .returning();
 
-    if (!record) throw new UnauthorizedException();
-
-    if (record.revokedAt) {
-      await this.revokeChain(record.id);
+    if (!record) {
+      // Token was already revoked (replay) or doesn't exist — check which
+      const [existing] = await this.db
+        .select({ id: refreshTokens.id, revokedAt: refreshTokens.revokedAt })
+        .from(refreshTokens)
+        .where(eq(refreshTokens.tokenHash, tokenHash));
+      if (existing) await this.revokeChain(existing.id);
       throw new UnauthorizedException();
     }
 
@@ -126,7 +132,7 @@ export class AuthService {
 
     await this.db
       .update(refreshTokens)
-      .set({ revokedAt: new Date(), replacedById: newTokenId })
+      .set({ replacedById: newTokenId })
       .where(eq(refreshTokens.id, record.id));
 
     return { accessToken, refreshToken };
