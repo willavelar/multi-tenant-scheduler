@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import type { Appointment } from '@/types'
 import { useAppointmentsCalendar } from '@/hooks/useAppointments'
 import {
@@ -32,7 +32,7 @@ export function CalendarView({ filters }: Props) {
   const [currentDate, setCurrentDate] = useState(() => new Date())
   const [popover, setPopover] = useState<{ appointment: Appointment; rect: DOMRect } | null>(null)
 
-  const today = new Date()
+  const today = useMemo(() => new Date(), [])
 
   const { dateFrom, dateTo } = (() => {
     if (mode === 'day') {
