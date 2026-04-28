@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Appointment } from '@/types'
 import { formatISOTime } from '@/lib/calendarUtils'
@@ -35,12 +35,13 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
   const completeMut = useCompleteAppointment()
   const deleteMut   = useDeleteAppointment()
 
-  let left = blockRect.right + 8
-  if (left + POPOVER_WIDTH > window.innerWidth - 16) left = blockRect.left - POPOVER_WIDTH - 8
-  let top = blockRect.top
-  if (top + POPOVER_HEIGHT > window.innerHeight - 16) top = window.innerHeight - POPOVER_HEIGHT - 16
-  top = Math.max(8, top)
-  left = Math.max(8, left)
+  const { top, left } = useMemo(() => {
+    let l = blockRect.right + 8
+    if (l + POPOVER_WIDTH > window.innerWidth - 16) l = blockRect.left - POPOVER_WIDTH - 8
+    let t = blockRect.top
+    if (t + POPOVER_HEIGHT > window.innerHeight - 16) t = window.innerHeight - POPOVER_HEIGHT - 16
+    return { top: Math.max(8, t), left: Math.max(8, l) }
+  }, [blockRect])
 
   useEffect(() => {
     function handler(e: MouseEvent) {
