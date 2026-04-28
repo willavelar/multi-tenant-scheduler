@@ -38,14 +38,14 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
         {appointment.clientName}
       </p>
       {height >= 32 && (
-        <p className="text-white/85 text-[10px] truncate leading-tight m-0">
-          {appointment.serviceName}
-        </p>
-      )}
-      {height >= 32 && (
-        <p className="text-white/75 text-[10px] leading-tight m-0">
-          {formatISOTime(appointment.startsAt)} – {formatISOTime(appointment.endsAt)}
-        </p>
+        <>
+          <p className="text-white/85 text-[10px] truncate leading-tight m-0">
+            {appointment.serviceName}
+          </p>
+          <p className="text-white/75 text-[10px] leading-tight m-0">
+            {formatISOTime(appointment.startsAt)} – {formatISOTime(appointment.endsAt)}
+          </p>
+        </>
       )}
     </div>
   )
