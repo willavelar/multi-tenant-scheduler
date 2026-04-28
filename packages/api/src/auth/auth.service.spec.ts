@@ -123,15 +123,13 @@ describe('AuthService.generateTokens (via login)', () => {
       avatarUrl: null, timezone: 'America/Sao_Paulo', timeFormat: '24h',
       lastLoginAt: null, createdAt: new Date(),
     };
+    // login() UPDATE goes through db.transaction → loginChain
+    // persistRefreshToken INSERT goes through db directly → insertChain
+    const loginChain = makeChain((resolve) => resolve(undefined));
     const insertChain = makeChain((resolve) => resolve([{ id: 'rt-1' }]));
-    const loginChain = makeChain((resolve) => resolve(undefined)); // update lastLoginAt
-    let callCount = 0;
     const db: Record<string, unknown> = {};
     QUERY_METHODS.forEach((m) => {
-      db[m] = jest.fn().mockImplementation(() => {
-        callCount++;
-        return callCount <= 0 ? loginChain : insertChain;
-      });
+      db[m] = jest.fn().mockReturnValue(insertChain);
     });
     db['transaction'] = jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(loginChain));
     const insertSpy = db['insert'] as jest.Mock;
