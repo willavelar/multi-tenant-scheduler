@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUUID, Matches } from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUUID, Matches } from 'class-validator';
 
 export class CreateAppointmentDto {
   @IsUUID()
@@ -18,4 +18,8 @@ export class CreateAppointmentDto {
   @IsOptional()
   @IsUUID()
   clientId?: string; // admin/professional can specify the client
+
+  @IsOptional()
+  @IsIn(['pending', 'confirmed'])
+  initialStatus?: 'pending' | 'confirmed'; // admin/professional override in manual mode
 }
