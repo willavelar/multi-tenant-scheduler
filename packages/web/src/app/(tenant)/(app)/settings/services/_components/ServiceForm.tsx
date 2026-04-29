@@ -154,23 +154,25 @@ export function ServiceForm({ mode, defaultValues, onSubmit, onCancel }: Service
           />
         </div>
 
-        <div className="mt-4">
-          <label htmlFor="service-active" className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
-          <div className="relative max-w-[180px]">
-            <select
-              id="service-active"
-              value={form.active ? 'true' : 'false'}
-              onChange={e => set('active', e.target.value === 'true')}
-              className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
-            >
-              <option value="true">Ativo</option>
-              <option value="false">Inativo</option>
-            </select>
-            <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
+        {mode === 'edit' && (
+          <div className="mt-4">
+            <label htmlFor="service-active" className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
+            <div className="relative max-w-[180px]">
+              <select
+                id="service-active"
+                value={form.active ? 'true' : 'false'}
+                onChange={e => set('active', e.target.value === 'true')}
+                className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+              >
+                <option value="true">Ativo</option>
+                <option value="false">Inativo</option>
+              </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* ── Footer ── */}

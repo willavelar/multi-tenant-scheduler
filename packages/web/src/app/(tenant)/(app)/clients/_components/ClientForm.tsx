@@ -221,7 +221,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     }
   }
 
-  const showStatus = mode === 'create' || !isOwnProfile
+  const showStatus = mode === 'edit' && !isOwnProfile
 
   return (
     <form onSubmit={handleSubmit} noValidate>
