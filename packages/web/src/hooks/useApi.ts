@@ -8,7 +8,7 @@ export function useApi() {
 
   return (path: string, options: RequestInit = {}) =>
     apiFetch(path, { slug, token: accessToken, ...options }).catch((err: unknown) => {
-      if (err instanceof ApiError && err.status === 401) {
+      if (err instanceof ApiError && err.status === 401 && accessToken) {
         signalExpired()
       }
       throw err
