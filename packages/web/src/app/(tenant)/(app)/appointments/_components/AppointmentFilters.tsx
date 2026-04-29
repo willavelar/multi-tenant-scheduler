@@ -3,6 +3,7 @@
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { ClientSearchField } from '@/components/ui/ClientSearchField'
 import { ProfessionalSearchField } from '@/components/ui/ProfessionalSearchField'
+import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import type { Service } from '@/types'
 
 type Props = {
@@ -50,6 +51,8 @@ export function AppointmentFilters({
   onProfessionalInput, onProfessionalSelect, onProfessionalClear,
   onClearFilters,
 }: Props) {
+  const { allowPaidStatus } = useTenantSettingsContext()
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-4 shadow-sm">
       <div className="flex flex-wrap gap-3 items-end">
@@ -101,10 +104,10 @@ export function AppointmentFilters({
           <div className="relative">
             <select className={selectClass} value={status} onChange={e => onStatusChange(e.target.value)}>
               <option value="">Todos</option>
-              <option value="pending">Agendado</option>
+              <option value="pending">Aguardando confirmação</option>
               <option value="confirmed">Confirmado</option>
               <option value="cancelled">Cancelado</option>
-              <option value="completed">Pago</option>
+              {allowPaidStatus && <option value="completed">Pago</option>}
             </select>
             <ChevronDown />
           </div>
