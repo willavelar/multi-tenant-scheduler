@@ -14,7 +14,7 @@ import { AppointmentFilters } from './_components/AppointmentFilters'
 import { CalendarView } from './_components/CalendarView'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
-  pending:   'Agendado',
+  pending:   'Aguardando confirmação',
   confirmed: 'Confirmado',
   cancelled: 'Cancelado',
   completed: 'Pago',
