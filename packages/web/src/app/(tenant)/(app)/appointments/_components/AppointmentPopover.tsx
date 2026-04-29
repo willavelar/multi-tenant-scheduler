@@ -8,12 +8,13 @@ import { clientColor } from '@/lib/calendarColors'
 import { useCancelAppointment, useCompleteAppointment, useConfirmAppointment, useDeleteAppointment } from '@/hooks/useAppointments'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import type { StatusVariant } from '@/components/ui/StatusBadge'
+import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 
 const POPOVER_WIDTH = 300
 const POPOVER_HEIGHT = 270
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
-  pending: 'Agendado', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Pago',
+  pending: 'Aguardando confirmação', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Pago',
 }
 const STATUS_VARIANTS: Record<Appointment['status'], StatusVariant> = {
   pending: 'warning', confirmed: 'success', cancelled: 'error', completed: 'purple',
@@ -34,6 +35,7 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
   const cancelMut   = useCancelAppointment()
   const completeMut = useCompleteAppointment()
   const deleteMut   = useDeleteAppointment()
+  const { allowPaidStatus } = useTenantSettingsContext()
 
   const { top, left } = useMemo(() => {
     let l = blockRect.right + 8
@@ -136,7 +138,7 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
                   <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />Confirmar
                 </button>
               )}
-              {status !== 'completed' && status !== 'cancelled' && (
+              {allowPaidStatus && status !== 'completed' && status !== 'cancelled' && (
                 <button className="w-full text-left px-3 py-2 text-[12.5px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-gray-100" onClick={() => handleStatusChange('complete')}>
                   <span className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0" />Marcar como Pago
                 </button>
