@@ -12,6 +12,30 @@ const inputCls = (disabled = false) => cn(
     : 'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
 )
 
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
+        checked ? 'bg-indigo-500' : 'bg-gray-200',
+        disabled && 'opacity-50 cursor-not-allowed',
+      )}
+    >
+      <span
+        className={cn(
+          'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+          checked ? 'translate-x-4' : 'translate-x-0',
+        )}
+      />
+    </button>
+  )
+}
+
 export function TenantGeneralForm() {
   const { data, isLoading } = useTenantSettings()
   const { mutateAsync, isPending } = useUpdateTenantSettings()
@@ -21,10 +45,16 @@ export function TenantGeneralForm() {
   const [error,    setError]    = useState('')
   const [success,  setSuccess]  = useState(false)
 
+  const [allowPaidStatus,  setAllowPaidStatus]  = useState(true)
+  const [requiresConfirm,  setRequiresConfirm]  = useState(false)
+  const [toggleSaving,     setToggleSaving]     = useState<string | null>(null)
+
   useEffect(() => {
     if (!data) return
     setName(data.name)
     setLogoUrl(data.logoUrl)
+    setAllowPaidStatus(data.allowPaidStatus)
+    setRequiresConfirm(data.confirmationMode === 'manual')
   }, [data])
 
   if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
@@ -42,6 +72,30 @@ export function TenantGeneralForm() {
       setSuccess(true)
     } catch {
       setError('Não foi possível salvar as alterações. Tente novamente.')
+    }
+  }
+
+  async function handleTogglePaidStatus(value: boolean) {
+    setAllowPaidStatus(value)
+    setToggleSaving('paid')
+    try {
+      await mutateAsync({ allowPaidStatus: value })
+    } catch {
+      setAllowPaidStatus(!value)
+    } finally {
+      setToggleSaving(null)
+    }
+  }
+
+  async function handleToggleConfirmation(value: boolean) {
+    setRequiresConfirm(value)
+    setToggleSaving('confirm')
+    try {
+      await mutateAsync({ confirmationMode: value ? 'manual' : 'auto' })
+    } catch {
+      setRequiresConfirm(!value)
+    } finally {
+      setToggleSaving(null)
     }
   }
 
@@ -95,6 +149,59 @@ export function TenantGeneralForm() {
               className={inputCls(true)}
             />
             <p className="text-[11px] text-gray-400 mt-1 m-0">O host não pode ser alterado.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Comportamento ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Comportamento</p>
+
+        <div className="space-y-5">
+          {/* Toggle: Paid status */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Habilitar status "Pago"</p>
+              <p className="text-[12px] text-gray-500 m-0">
+                Permite marcar agendamentos como pagos. Quando desativado, a opção é removida do sistema.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {toggleSaving === 'paid' && (
+                <svg className="animate-spin text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+              )}
+              <Toggle
+                checked={allowPaidStatus}
+                onChange={handleTogglePaidStatus}
+                disabled={toggleSaving === 'paid'}
+              />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Toggle: Confirmation required */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Exigir confirmação de agendamentos</p>
+              <p className="text-[12px] text-gray-500 m-0">
+                Novos agendamentos criados por clientes ficam como "Aguardando confirmação" até serem confirmados.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {toggleSaving === 'confirm' && (
+                <svg className="animate-spin text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+              )}
+              <Toggle
+                checked={requiresConfirm}
+                onChange={handleToggleConfirmation}
+                disabled={toggleSaving === 'confirm'}
+              />
+            </div>
           </div>
         </div>
       </div>
