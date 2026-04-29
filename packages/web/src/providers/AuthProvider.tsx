@@ -87,7 +87,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAccessToken(stored)
         setUser({ ...decoded, ...override })
       } catch {
-        signalExpired()
+        // Access token expired — try a silent refresh before logging out
+        const rt = localStorage.getItem('refreshToken')
+        if (rt) {
+          const slug = window.location.pathname.split('/')[1] ?? ''
+          attemptRefresh(slug).catch(() => signalExpired())
+          // on success, 'token-refreshed' event fires → handler below updates state
+        } else {
+          signalExpired()
+        }
       }
     }
   }, [signalExpired])
