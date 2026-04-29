@@ -3,10 +3,12 @@ import { useApi } from './useApi'
 import { useTenant } from '@/providers/TenantProvider'
 
 export type TenantSettings = {
-  id:      string
-  name:    string
-  slug:    string
-  logoUrl: string | null
+  id:               string
+  name:             string
+  slug:             string
+  logoUrl:          string | null
+  confirmationMode: 'auto' | 'manual'
+  allowPaidStatus:  boolean
 }
 
 export function useTenantSettings() {
@@ -23,7 +25,12 @@ export function useUpdateTenantSettings() {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (body: { name?: string; logoUrl?: string | null }) =>
+    mutationFn: (body: {
+      name?:             string
+      logoUrl?:          string | null
+      confirmationMode?: 'auto' | 'manual'
+      allowPaidStatus?:  boolean
+    }) =>
       api('/tenants/me', { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['tenant-settings', slug] }),
