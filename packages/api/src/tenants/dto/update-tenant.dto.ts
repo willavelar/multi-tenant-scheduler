@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
 
 export class UpdateTenantDto {
   @IsOptional()
@@ -11,4 +11,12 @@ export class UpdateTenantDto {
   @IsString()
   @MaxLength(200_000)
   logoUrl?: string | null;
+
+  @IsOptional()
+  @IsIn(['auto', 'manual'])
+  confirmationMode?: 'auto' | 'manual';
+
+  @IsOptional()
+  @IsBoolean()
+  allowPaidStatus?: boolean;
 }

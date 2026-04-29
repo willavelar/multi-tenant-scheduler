@@ -34,10 +34,12 @@ export class TenantsService {
   async findCurrent(tenantId: string) {
     const [tenant] = await this.db
       .select({
-        id:      tenants.id,
-        name:    tenants.name,
-        slug:    tenants.slug,
-        logoUrl: tenants.logoUrl,
+        id:               tenants.id,
+        name:             tenants.name,
+        slug:             tenants.slug,
+        logoUrl:          tenants.logoUrl,
+        confirmationMode: tenants.confirmationMode,
+        allowPaidStatus:  tenants.allowPaidStatus,
       })
       .from(tenants)
       .where(eq(tenants.id, tenantId));
@@ -48,8 +50,10 @@ export class TenantsService {
 
   async update(tenantId: string, dto: UpdateTenantDto) {
     const patch: Partial<typeof tenants.$inferInsert> = {};
-    if (dto.name    !== undefined) patch.name    = dto.name;
-    if (dto.logoUrl !== undefined) patch.logoUrl = dto.logoUrl;
+    if (dto.name             !== undefined) patch.name             = dto.name;
+    if (dto.logoUrl          !== undefined) patch.logoUrl          = dto.logoUrl;
+    if (dto.confirmationMode !== undefined) patch.confirmationMode = dto.confirmationMode;
+    if (dto.allowPaidStatus  !== undefined) patch.allowPaidStatus  = dto.allowPaidStatus;
 
     if (Object.keys(patch).length === 0) {
       throw new BadRequestException('No updatable fields provided');
@@ -60,10 +64,12 @@ export class TenantsService {
       .set(patch)
       .where(eq(tenants.id, tenantId))
       .returning({
-        id:      tenants.id,
-        name:    tenants.name,
-        slug:    tenants.slug,
-        logoUrl: tenants.logoUrl,
+        id:               tenants.id,
+        name:             tenants.name,
+        slug:             tenants.slug,
+        logoUrl:          tenants.logoUrl,
+        confirmationMode: tenants.confirmationMode,
+        allowPaidStatus:  tenants.allowPaidStatus,
       });
 
     if (!updated) throw new NotFoundException('Tenant not found');
