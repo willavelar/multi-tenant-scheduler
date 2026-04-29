@@ -41,7 +41,15 @@ export class AppointmentsService {
 
       const startsAt = new Date(`${dto.date}T${dto.startTime}:00Z`);
       const endsAt = new Date(startsAt.getTime() + svc.durationMinutes * 60000);
-      const status = tenant.confirmationMode === 'auto' ? 'confirmed' : 'pending';
+
+      let status: 'pending' | 'confirmed';
+      if (tenant.confirmationMode === 'auto') {
+        status = 'confirmed';
+      } else {
+        // manual mode: clients always start pending; admin/prof may choose
+        const isPrivileged = userRole === 'tenant_admin' || userRole === 'professional';
+        status = isPrivileged && dto.initialStatus ? dto.initialStatus : 'pending';
+      }
 
       const [appointment] = await tx.insert(appointments).values({
         tenantId,
@@ -140,6 +148,16 @@ export class AppointmentsService {
 
   async updateStatus(id: string, status: 'confirmed' | 'cancelled' | 'completed', tenantId: string) {
     return withTenant(this.db, tenantId, async (tx) => {
+      if (status === 'completed') {
+        const [tenant] = await tx
+          .select({ allowPaidStatus: tenants.allowPaidStatus })
+          .from(tenants)
+          .where(eq(tenants.id, tenantId));
+        if (!tenant?.allowPaidStatus) {
+          throw new BadRequestException('Paid status is not enabled for this tenant');
+        }
+      }
+
       const [appt] = await tx
         .select()
         .from(appointments)
