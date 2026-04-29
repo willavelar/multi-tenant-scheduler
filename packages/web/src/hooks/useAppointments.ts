@@ -36,7 +36,14 @@ export function useCreateAppointment() {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (body: { professionalId: string; serviceId: string; date: string; startTime: string; clientId?: string }) =>
+    mutationFn: (body: {
+      professionalId: string
+      serviceId: string
+      date: string
+      startTime: string
+      clientId?: string
+      initialStatus?: 'pending' | 'confirmed'
+    }) =>
       api('/appointments', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
   })
