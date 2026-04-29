@@ -8,6 +8,7 @@ import { useSlots } from '@/hooks/useSlots'
 import { useCreateAppointment } from '@/hooks/useAppointments'
 import { useClients, useClient } from '@/hooks/useClients'
 import { useAuth } from '@/providers/AuthProvider'
+import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { BackButton } from '@/components/ui/BackButton'
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { ClientSearchField } from '@/components/ui/ClientSearchField'
@@ -100,6 +101,9 @@ export default function CreateAppointmentPage() {
   const router = useRouter()
   const { user } = useAuth()
   const isAdminOrProfessional = user?.role === 'tenant_admin' || user?.role === 'professional'
+  const { confirmationMode } = useTenantSettingsContext()
+  const showStatusPicker = isAdminOrProfessional && confirmationMode === 'manual'
+  const [initialStatus, setInitialStatus] = useState<'pending' | 'confirmed'>('pending')
 
   const { data: allProfessionals = [], isLoading: loadingProfs } = useProfessionals()
   const { data: allServices      = [], isLoading: loadingServices } = useServices()
@@ -177,6 +181,7 @@ export default function CreateAppointmentPage() {
     if (!professionalId || !serviceId || !date || !startTime) return
     const body: Parameters<typeof create.mutateAsync>[0] = { professionalId, serviceId, date, startTime }
     if (isAdminOrProfessional && clientId) body.clientId = clientId
+    if (showStatusPicker) body.initialStatus = initialStatus
     await create.mutateAsync(body)
     router.push('/appointments')
   }
@@ -356,6 +361,31 @@ export default function CreateAppointmentPage() {
                   </div>
                 ))}
               </div>
+
+              {showStatusPicker && (
+                <div className="mb-5">
+                  <label className="block text-xs font-semibold text-gray-500 mb-2.5 uppercase tracking-[0.06em]">
+                    Status inicial
+                  </label>
+                  <div className="flex gap-2">
+                    {(['pending', 'confirmed'] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setInitialStatus(s)}
+                        className={cn(
+                          'px-3.5 py-2.5 border-[1.5px] rounded-lg cursor-pointer text-[13px] font-semibold transition-[border-color,background,color]',
+                          initialStatus === s
+                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                            : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700',
+                        )}
+                      >
+                        {s === 'pending' ? 'Aguardando confirmação' : 'Confirmado'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {create.isError && (
                 <p className="text-[13px] text-red-600 mb-3.5">
