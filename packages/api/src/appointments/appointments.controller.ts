@@ -53,6 +53,7 @@ export class AppointmentsController {
   }
 
   @Patch(':id/complete')
+  @Roles('tenant_admin', 'professional')
   complete(@Param('id') id: string, @TenantId() tenantId: string) {
     return this.service.updateStatus(id, 'completed', tenantId);
   }
