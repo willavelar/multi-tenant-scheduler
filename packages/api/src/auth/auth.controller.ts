@@ -31,6 +31,13 @@ export class AuthController {
     return this.authService.refresh(refreshToken);
   }
 
+  @Post('logout')
+  @HttpCode(204)
+  logout(@Body('refreshToken') refreshToken: string) {
+    if (!refreshToken) return;
+    return this.authService.logout(refreshToken);
+  }
+
   @Get('clients')
   @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
   @Roles('tenant_admin', 'professional')

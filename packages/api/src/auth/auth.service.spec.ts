@@ -238,3 +238,57 @@ describe('AuthService.refresh', () => {
     expect(updateSpy).toHaveBeenCalled(); // revokeChain updated the child token
   });
 });
+
+describe('AuthService.logout', () => {
+  const rawRt = 'raw.logout.token';
+  const tokenHash = createHash('sha256').update(rawRt).digest('hex');
+
+  async function buildService(db: unknown) {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: db },
+        {
+          provide: JwtService,
+          useValue: {
+            sign: jest.fn(),
+            verify: jest.fn().mockReturnValue({ sub: 'user-1', tenantId: 'tenant-1' }),
+          },
+        },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    return module.get(AuthService);
+  }
+
+  it('marks refresh token as revoked', async () => {
+    const chain = makeChain((resolve) => resolve([{ id: 'rt-1', tokenHash }]));
+    const db = makeMockDb(chain);
+    const updateSpy = db['update'] as jest.Mock;
+
+    const service = await buildService(db);
+    await service.logout(rawRt);
+
+    expect(updateSpy).toHaveBeenCalled();
+  });
+
+  it('is a no-op if JWT verification fails', async () => {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: makeSimpleDb([]) },
+        {
+          provide: JwtService,
+          useValue: {
+            sign: jest.fn(),
+            verify: jest.fn().mockImplementation(() => { throw new Error('bad'); }),
+          },
+        },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    const service = module.get(AuthService);
+
+    await expect(service.logout(rawRt)).resolves.toBeUndefined();
+  });
+});

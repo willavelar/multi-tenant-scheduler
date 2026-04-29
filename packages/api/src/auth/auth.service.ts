@@ -138,6 +138,23 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async logout(rawRefreshToken: string): Promise<void> {
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(rawRefreshToken, {
+        secret: this.config.get('JWT_REFRESH_SECRET'),
+      }) as JwtPayload;
+    } catch {
+      return;
+    }
+
+    const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(refreshTokens.tokenHash, tokenHash), eq(refreshTokens.userId, payload.sub)));
+  }
+
   private async revokeChain(tokenId: string, depth = 0): Promise<void> {
     if (depth > 20) return;
     const [record] = await this.db
