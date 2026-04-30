@@ -5,6 +5,7 @@ import type { Appointment } from '@/types'
 import { HOUR_HEIGHT, TOTAL_HOURS, layoutAppointments, blockPosition } from '@/lib/calendarUtils'
 import { clientColor } from '@/lib/calendarColors'
 import { CalendarEventBlock } from './CalendarEventBlock'
+import { useFormatTime } from '@/hooks/useFormatTime'
 
 type Props = {
   appointments: Appointment[]
@@ -19,6 +20,7 @@ export function CalendarDayGrid({ appointments, onAppointmentClick }: Props) {
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 7 * HOUR_HEIGHT }, [])
 
   const layout = layoutAppointments(appointments)
+  const { formatHour } = useFormatTime()
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -28,7 +30,7 @@ export function CalendarDayGrid({ appointments, onAppointmentClick }: Props) {
           <div className="relative flex-shrink-0 border-r border-gray-200" style={{ width: LABEL_WIDTH }}>
             {HOURS.map(h => (
               <div key={h} className="absolute right-2 text-[10px] text-gray-400 select-none" style={{ top: h * HOUR_HEIGHT - 7 }}>
-                {h === 0 ? '' : `${String(h).padStart(2, '0')}:00`}
+                {formatHour(h)}
               </div>
             ))}
           </div>

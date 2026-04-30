@@ -6,6 +6,7 @@ import { HOUR_HEIGHT, TOTAL_HOURS, isSameDay, layoutAppointments, blockPosition,
 import { clientColor } from '@/lib/calendarColors'
 import { CalendarEventBlock } from './CalendarEventBlock'
 import { cn } from '@/lib/utils'
+import { useFormatTime } from '@/hooks/useFormatTime'
 
 type Props = {
   days: Date[]
@@ -19,6 +20,7 @@ const LABEL_WIDTH = 52
 
 export function CalendarWeekGrid({ days, appointments, today, onAppointmentClick }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { formatHour } = useFormatTime()
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 7 * HOUR_HEIGHT }, [])
 
   return (
@@ -46,7 +48,7 @@ export function CalendarWeekGrid({ days, appointments, today, onAppointmentClick
           <div className="relative flex-shrink-0 border-r border-gray-200" style={{ width: LABEL_WIDTH }}>
             {HOURS.map(h => (
               <div key={h} className="absolute right-2 text-[10px] text-gray-400 select-none" style={{ top: h * HOUR_HEIGHT - 7 }}>
-                {h === 0 ? '' : `${String(h).padStart(2, '0')}:00`}
+                {formatHour(h)}
               </div>
             ))}
           </div>
