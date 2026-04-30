@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 const schema = z.object({
   name: z.string().min(2, 'Informe seu nome completo'),
   email: z.string().email('Informe um e-mail válido'),
-  password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
+  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
   confirmPassword: z.string(),
   phone: z.string().optional(),
 }).refine((d) => d.password === d.confirmPassword, {
@@ -162,7 +162,7 @@ export default function RegisterPage() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Mínimo 6 caracteres"
                   autoComplete="new-password"
                   {...register('password')}
                   className={cn(
