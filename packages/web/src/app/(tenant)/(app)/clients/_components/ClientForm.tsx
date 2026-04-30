@@ -27,8 +27,9 @@ export type ClientFormData = {
   allServices: boolean
   professionalIds: string[]
   serviceIds: string[]
-  serviceLimitCount?: number
-  serviceLimitPeriod?: 'day' | 'week' | 'month'
+  serviceLimitCount?: number | null
+  serviceLimitPeriod?: 'day' | 'week' | 'month' | null
+  serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[]
 }
 
 export type ClientFormProps = {
@@ -50,6 +51,9 @@ type FormState = {
   serviceLimitCount: string
   serviceLimitPeriod: string
 }
+
+type LimitMode = 'none' | 'normal' | 'per_service'
+type PerServiceLimitMap = Record<string, { count: string; period: string }>
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -95,6 +99,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
   const [allSvcs, setAllSvcs] = useState(true)
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
+  const [limitMode, setLimitMode] = useState<LimitMode>('none')
+  const [perServiceLimits, setPerServiceLimits] = useState<PerServiceLimitMap>({})
+
   // Initialize edit form once both defaultValues and allProfessionals are ready
   useEffect(() => {
     if (mode !== 'edit' || !defaultValues || initialized || !profsReady) return
@@ -121,6 +128,18 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         .filter(Boolean) as Professional[]
     )
     setSelectedServiceIds(defaultValues.linkedServices.map(s => s.serviceId))
+    if (defaultValues.serviceLimitCount != null && defaultValues.serviceLimitPeriod) {
+      setLimitMode('normal')
+    } else if (defaultValues.perServiceLimits?.length) {
+      setLimitMode('per_service')
+      const map: PerServiceLimitMap = {}
+      defaultValues.perServiceLimits.forEach(sl => {
+        map[sl.serviceId] = { count: String(sl.limitCount), period: sl.limitPeriod }
+      })
+      setPerServiceLimits(map)
+    } else {
+      setLimitMode('none')
+    }
     setInitialized(true)
   }, [mode, defaultValues, allProfessionals, profsReady, initialized])
 
@@ -173,11 +192,16 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       if (!form.password) e.password = 'Senha obrigatória'
       else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
     }
-    if (form.serviceLimitCount && isNaN(Number(form.serviceLimitCount))) {
-      e.serviceLimitCount = 'Valor inválido'
-    }
-    if (form.serviceLimitCount && !form.serviceLimitPeriod) {
-      e.serviceLimitPeriod = 'Selecione o período'
+    if (limitMode === 'normal') {
+      if (form.serviceLimitCount && isNaN(Number(form.serviceLimitCount))) {
+        e.serviceLimitCount = 'Valor inválido'
+      }
+      if (form.serviceLimitCount && !form.serviceLimitPeriod) {
+        e.serviceLimitPeriod = 'Selecione o período'
+      }
+      if (!form.serviceLimitCount && form.serviceLimitPeriod) {
+        e.serviceLimitCount = 'Informe a quantidade'
+      }
     }
     setErrors(e)
     return Object.keys(e).length === 0
@@ -203,12 +227,19 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         allServices:      allSvcs,
         professionalIds:  allProfs ? [] : selectedProfs.map(p => p.id),
         serviceIds:       allSvcs ? [] : selectedServiceIds,
-        ...(form.serviceLimitCount
-          ? {
-              serviceLimitCount:  Number(form.serviceLimitCount),
-              serviceLimitPeriod: form.serviceLimitPeriod as 'day' | 'week' | 'month',
-            }
-          : {}),
+        serviceLimitCount:  limitMode === 'normal' && form.serviceLimitCount
+          ? Number(form.serviceLimitCount) : null,
+        serviceLimitPeriod: limitMode === 'normal' && form.serviceLimitPeriod
+          ? form.serviceLimitPeriod as 'day' | 'week' | 'month' : null,
+        serviceLimits: limitMode === 'per_service'
+          ? selectedServiceIds
+              .filter(id => perServiceLimits[id]?.count && perServiceLimits[id]?.period)
+              .map(id => ({
+                serviceId:   id,
+                limitCount:  Number(perServiceLimits[id].count),
+                limitPeriod: perServiceLimits[id].period as 'day' | 'week' | 'month',
+              }))
+          : [],
       }
       await onSubmit(data)
     } catch {
@@ -344,66 +375,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         onTimeFormatChange={setTimeFormat}
       />
 
-      {/* ── Card 4: Limite de serviços ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Limite de serviços</p>
-        <p className="text-[13px] text-gray-500 m-0 mb-4">
-          Define quantos agendamentos este cliente pode fazer em um determinado período.
-        </p>
-
-        <div className="flex gap-3 items-end">
-          <div className="[flex:0_0_140px]">
-            <label htmlFor="client-limit-count" className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
-            <input
-              id="client-limit-count"
-              type="number"
-              min={1}
-              value={form.serviceLimitCount}
-              onChange={e => set('serviceLimitCount', e.target.value)}
-              placeholder="Ex: 3"
-              className={inputCls(!!errors.serviceLimitCount)}
-            />
-            {errors.serviceLimitCount && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitCount}</p>}
-          </div>
-          <div className="[flex:0_0_180px]">
-            <label htmlFor="client-limit-period" className="block text-[13px] font-medium text-gray-700 mb-1.5">Por período</label>
-            <div className="relative">
-              <select
-                id="client-limit-period"
-                value={form.serviceLimitPeriod}
-                onChange={e => set('serviceLimitPeriod', e.target.value)}
-                className={cn(
-                  'w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-                  errors.serviceLimitPeriod ? 'border-red-400' : 'border-gray-200'
-                )}
-              >
-                <option value="">Selecione…</option>
-                <option value="day">Dia</option>
-                <option value="week">Semana</option>
-                <option value="month">Mês</option>
-              </select>
-              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
-            </div>
-            {errors.serviceLimitPeriod && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitPeriod}</p>}
-          </div>
-          {form.serviceLimitCount && (
-            <button
-              type="button"
-              onClick={() => { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }}
-              className={cn(
-                'h-[42px] px-3 bg-transparent border border-gray-200 rounded-lg text-xs text-gray-500 cursor-pointer hover:bg-gray-50 transition-colors',
-                errors.serviceLimitCount || errors.serviceLimitPeriod ? 'mb-[22px]' : 'mb-0'
-              )}
-            >
-              Remover limite
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ── Card 5: Profissionais vinculados ── */}
+      {/* ── Card 4: Profissionais vinculados ── */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm relative">
         <p className="text-sm font-bold text-gray-900 m-0 mb-5">Profissionais vinculados</p>
         <p className="text-[13px] text-gray-500 m-0 mb-4">
@@ -476,7 +448,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         )}
       </div>
 
-      {/* ── Card 6: Serviços permitidos ── */}
+      {/* ── Card 5: Serviços permitidos ── */}
       {services.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-gray-900 m-0 mb-5">Serviços permitidos</p>
@@ -523,6 +495,150 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
           )}
         </div>
       )}
+
+      {/* ── Card 6: Limite de serviços ── */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-gray-900 m-0 mb-2">Limite de serviços</p>
+        <p className="text-[13px] text-gray-500 m-0 mb-5">
+          Define quantos agendamentos este cliente pode fazer em um determinado período.
+        </p>
+
+        {/* Mode selector */}
+        <div className="flex flex-col gap-2 mb-5">
+          {(['none', 'normal', 'per_service'] as LimitMode[]).map((mode) => {
+            const labels: Record<LimitMode, string> = {
+              none:        'Sem limite',
+              normal:      'Normal',
+              per_service: 'Por Serviço',
+            }
+            const descs: Record<LimitMode, string> = {
+              none:        'Nenhuma restrição de quantidade de agendamentos',
+              normal:      'Limite total por período, independente do serviço',
+              per_service: 'Limite individual para cada serviço',
+            }
+            return (
+              <label
+                key={mode}
+                className={cn(
+                  'flex items-start gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',
+                  limitMode === mode ? 'border-indigo-400 bg-indigo-50/60' : 'border-gray-200 hover:bg-gray-50',
+                )}
+              >
+                <input
+                  type="radio"
+                  name="limitMode"
+                  value={mode}
+                  checked={limitMode === mode}
+                  onChange={() => {
+                    setLimitMode(mode)
+                    if (mode !== 'normal') { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }
+                    if (mode !== 'per_service') setPerServiceLimits({})
+                  }}
+                  className="mt-0.5 w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
+                />
+                <div>
+                  <p className="m-0 text-[13.5px] font-semibold text-gray-800">{labels[mode]}</p>
+                  <p className="m-0 text-xs text-gray-400">{descs[mode]}</p>
+                </div>
+              </label>
+            )
+          })}
+        </div>
+
+        {/* Normal mode inputs */}
+        {limitMode === 'normal' && (
+          <div className="flex gap-3 items-end">
+            <div className="[flex:0_0_140px]">
+              <label htmlFor="client-limit-count" className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
+              <input
+                id="client-limit-count"
+                type="number"
+                min={1}
+                value={form.serviceLimitCount}
+                onChange={e => set('serviceLimitCount', e.target.value)}
+                placeholder="Ex: 3"
+                className={inputCls(!!errors.serviceLimitCount)}
+              />
+              {errors.serviceLimitCount && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitCount}</p>}
+            </div>
+            <div className="[flex:0_0_180px]">
+              <label htmlFor="client-limit-period" className="block text-[13px] font-medium text-gray-700 mb-1.5">Por período</label>
+              <div className="relative">
+                <select
+                  id="client-limit-period"
+                  value={form.serviceLimitPeriod}
+                  onChange={e => set('serviceLimitPeriod', e.target.value)}
+                  className={cn(
+                    'w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+                    errors.serviceLimitPeriod ? 'border-red-400' : 'border-gray-200',
+                  )}
+                >
+                  <option value="">Selecione…</option>
+                  <option value="day">Dia</option>
+                  <option value="week">Semana</option>
+                  <option value="month">Mês</option>
+                </select>
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              {errors.serviceLimitPeriod && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitPeriod}</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Per-service mode inputs */}
+        {limitMode === 'per_service' && (
+          <div className="flex flex-col gap-3">
+            {allSvcs || selectedServiceIds.length === 0 ? (
+              <p className="text-[13px] text-gray-400">
+                Selecione serviços específicos em &quot;Serviços permitidos&quot; para configurar limites por serviço.
+              </p>
+            ) : (
+              selectedServiceIds.map(id => {
+                const svc = services.find((s: Service) => s.id === id)
+                const sl  = perServiceLimits[id] ?? { count: '', period: '' }
+                return (
+                  <div key={id} className="flex gap-3 items-end">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-medium text-gray-700 mb-1.5 truncate">{svc?.name ?? id}</p>
+                    </div>
+                    <div className="[flex:0_0_120px]">
+                      <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={sl.count}
+                        onChange={e => setPerServiceLimits(prev => ({ ...prev, [id]: { ...sl, count: e.target.value } }))}
+                        placeholder="Ex: 2"
+                        className={inputCls(false)}
+                      />
+                    </div>
+                    <div className="[flex:0_0_160px]">
+                      <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Período</label>
+                      <div className="relative">
+                        <select
+                          value={sl.period}
+                          onChange={e => setPerServiceLimits(prev => ({ ...prev, [id]: { ...sl, period: e.target.value } }))}
+                          className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                        >
+                          <option value="">Selecione…</option>
+                          <option value="day">Dia</option>
+                          <option value="week">Semana</option>
+                          <option value="month">Mês</option>
+                        </select>
+                        <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ── Footer ── */}
       {errors.root && (
