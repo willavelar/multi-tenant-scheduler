@@ -8,6 +8,7 @@ import {
   useDeleteWeeklyAvailability,
 } from '@/hooks/useWeeklyAvailability'
 import { TimeDisplay } from '@/components/ui/TimeDisplay'
+import { TimeInputField } from '@/components/ui/TimeInputField'
 import type { WeeklyAvailability } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -25,20 +26,6 @@ export const DAYS = [
 export type LocalSlot = { _key: string; dayOfWeek: number; startTime: string; endTime: string }
 
 // ── Shared small components ───────────────────────────────────────────────────
-
-function TimeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  return (
-    <input
-      type="time"
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className={cn(
-        'h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none',
-        'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors',
-      )}
-    />
-  )
-}
 
 function TextBtn({ label, onClick, disabled, variant = 'default' }: { label: string; onClick: () => void; disabled?: boolean; variant?: 'default' | 'danger' }) {
   return (
@@ -64,9 +51,17 @@ function AddForm({ onConfirm, onCancel }: { onConfirm: (s: string, e: string) =>
   const [end, setEnd]     = useState('18:00')
   return (
     <div className="flex items-center gap-2">
-      <TimeInput value={start} onChange={setStart} />
+      <TimeInputField
+        value={start}
+        onChange={setStart}
+        className="h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+      />
       <span className="text-gray-400 text-sm">–</span>
-      <TimeInput value={end} onChange={setEnd} />
+      <TimeInputField
+        value={end}
+        onChange={setEnd}
+        className="h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+      />
       <button type="button" onClick={() => onConfirm(start, end)}
         className="h-7 px-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-md cursor-pointer hover:bg-emerald-600 transition-colors">
         Confirmar
