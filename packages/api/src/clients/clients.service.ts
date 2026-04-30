@@ -7,6 +7,7 @@ import {
   clientProfiles,
   clientProfessionals,
   clientServices,
+  clientServiceLimits,
   professionals,
   services,
   users,
@@ -127,7 +128,18 @@ export class ClientsService {
             .where(eq(clientServices.clientProfileId, row.profileId))
         : [];
 
-      return { ...row, linkedProfessionals, linkedServices };
+      const perServiceLimits = row.profileId
+        ? await tx
+            .select({
+              serviceId:   clientServiceLimits.serviceId,
+              limitCount:  clientServiceLimits.limitCount,
+              limitPeriod: clientServiceLimits.limitPeriod,
+            })
+            .from(clientServiceLimits)
+            .where(eq(clientServiceLimits.clientProfileId, row.profileId))
+        : [];
+
+      return { ...row, linkedProfessionals, linkedServices, perServiceLimits };
     });
   }
 
@@ -180,6 +192,18 @@ export class ClientsService {
       if (dto.serviceIds?.length) {
         await tx.insert(clientServices).values(
           dto.serviceIds.map((serviceId) => ({ tenantId, clientProfileId: profile.id, serviceId })),
+        );
+      }
+
+      if (dto.serviceLimits?.length) {
+        await tx.insert(clientServiceLimits).values(
+          dto.serviceLimits.map((sl) => ({
+            tenantId,
+            clientProfileId: profile.id,
+            serviceId:  sl.serviceId,
+            limitCount: sl.limitCount,
+            limitPeriod: sl.limitPeriod,
+          })),
         );
       }
 
@@ -248,6 +272,21 @@ export class ClientsService {
         if (dto.serviceIds.length) {
           await tx.insert(clientServices).values(
             dto.serviceIds.map((serviceId) => ({ tenantId, clientProfileId: profileId, serviceId })),
+          );
+        }
+      }
+
+      if (dto.serviceLimits !== undefined) {
+        await tx.delete(clientServiceLimits).where(eq(clientServiceLimits.clientProfileId, profileId));
+        if (dto.serviceLimits.length) {
+          await tx.insert(clientServiceLimits).values(
+            dto.serviceLimits.map((sl) => ({
+              tenantId,
+              clientProfileId: profileId,
+              serviceId:  sl.serviceId,
+              limitCount: sl.limitCount,
+              limitPeriod: sl.limitPeriod,
+            })),
           );
         }
       }
