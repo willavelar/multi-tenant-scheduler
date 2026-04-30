@@ -1,5 +1,14 @@
-import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min } from 'class-validator';
+import {
+  IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID,
+  Matches, MaxLength, Min, ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
 
+class ServiceLimitItemDto {
+  @IsUUID() serviceId: string;
+  @IsInt() @Min(1) limitCount: number;
+  @IsIn(['day', 'week', 'month']) limitPeriod: 'day' | 'week' | 'month';
+}
 
 export class UpdateClientDto {
   @IsOptional() @IsString() name?: string;
@@ -18,7 +27,9 @@ export class UpdateClientDto {
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) professionalIds?: string[];
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) serviceIds?: string[];
 
-  @IsOptional() @IsString() timezone?: string;
+  @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => ServiceLimitItemDto)
+  serviceLimits?: ServiceLimitItemDto[];
 
+  @IsOptional() @IsString() timezone?: string;
   @IsOptional() @IsString() @IsIn(['12h', '24h']) timeFormat?: string;
 }
