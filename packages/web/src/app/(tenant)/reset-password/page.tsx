@@ -104,8 +104,10 @@ export default function ResetPasswordPage() {
       method: 'GET',
     })
       .then((res) => res.json())
-      .then((data: { email: string }) => {
-        setPageState({ status: 'valid', email: data.email })
+      .then((data: unknown) => {
+        const email = (data as { email?: string }).email
+        if (!email) { setPageState({ status: 'invalid' }); return }
+        setPageState({ status: 'valid', email })
       })
       .catch(() => {
         setPageState({ status: 'invalid' })
@@ -207,7 +209,6 @@ export default function ResetPasswordPage() {
                   type="email"
                   value={pageState.email}
                   disabled
-                  readOnly
                   className="w-full h-[46px] px-3.5 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200 outline-none cursor-not-allowed box-border"
                 />
               </div>
