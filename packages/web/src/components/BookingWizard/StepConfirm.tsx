@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
 import { useApi } from '@/hooks/useApi'
+import { useFormatTime } from '@/hooks/useFormatTime'
 import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,6 +43,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
   const { slug } = useTenant()
   const api = useApi()
   const queryClient = useQueryClient()
+  const { formatTime } = useFormatTime()
   const [showAuth, setShowAuth] = useState(false)
   const [result, setResult] = useState<{ status: string } | null>(null)
   const [bookError, setBookError] = useState<string | null>(null)
@@ -121,7 +123,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
         <Badge variant={result.status === 'confirmed' ? 'default' : 'secondary'}>
           {result.status === 'confirmed' ? 'Confirmado' : 'Aguardando confirmação'}
         </Badge>
-        <p className="text-sm text-gray-500">{date} às {startTime}</p>
+        <p className="text-sm text-gray-500">{date} às {formatTime(startTime)}</p>
         <Button variant="outline" onClick={onDone}>
           Fazer outro agendamento
         </Button>
@@ -139,7 +141,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
         </div>
         <div className="flex justify-between">
           <span className="text-gray-500">Horário</span>
-          <span className="font-medium">{startTime}</span>
+          <span className="font-medium">{formatTime(startTime)}</span>
         </div>
       </div>
 

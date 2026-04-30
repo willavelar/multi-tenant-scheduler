@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { useSlots } from '@/hooks/useSlots'
+import { useFormatTime } from '@/hooks/useFormatTime'
 import { Button } from '@/components/ui/button'
 
 type Props = {
@@ -22,6 +23,7 @@ export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const dateStr = selectedDate ? toLocalDateString(selectedDate) : null
   const { data: slots, isLoading, error: slotsError } = useSlots(professionalId, dateStr)
+  const { formatTime } = useFormatTime()
 
   const today = useMemo(() => {
     const d = new Date()
@@ -56,7 +58,7 @@ export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
                   size="sm"
                   onClick={() => onSelect(toLocalDateString(selectedDate!), slot)}
                 >
-                  {slot}
+                  {formatTime(slot)}
                 </Button>
               ))}
             </div>
