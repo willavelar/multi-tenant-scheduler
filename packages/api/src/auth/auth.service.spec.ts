@@ -1,12 +1,14 @@
 // packages/api/src/auth/auth.service.spec.ts
 import { Test } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
 import { AuthService } from './auth.service';
 import { DB } from '../database/database.module';
+import { EmailService } from '../email/email.service';
+import { REDIS } from '../redis/redis.module';
 
 // Mesmo padrão de mock usado em professionals.service.spec.ts:
 // um proxy thenable que encadeia todos os métodos de query builder.
@@ -42,6 +44,8 @@ describe('AuthService.validateUser', () => {
       providers: [
         AuthService,
         { provide: DB, useValue: db },
+        { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn() } },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -110,6 +114,8 @@ describe('AuthService.generateTokens (via login)', () => {
       providers: [
         AuthService,
         { provide: DB, useValue: db },
+        { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn() } },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('signed-token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -153,6 +159,8 @@ describe('AuthService.refresh', () => {
       providers: [
         AuthService,
         { provide: DB, useValue: db },
+        { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn() } },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -199,6 +207,8 @@ describe('AuthService.refresh', () => {
       providers: [
         AuthService,
         { provide: DB, useValue: makeSimpleDb([]) },
+        { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn() } },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -248,6 +258,8 @@ describe('AuthService.logout', () => {
       providers: [
         AuthService,
         { provide: DB, useValue: db },
+        { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn() } },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -277,6 +289,8 @@ describe('AuthService.logout', () => {
       providers: [
         AuthService,
         { provide: DB, useValue: makeSimpleDb([]) },
+        { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn() } },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -290,5 +304,52 @@ describe('AuthService.logout', () => {
     const service = module.get(AuthService);
 
     await expect(service.logout(rawRt)).resolves.toBeUndefined();
+  });
+});
+
+describe('AuthService.forgotPassword', () => {
+  const mockRedis = {
+    set: jest.fn().mockResolvedValue('OK'),
+    get: jest.fn(),
+    del: jest.fn(),
+  };
+  const mockEmailService = { sendPasswordReset: jest.fn().mockResolvedValue(undefined) };
+
+  async function buildService(db: unknown) {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: db },
+        { provide: REDIS, useValue: mockRedis },
+        { provide: EmailService, useValue: mockEmailService },
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('scheduler.app') } },
+      ],
+    }).compile();
+    return module.get(AuthService);
+  }
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('lança NotFoundException quando e-mail não existe no tenant', async () => {
+    const service = await buildService(makeSimpleDb([]));
+    await expect(service.forgotPassword('x@y.com', 'tenant-1', 'acme'))
+      .rejects.toThrow(NotFoundException);
+  });
+
+  it('gera token Redis e envia e-mail quando usuário existe', async () => {
+    const service = await buildService(makeSimpleDb([{ id: 'user-1', email: 'a@b.com' }]));
+    await service.forgotPassword('a@b.com', 'tenant-1', 'acme');
+
+    expect(mockRedis.set).toHaveBeenCalledWith(
+      expect.stringMatching(/^password:reset:/),
+      expect.stringContaining('"userId":"user-1"'),
+      'EX',
+      86400,
+    );
+    expect(mockEmailService.sendPasswordReset).toHaveBeenCalledWith(
+      'a@b.com',
+      expect.stringContaining('/reset-password?token='),
+    );
   });
 });
