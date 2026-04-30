@@ -1,11 +1,37 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, eq, count, desc, gte, lte } from 'drizzle-orm';
+import { and, eq, count, desc, gte, lte, notInArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { appointments, services, tenants, professionals, users } from '@scheduler/shared';
+import {
+  appointments, services, tenants, professionals, users,
+  clientProfiles, clientServiceLimits,
+} from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { AvailabilityService } from '../availability/availability.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+
+function getPeriodBounds(dateStr: string, period: 'day' | 'week' | 'month'): { from: Date; to: Date } {
+  const date = new Date(dateStr + 'T00:00:00Z');
+  if (period === 'day') {
+    return {
+      from: date,
+      to: new Date(dateStr + 'T23:59:59.999Z'),
+    };
+  }
+  if (period === 'week') {
+    const dow = date.getUTCDay();
+    const monday = new Date(date);
+    monday.setUTCDate(date.getUTCDate() - ((dow + 6) % 7));
+    const sunday = new Date(monday);
+    sunday.setUTCDate(monday.getUTCDate() + 6);
+    sunday.setUTCHours(23, 59, 59, 999);
+    return { from: monday, to: sunday };
+  }
+  // month
+  const from = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+  const to   = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+  return { from, to };
+}
 
 @Injectable()
 export class AppointmentsService {
@@ -32,6 +58,60 @@ export class AppointmentsService {
         .from(services)
         .where(and(eq(services.id, dto.serviceId), eq(services.tenantId, tenantId)));
       if (!svc) throw new NotFoundException('Service not found');
+
+      // ── Appointment limit check ───────────────────────────────────────────
+      const [limitProfile] = await tx
+        .select({
+          serviceLimitCount:  clientProfiles.serviceLimitCount,
+          serviceLimitPeriod: clientProfiles.serviceLimitPeriod,
+        })
+        .from(clientProfiles)
+        .where(eq(clientProfiles.userId, clientId));
+
+      if (limitProfile?.serviceLimitCount && limitProfile?.serviceLimitPeriod) {
+        const { from, to } = getPeriodBounds(dto.date, limitProfile.serviceLimitPeriod);
+        const [{ total }] = await tx
+          .select({ total: count() })
+          .from(appointments)
+          .where(and(
+            eq(appointments.clientId, clientId),
+            eq(appointments.tenantId, tenantId),
+            gte(appointments.startsAt, from),
+            lte(appointments.startsAt, to),
+            notInArray(appointments.status, ['cancelled', 'completed']),
+          ));
+        if (Number(total) >= limitProfile.serviceLimitCount) {
+          throw new BadRequestException('LIMIT_EXCEEDED');
+        }
+      } else if (limitProfile) {
+        const [serviceLimit] = await tx
+          .select({ limitCount: clientServiceLimits.limitCount, limitPeriod: clientServiceLimits.limitPeriod })
+          .from(clientServiceLimits)
+          .innerJoin(clientProfiles, eq(clientProfiles.id, clientServiceLimits.clientProfileId))
+          .where(and(
+            eq(clientProfiles.userId, clientId),
+            eq(clientServiceLimits.serviceId, dto.serviceId),
+          ));
+
+        if (serviceLimit) {
+          const { from, to } = getPeriodBounds(dto.date, serviceLimit.limitPeriod);
+          const [{ total }] = await tx
+            .select({ total: count() })
+            .from(appointments)
+            .where(and(
+              eq(appointments.clientId, clientId),
+              eq(appointments.tenantId, tenantId),
+              eq(appointments.serviceId, dto.serviceId),
+              gte(appointments.startsAt, from),
+              lte(appointments.startsAt, to),
+              notInArray(appointments.status, ['cancelled', 'completed']),
+            ));
+          if (Number(total) >= serviceLimit.limitCount) {
+            throw new BadRequestException('LIMIT_EXCEEDED');
+          }
+        }
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       const [tenant] = await tx
         .select({ confirmationMode: tenants.confirmationMode })
@@ -62,6 +142,65 @@ export class AppointmentsService {
       }).returning();
 
       return appointment;
+    });
+  }
+
+  async checkLimit(
+    clientId: string,
+    serviceId: string,
+    date: string,
+    tenantId: string,
+  ): Promise<{ exceeded: boolean }> {
+    return withTenant(this.db, tenantId, async (tx) => {
+      const [profile] = await tx
+        .select({
+          serviceLimitCount:  clientProfiles.serviceLimitCount,
+          serviceLimitPeriod: clientProfiles.serviceLimitPeriod,
+        })
+        .from(clientProfiles)
+        .where(eq(clientProfiles.userId, clientId));
+
+      if (!profile) return { exceeded: false };
+
+      if (profile.serviceLimitCount && profile.serviceLimitPeriod) {
+        const { from, to } = getPeriodBounds(date, profile.serviceLimitPeriod);
+        const [{ total }] = await tx
+          .select({ total: count() })
+          .from(appointments)
+          .where(and(
+            eq(appointments.clientId, clientId),
+            eq(appointments.tenantId, tenantId),
+            gte(appointments.startsAt, from),
+            lte(appointments.startsAt, to),
+            notInArray(appointments.status, ['cancelled', 'completed']),
+          ));
+        return { exceeded: Number(total) >= profile.serviceLimitCount };
+      }
+
+      const [serviceLimit] = await tx
+        .select({ limitCount: clientServiceLimits.limitCount, limitPeriod: clientServiceLimits.limitPeriod })
+        .from(clientServiceLimits)
+        .innerJoin(clientProfiles, eq(clientProfiles.id, clientServiceLimits.clientProfileId))
+        .where(and(
+          eq(clientProfiles.userId, clientId),
+          eq(clientServiceLimits.serviceId, serviceId),
+        ));
+
+      if (!serviceLimit) return { exceeded: false };
+
+      const { from, to } = getPeriodBounds(date, serviceLimit.limitPeriod);
+      const [{ total }] = await tx
+        .select({ total: count() })
+        .from(appointments)
+        .where(and(
+          eq(appointments.clientId, clientId),
+          eq(appointments.tenantId, tenantId),
+          eq(appointments.serviceId, serviceId),
+          gte(appointments.startsAt, from),
+          lte(appointments.startsAt, to),
+          notInArray(appointments.status, ['cancelled', 'completed']),
+        ));
+      return { exceeded: Number(total) >= serviceLimit.limitCount };
     });
   }
 
