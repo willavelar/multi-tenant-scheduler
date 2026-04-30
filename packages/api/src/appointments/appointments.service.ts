@@ -68,7 +68,7 @@ export class AppointmentsService {
         .from(clientProfiles)
         .where(and(eq(clientProfiles.userId, clientId), eq(clientProfiles.tenantId, tenantId)));
 
-      if (limitProfile?.serviceLimitCount && limitProfile?.serviceLimitPeriod) {
+      if (limitProfile?.serviceLimitCount != null && limitProfile?.serviceLimitPeriod != null) {
         const { from, to } = getPeriodBounds(dto.date, limitProfile.serviceLimitPeriod);
         const [{ total }] = await tx
           .select({ total: count() })
@@ -164,7 +164,7 @@ export class AppointmentsService {
 
       if (!profile) return { exceeded: false };
 
-      if (profile.serviceLimitCount && profile.serviceLimitPeriod) {
+      if (profile.serviceLimitCount != null && profile.serviceLimitPeriod != null) {
         const { from, to } = getPeriodBounds(date, profile.serviceLimitPeriod);
         const [{ total }] = await tx
           .select({ total: count() })
