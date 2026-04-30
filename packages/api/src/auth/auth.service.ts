@@ -1,13 +1,16 @@
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
-import { createHash } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 import { eq, and, or, ilike, isNull } from 'drizzle-orm';
 import { users, clientProfiles, refreshTokens } from '@scheduler/shared';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { RegisterDto } from './dto/register.dto';
+import Redis from 'ioredis';
+import { REDIS } from '../redis/redis.module';
+import { EmailService } from '../email/email.service';
 
 export interface JwtPayload {
   sub: string;
@@ -23,6 +26,8 @@ export class AuthService {
     @Inject(DB) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    @Inject(REDIS) private readonly redis: Redis,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto, tenantId: string) {
@@ -77,6 +82,30 @@ export class AuthService {
         .where(where)
         .limit(20);
     });
+  }
+
+  async forgotPassword(email: string, tenantId: string, slug: string): Promise<void> {
+    const user = await withTenant(this.db, tenantId, async (tx) => {
+      const [found] = await tx
+        .select({ id: users.id, email: users.email })
+        .from(users)
+        .where(and(eq(users.email, email), eq(users.tenantId, tenantId)));
+      return found ?? null;
+    });
+
+    if (!user) throw new NotFoundException('Nenhum usuário encontrado com este e-mail');
+
+    const token = randomBytes(32).toString('hex');
+    await this.redis.set(
+      `password:reset:${token}`,
+      JSON.stringify({ userId: user.id, email: user.email, tenantId }),
+      'EX',
+      86400,
+    );
+
+    const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN');
+    const resetUrl = `https://${slug}.${domain}/reset-password?token=${token}`;
+    await this.emailService.sendPasswordReset(user.email, resetUrl);
   }
 
   async login(user: typeof users.$inferSelect) {
