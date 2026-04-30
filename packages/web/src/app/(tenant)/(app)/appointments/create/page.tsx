@@ -9,6 +9,7 @@ import { useCreateAppointment } from '@/hooks/useAppointments'
 import { useClients, useClient } from '@/hooks/useClients'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
+import { useFormatTime } from '@/hooks/useFormatTime'
 import { BackButton } from '@/components/ui/BackButton'
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { ClientSearchField } from '@/components/ui/ClientSearchField'
@@ -104,6 +105,8 @@ export default function CreateAppointmentPage() {
   const { confirmationMode } = useTenantSettingsContext()
   const showStatusPicker = isAdminOrProfessional && confirmationMode === 'manual'
   const [initialStatus, setInitialStatus] = useState<'pending' | 'confirmed'>('pending')
+
+  const { formatTime } = useFormatTime()
 
   const { data: allProfessionals = [], isLoading: loadingProfs } = useProfessionals()
   const { data: allServices      = [], isLoading: loadingServices } = useServices()
@@ -328,7 +331,7 @@ export default function CreateAppointmentPage() {
                             : 'border-gray-200 bg-white text-gray-700',
                         )}
                       >
-                        {slot}
+                        {formatTime(slot)}
                       </button>
                     ))}
                   </div>
@@ -337,7 +340,7 @@ export default function CreateAppointmentPage() {
             </div>
           ) : step > (isAdminOrProfessional ? 4 : 3) ? (
             <SelectionSummary
-              label={`${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às ${startTime}`}
+              label={`${new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })} às ${formatTime(startTime!)}`}
               onClear={() => setStartTime(null)}
             />
           ) : null}
@@ -353,7 +356,7 @@ export default function CreateAppointmentPage() {
                   { label: 'Serviço',      value: `${selectedService?.name} · ${selectedService?.durationMinutes} min` },
                   { label: 'Profissional', value: selectedProf?.name },
                   { label: 'Data',         value: new Date(date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }) },
-                  { label: 'Horário',      value: startTime },
+                  { label: 'Horário',      value: startTime ? formatTime(startTime) : '' },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-[13.5px]">
                     <span className="text-gray-500">{label}</span>
