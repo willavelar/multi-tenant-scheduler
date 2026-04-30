@@ -11,6 +11,8 @@ type Props = {
 
 export function TimeInputField({ value, onChange, disabled, className }: Props) {
   const { timeFormat } = useFormatTime()
+  // Chromium-only hint: pt-BR forces 24h display, en-US forces AM/PM.
+  // Firefox/Safari ignore lang and use OS locale. Value is always HH:mm.
   const lang = timeFormat === '24h' ? 'pt-BR' : 'en-US'
   return (
     <input
