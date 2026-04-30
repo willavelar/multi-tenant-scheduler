@@ -30,9 +30,9 @@ export default function NewClientPage() {
             allServices:      data.allServices,
             professionalIds:  data.professionalIds,
             serviceIds:       data.serviceIds,
-            ...(data.serviceLimitCount != null
-              ? { serviceLimitCount: data.serviceLimitCount, serviceLimitPeriod: data.serviceLimitPeriod }
-              : {}),
+            serviceLimitCount:  data.serviceLimitCount ?? undefined,
+            serviceLimitPeriod: data.serviceLimitPeriod ?? undefined,
+            serviceLimits:      data.serviceLimits,
           })
           router.push('/clients')
         }}

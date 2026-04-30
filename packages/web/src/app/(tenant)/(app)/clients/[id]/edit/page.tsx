@@ -44,9 +44,8 @@ export default function EditClientPage() {
             professionalIds:  data.professionalIds,
             serviceIds:       data.serviceIds,
             serviceLimitCount:  data.serviceLimitCount ?? null,
-            serviceLimitPeriod: data.serviceLimitCount
-              ? data.serviceLimitPeriod ?? null
-              : null,
+            serviceLimitPeriod: data.serviceLimitPeriod ?? null,
+            serviceLimits:      data.serviceLimits,
           })
           if (isOwnProfile) updateUser({ name: data.name, avatarUrl: data.avatarUrl ?? null })
           router.push(`/clients/${id}`)
