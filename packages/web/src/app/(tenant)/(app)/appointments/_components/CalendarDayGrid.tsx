@@ -18,9 +18,9 @@ const LABEL_WIDTH = 52
 export function CalendarDayGrid({ appointments, onAppointmentClick }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
   useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = 7 * HOUR_HEIGHT }, [])
+  const { formatHour } = useFormatTime()
 
   const layout = layoutAppointments(appointments)
-  const { formatHour } = useFormatTime()
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
