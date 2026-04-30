@@ -3,12 +3,7 @@ import {
   Matches, MaxLength, Min, ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
-class ServiceLimitItemDto {
-  @IsUUID() serviceId: string;
-  @IsInt() @Min(1) limitCount: number;
-  @IsIn(['day', 'week', 'month']) limitPeriod: 'day' | 'week' | 'month';
-}
+import { ServiceLimitItemDto } from './service-limit-item.dto';
 
 export class UpdateClientDto {
   @IsOptional() @IsString() name?: string;
