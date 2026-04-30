@@ -125,9 +125,10 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    await withTenant(this.db, tenantId, (tx) =>
-      tx.update(users).set({ passwordHash }).where(eq(users.id, userId)),
+    const updated = await withTenant(this.db, tenantId, (tx) =>
+      tx.update(users).set({ passwordHash }).where(eq(users.id, userId)).returning({ id: users.id }),
     );
+    if (!updated.length) throw new BadRequestException('Token inválido ou expirado');
     await this.redis.del(`password:reset:${token}`);
   }
 
