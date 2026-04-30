@@ -1,7 +1,7 @@
 'use client'
 
 import type { Appointment } from '@/types'
-import { formatISOTime } from '@/lib/calendarUtils'
+import { useFormatTime } from '@/hooks/useFormatTime'
 
 type Props = {
   appointment: Appointment
@@ -14,6 +14,7 @@ type Props = {
 }
 
 export function CalendarEventBlock({ appointment, color, top, height, columnIndex, columnCount, onClick }: Props) {
+  const { formatISOTime } = useFormatTime()
   const widthPct = 100 / columnCount
   const leftPct = (columnIndex * 100) / columnCount
 
