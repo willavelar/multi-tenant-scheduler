@@ -101,12 +101,6 @@ export function layoutAppointments(appts: Appointment[]): LayoutItem[] {
   }))
 }
 
-// Local time — matches blockPosition's convention.
-export function formatISOTime(iso: string): string {
-  const d = new Date(iso)
-  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-}
-
 export function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
