@@ -66,7 +66,7 @@ export class AppointmentsService {
           serviceLimitPeriod: clientProfiles.serviceLimitPeriod,
         })
         .from(clientProfiles)
-        .where(eq(clientProfiles.userId, clientId));
+        .where(and(eq(clientProfiles.userId, clientId), eq(clientProfiles.tenantId, tenantId)));
 
       if (limitProfile?.serviceLimitCount && limitProfile?.serviceLimitPeriod) {
         const { from, to } = getPeriodBounds(dto.date, limitProfile.serviceLimitPeriod);
@@ -90,7 +90,9 @@ export class AppointmentsService {
           .innerJoin(clientProfiles, eq(clientProfiles.id, clientServiceLimits.clientProfileId))
           .where(and(
             eq(clientProfiles.userId, clientId),
+            eq(clientProfiles.tenantId, tenantId),
             eq(clientServiceLimits.serviceId, dto.serviceId),
+            eq(clientServiceLimits.tenantId, tenantId),
           ));
 
         if (serviceLimit) {
@@ -158,7 +160,7 @@ export class AppointmentsService {
           serviceLimitPeriod: clientProfiles.serviceLimitPeriod,
         })
         .from(clientProfiles)
-        .where(eq(clientProfiles.userId, clientId));
+        .where(and(eq(clientProfiles.userId, clientId), eq(clientProfiles.tenantId, tenantId)));
 
       if (!profile) return { exceeded: false };
 
@@ -183,7 +185,9 @@ export class AppointmentsService {
         .innerJoin(clientProfiles, eq(clientProfiles.id, clientServiceLimits.clientProfileId))
         .where(and(
           eq(clientProfiles.userId, clientId),
+          eq(clientProfiles.tenantId, tenantId),
           eq(clientServiceLimits.serviceId, serviceId),
+          eq(clientServiceLimits.tenantId, tenantId),
         ));
 
       if (!serviceLimit) return { exceeded: false };
