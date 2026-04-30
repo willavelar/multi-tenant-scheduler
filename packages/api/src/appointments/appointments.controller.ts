@@ -21,6 +21,21 @@ export class AppointmentsController {
     return this.service.create(dto, user.id, user.role, tenantId);
   }
 
+  @Get('limit-check')
+  checkLimit(
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+    @Query('serviceId') serviceId: string,
+    @Query('date') date: string,
+    @Query('clientId') clientId?: string,
+  ) {
+    const resolvedClientId =
+      clientId && (user.role === 'tenant_admin' || user.role === 'professional')
+        ? clientId
+        : user.id;
+    return this.service.checkLimit(resolvedClientId, serviceId, date, tenantId);
+  }
+
   @Get()
   findAll(
     @TenantId() tenantId: string,
