@@ -1,7 +1,10 @@
-import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query, Request, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, HttpCode, Post, Query, Req, Request, UseGuards } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
@@ -43,5 +46,27 @@ export class AuthController {
   @Roles('tenant_admin', 'professional')
   listClients(@TenantId() tenantId: string, @Query('q') q?: string) {
     return this.authService.listClients(tenantId, q);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(200)
+  async forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+    @TenantId() tenantId: string,
+    @Req() req: ExpressRequest,
+  ): Promise<void> {
+    const slug = req.headers['x-tenant-slug'] as string;
+    await this.authService.forgotPassword(dto.email, tenantId, slug);
+  }
+
+  @Get('reset-password/validate')
+  async validateResetToken(@Query('token') token: string): Promise<{ email: string }> {
+    return this.authService.validateResetToken(token);
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }
