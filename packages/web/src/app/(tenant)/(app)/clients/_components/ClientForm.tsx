@@ -203,7 +203,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         e.serviceLimitCount = 'Informe a quantidade'
       }
     }
-    if (limitMode === 'per_service' && (allSvcs || selectedServiceIds.length === 0)) {
+    if (limitMode === 'per_service' && !allSvcs && selectedServiceIds.length === 0) {
       e.root = 'Para usar limites por serviço, selecione serviços específicos em "Serviços permitidos".'
     }
     setErrors(e)
@@ -235,7 +235,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         serviceLimitPeriod: limitMode === 'normal' && form.serviceLimitPeriod
           ? form.serviceLimitPeriod as 'day' | 'week' | 'month' : null,
         serviceLimits: limitMode === 'per_service'
-          ? selectedServiceIds
+          ? (allSvcs ? services.map((s: Service) => s.id) : selectedServiceIds)
               .filter(id => perServiceLimits[id]?.count && perServiceLimits[id]?.period)
               .map(id => ({
                 serviceId:   id,
@@ -593,12 +593,12 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         {/* Per-service mode inputs */}
         {limitMode === 'per_service' && (
           <div className="flex flex-col gap-3">
-            {allSvcs || selectedServiceIds.length === 0 ? (
+            {!allSvcs && selectedServiceIds.length === 0 ? (
               <p className="text-[13px] text-gray-400">
                 Selecione serviços específicos em &quot;Serviços permitidos&quot; para configurar limites por serviço.
               </p>
             ) : (
-              selectedServiceIds.map(id => {
+              (allSvcs ? services.map((s: Service) => s.id) : selectedServiceIds).map(id => {
                 const svc = services.find((s: Service) => s.id === id)
                 const sl  = perServiceLimits[id] ?? { count: '', period: '' }
                 return (
