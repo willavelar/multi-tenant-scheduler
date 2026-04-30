@@ -5,10 +5,10 @@ import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { eq, and, or, ilike, isNull } from 'drizzle-orm';
 import { users, clientProfiles, refreshTokens } from '@scheduler/shared';
+import Redis from 'ioredis';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { RegisterDto } from './dto/register.dto';
-import Redis from 'ioredis';
 import { REDIS } from '../redis/redis.module';
 import { EmailService } from '../email/email.service';
 
@@ -103,7 +103,7 @@ export class AuthService {
       86400,
     );
 
-    const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN');
+    const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
     const resetUrl = `https://${slug}.${domain}/reset-password?token=${token}`;
     await this.emailService.sendPasswordReset(user.email, resetUrl);
   }
