@@ -47,7 +47,7 @@ export function useCreateClient() {
       phone?: string; birthDate?: string; notes?: string;
       active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number; serviceLimitPeriod?: string;
-      serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: string }[];
+      serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[];
       professionalIds?: string[]; serviceIds?: string[];
       timezone?: string; timeFormat?: '12h' | '24h';
     }) => api('/clients', { method: 'POST', body: JSON.stringify(body) }),
@@ -64,7 +64,7 @@ export function useUpdateClient(id: string) {
       name?: string; email?: string; phone?: string;
       birthDate?: string; notes?: string; active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number | null; serviceLimitPeriod?: string | null;
-      serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: string }[];
+      serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[];
       professionalIds?: string[]; serviceIds?: string[];
       timezone?: string; timeFormat?: '12h' | '24h';
     }) => api(`/clients/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),

@@ -203,6 +203,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         e.serviceLimitCount = 'Informe a quantidade'
       }
     }
+    if (limitMode === 'per_service' && (allSvcs || selectedServiceIds.length === 0)) {
+      e.root = 'Para usar limites por serviço, selecione serviços específicos em "Serviços permitidos".'
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }
