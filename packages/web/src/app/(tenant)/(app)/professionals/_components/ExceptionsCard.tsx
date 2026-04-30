@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { DatePickerField } from '@/components/ui/DatePickerField'
+import { TimeInputField } from '@/components/ui/TimeInputField'
 import { TimeDisplay } from '@/components/ui/TimeDisplay'
 import {
   useExceptions,
@@ -59,10 +60,9 @@ function TimeField({ label, value, onChange, disabled }: {
       <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">
         {label}
       </label>
-      <input
-        type="time"
+      <TimeInputField
         value={value}
-        onChange={e => onChange(e.target.value)}
+        onChange={onChange}
         disabled={disabled}
         className={cn(
           'h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors',
