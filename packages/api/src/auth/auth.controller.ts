@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ValidateTokenDto } from './dto/validate-token.dto';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
@@ -60,8 +61,8 @@ export class AuthController {
   }
 
   @Get('reset-password/validate')
-  async validateResetToken(@Query('token') token: string): Promise<{ email: string }> {
-    return this.authService.validateResetToken(token);
+  async validateResetToken(@Query() dto: ValidateTokenDto): Promise<{ email: string }> {
+    return this.authService.validateResetToken(dto.token);
   }
 
   @Post('reset-password')
