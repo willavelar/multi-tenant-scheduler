@@ -14,5 +14,5 @@ export const clientServiceLimits = pgTable('client_service_limits', {
   uniq: unique().on(t.clientProfileId, t.serviceId),
 }));
 
-export type ClientServiceLimit  = typeof clientServiceLimits.$inferSelect;
+export type ClientServiceLimit = typeof clientServiceLimits.$inferSelect;
 export type NewClientServiceLimit = typeof clientServiceLimits.$inferInsert;
