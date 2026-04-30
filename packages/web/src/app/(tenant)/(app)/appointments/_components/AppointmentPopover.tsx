@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Appointment } from '@/types'
-import { formatISOTime } from '@/lib/calendarUtils'
+import { useFormatTime } from '@/hooks/useFormatTime'
 import { clientColor } from '@/lib/calendarColors'
 import { useCancelAppointment, useCompleteAppointment, useConfirmAppointment, useDeleteAppointment } from '@/hooks/useAppointments'
 import { StatusBadge } from '@/components/ui/StatusBadge'
@@ -36,6 +36,7 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
   const completeMut = useCompleteAppointment()
   const deleteMut   = useDeleteAppointment()
   const { allowPaidStatus } = useTenantSettingsContext()
+  const { formatISOTime } = useFormatTime()
 
   const { top, left } = useMemo(() => {
     let l = blockRect.right + 8

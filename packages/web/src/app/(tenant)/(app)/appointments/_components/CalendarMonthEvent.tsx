@@ -1,7 +1,7 @@
 'use client'
 
 import type { Appointment } from '@/types'
-import { formatISOTime } from '@/lib/calendarUtils'
+import { useFormatTime } from '@/hooks/useFormatTime'
 
 type Props = {
   appointment: Appointment
@@ -10,6 +10,8 @@ type Props = {
 }
 
 export function CalendarMonthEvent({ appointment, color, onClick }: Props) {
+  const { formatISOTime } = useFormatTime()
+
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation()
     onClick((e.currentTarget as HTMLElement).getBoundingClientRect())
