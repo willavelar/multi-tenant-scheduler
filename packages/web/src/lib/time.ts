@@ -22,3 +22,18 @@ export function formatTime(time: string, format: '12h' | '24h'): string {
   const h12    = h % 12 || 12
   return `${h12}:${String(m).padStart(2, '0')} ${period}`
 }
+
+export function formatISOTime(iso: string, format: '12h' | '24h'): string {
+  const d = new Date(iso)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return formatTime(`${hh}:${mm}`, format)
+}
+
+export function formatHour(h: number, format: '12h' | '24h'): string {
+  if (h === 0) return ''
+  if (format === '24h') return `${String(h).padStart(2, '0')}:00`
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12} ${period}`
+}
