@@ -59,9 +59,16 @@ export type ClientPage = {
   limit: number
 }
 
+export type ServiceLimit = {
+  serviceId: string
+  limitCount: number
+  limitPeriod: 'day' | 'week' | 'month'
+}
+
 export type ClientDetail = Client & {
   linkedProfessionals: { professionalId: string; name: string; position: string | null }[]
   linkedServices: { serviceId: string; name: string }[]
+  perServiceLimits: ServiceLimit[]
 }
 
 export type Service = {
