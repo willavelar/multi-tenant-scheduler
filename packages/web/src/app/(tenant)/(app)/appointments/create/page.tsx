@@ -7,6 +7,7 @@ import { useServices } from '@/hooks/useServices'
 import { useSlots } from '@/hooks/useSlots'
 import { useCreateAppointment } from '@/hooks/useAppointments'
 import { useClients, useClient } from '@/hooks/useClients'
+import { useLimitCheck } from '@/hooks/useLimitCheck'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { useFormatTime } from '@/hooks/useFormatTime'
@@ -131,6 +132,10 @@ export default function CreateAppointmentPage() {
 
   const { data: slots = [], isLoading: loadingSlots } = useSlots(professionalId, date)
   const create = useCreateAppointment()
+
+  const limitClientId = isAdminOrProfessional ? clientId : (user?.id ?? null)
+  const { data: limitCheck } = useLimitCheck(serviceId, date, limitClientId)
+  const limitExceeded = limitCheck?.exceeded === true
 
   // Derived available lists (apply client restrictions)
   const profileReady = !loadingProfile
@@ -323,18 +328,25 @@ export default function CreateAppointmentPage() {
                     {slots.map((slot: string) => (
                       <button
                         key={slot}
-                        onClick={() => setStartTime(slot)}
+                        onClick={() => { if (!limitExceeded) setStartTime(slot) }}
                         className={cn(
-                          'px-3.5 py-2 border-[1.5px] rounded-lg cursor-pointer text-[13px] font-semibold transition-[border-color,background,color] hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700',
-                          startTime === slot
-                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                            : 'border-gray-200 bg-white text-gray-700',
+                          'px-3.5 py-2 border-[1.5px] rounded-lg text-[13px] font-semibold transition-[border-color,background,color]',
+                          limitExceeded
+                            ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed opacity-60'
+                            : startTime === slot
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700 cursor-pointer'
+                              : 'border-gray-200 bg-white text-gray-700 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700',
                         )}
                       >
                         {formatTime(slot)}
                       </button>
                     ))}
                   </div>
+                )}
+                {limitExceeded && (
+                  <p className="mt-3 text-[13px] text-red-600 font-medium">
+                    Não é possivel agendar nessa data pelo seu limite de agendamentos
+                  </p>
                 )}
               </div>
             </div>
