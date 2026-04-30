@@ -1,9 +1,8 @@
 'use client'
 
-import { useUserPreferences } from '@/providers/UserPreferencesProvider'
-import { formatTime } from '@/lib/time'
+import { useFormatTime } from '@/hooks/useFormatTime'
 
 export function TimeDisplay({ time }: { time: string }) {
-  const { timeFormat } = useUserPreferences()
-  return <span>{formatTime(time, timeFormat)}</span>
+  const { formatTime } = useFormatTime()
+  return <span>{formatTime(time)}</span>
 }
