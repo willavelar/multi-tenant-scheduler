@@ -35,9 +35,11 @@ export default function ForgotPasswordPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
+    clearErrors,
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
   async function onSubmit(data: FormData) {
+    clearErrors('root')
     try {
       await apiFetch('/auth/forgot-password', {
         slug,
