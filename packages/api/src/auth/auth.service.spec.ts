@@ -1,6 +1,6 @@
 // packages/api/src/auth/auth.service.spec.ts
 import { Test } from '@nestjs/testing';
-import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
@@ -415,10 +415,10 @@ describe('AuthService.forgotPassword', () => {
 
   beforeEach(() => jest.clearAllMocks());
 
-  it('lança NotFoundException quando e-mail não existe no tenant', async () => {
+  it('resolve silenciosamente quando e-mail não existe no tenant', async () => {
     const service = await buildService(makeSimpleDb([]));
     await expect(service.forgotPassword('x@y.com', 'tenant-1', 'acme'))
-      .rejects.toThrow(NotFoundException);
+      .resolves.toBeUndefined();
   });
 
   it('gera token Redis e envia e-mail quando usuário existe', async () => {

@@ -56,8 +56,9 @@ export class AuthController {
     @TenantId() tenantId: string,
     @Req() req: ExpressRequest,
   ): Promise<void> {
-    const slug = req.headers['x-tenant-slug'] as string;
-    await this.authService.forgotPassword(dto.email, tenantId, slug);
+    const slug = req.headers['x-tenant-slug'];
+    if (!tenantId || !slug) throw new BadRequestException('Tenant header required');
+    await this.authService.forgotPassword(dto.email, tenantId, Array.isArray(slug) ? slug[0] : slug);
   }
 
   @Get('reset-password/validate')
