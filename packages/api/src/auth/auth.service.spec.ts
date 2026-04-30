@@ -349,7 +349,7 @@ describe('AuthService.resetPassword', () => {
 
   beforeEach(async () => {
     redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
-    chain = makeChain((resolve) => resolve(undefined));
+    chain = makeChain((resolve) => resolve([{ id: 'u1' }]));
     const db = makeMockDb(chain);
 
     const module = await Test.createTestingModule({
@@ -373,6 +373,9 @@ describe('AuthService.resetPassword', () => {
 
     expect(redis.del).toHaveBeenCalledWith('password:reset:token');
     expect(chain['update']).toHaveBeenCalled();
+    const setCalls = (chain['set'] as jest.Mock).mock.calls;
+    const hashArg = setCalls.find((args: unknown[]) => args[0] && typeof args[0] === 'object' && 'passwordHash' in (args[0] as Record<string, unknown>))?.[0] as { passwordHash: string } | undefined;
+    expect(hashArg?.passwordHash).toMatch(/^\$2[ab]\$/);
   });
 
   it('lança BadRequestException para token inválido', async () => {
