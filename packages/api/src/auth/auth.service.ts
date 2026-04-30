@@ -108,6 +108,29 @@ export class AuthService {
     await this.emailService.sendPasswordReset(user.email, resetUrl);
   }
 
+  async validateResetToken(token: string): Promise<{ email: string }> {
+    const raw = await this.redis.get(`password:reset:${token}`);
+    if (!raw) throw new BadRequestException('Token inválido ou expirado');
+    const { email } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
+    return { email };
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const raw = await this.redis.get(`password:reset:${token}`);
+    if (!raw) throw new BadRequestException('Token inválido ou expirado');
+    const { userId, tenantId } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
+
+    if (newPassword.length < 6) {
+      throw new BadRequestException('A senha deve ter no mínimo 6 caracteres');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await withTenant(this.db, tenantId, (tx) =>
+      tx.update(users).set({ passwordHash }).where(eq(users.id, userId)),
+    );
+    await this.redis.del(`password:reset:${token}`);
+  }
+
   async login(user: typeof users.$inferSelect) {
     if (user.tenantId) {
       await withTenant(this.db, user.tenantId, (tx) =>

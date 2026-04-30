@@ -307,6 +307,87 @@ describe('AuthService.logout', () => {
   });
 });
 
+describe('AuthService.validateResetToken', () => {
+  let service: AuthService;
+  let redis: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
+
+  beforeEach(async () => {
+    redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: makeSimpleDb([]) },
+        { provide: REDIS, useValue: redis },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    service = module.get(AuthService);
+  });
+
+  it('retorna o email quando token é válido', async () => {
+    redis.get.mockResolvedValue(JSON.stringify({ userId: 'u1', email: 'test@test.com', tenantId: 't1' }));
+
+    const result = await service.validateResetToken('valid-token');
+
+    expect(result).toEqual({ email: 'test@test.com' });
+    expect(redis.get).toHaveBeenCalledWith('password:reset:valid-token');
+  });
+
+  it('lança BadRequestException para token inválido', async () => {
+    redis.get.mockResolvedValue(null);
+
+    await expect(service.validateResetToken('bad-token')).rejects.toThrow(BadRequestException);
+  });
+});
+
+describe('AuthService.resetPassword', () => {
+  let service: AuthService;
+  let redis: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
+  let chain: Record<string, unknown>;
+
+  beforeEach(async () => {
+    redis = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
+    chain = makeChain((resolve) => resolve(undefined));
+    const db = makeMockDb(chain);
+
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: db },
+        { provide: REDIS, useValue: redis },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    service = module.get(AuthService);
+  });
+
+  it('atualiza a senha e deleta o token', async () => {
+    redis.get.mockResolvedValue(JSON.stringify({ userId: 'u1', email: 'test@test.com', tenantId: 't1' }));
+    redis.del.mockResolvedValue(1);
+
+    await service.resetPassword('token', 'newPassword123');
+
+    expect(redis.del).toHaveBeenCalledWith('password:reset:token');
+    expect(chain['update']).toHaveBeenCalled();
+  });
+
+  it('lança BadRequestException para token inválido', async () => {
+    redis.get.mockResolvedValue(null);
+
+    await expect(service.resetPassword('bad-token', 'newPassword123')).rejects.toThrow(BadRequestException);
+  });
+
+  it('lança BadRequestException para senha menor que 6 caracteres', async () => {
+    redis.get.mockResolvedValue(JSON.stringify({ userId: 'u1', email: 'test@test.com', tenantId: 't1' }));
+
+    await expect(service.resetPassword('token', 'abc')).rejects.toThrow(BadRequestException);
+  });
+});
+
 describe('AuthService.forgotPassword', () => {
   const mockRedis = {
     set: jest.fn().mockResolvedValue('OK'),
