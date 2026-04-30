@@ -505,7 +505,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
         {/* Mode selector */}
         <div className="flex flex-col gap-2 mb-5">
-          {(['none', 'normal', 'per_service'] as LimitMode[]).map((mode) => {
+          {(['none', 'normal', 'per_service'] as LimitMode[]).map((lm) => {
             const labels: Record<LimitMode, string> = {
               none:        'Sem limite',
               normal:      'Normal',
@@ -518,27 +518,27 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             }
             return (
               <label
-                key={mode}
+                key={lm}
                 className={cn(
                   'flex items-start gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',
-                  limitMode === mode ? 'border-indigo-400 bg-indigo-50/60' : 'border-gray-200 hover:bg-gray-50',
+                  limitMode === lm ? 'border-indigo-400 bg-indigo-50/60' : 'border-gray-200 hover:bg-gray-50',
                 )}
               >
                 <input
                   type="radio"
                   name="limitMode"
-                  value={mode}
-                  checked={limitMode === mode}
+                  value={lm}
+                  checked={limitMode === lm}
                   onChange={() => {
-                    setLimitMode(mode)
-                    if (mode !== 'normal') { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }
-                    if (mode !== 'per_service') setPerServiceLimits({})
+                    setLimitMode(lm)
+                    if (lm !== 'normal') { set('serviceLimitCount', ''); set('serviceLimitPeriod', '') }
+                    if (lm !== 'per_service') setPerServiceLimits({})
                   }}
                   className="mt-0.5 w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
                 />
                 <div>
-                  <p className="m-0 text-[13.5px] font-semibold text-gray-800">{labels[mode]}</p>
-                  <p className="m-0 text-xs text-gray-400">{descs[mode]}</p>
+                  <p className="m-0 text-[13.5px] font-semibold text-gray-800">{labels[lm]}</p>
+                  <p className="m-0 text-xs text-gray-400">{descs[lm]}</p>
                 </div>
               </label>
             )
