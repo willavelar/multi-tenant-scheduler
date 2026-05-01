@@ -25,4 +25,18 @@ export class EmailService {
     });
     if (error) throw new Error(`Email delivery failed: ${error.message}`);
   }
+
+  async sendInvite(to: string, inviteUrl: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.from,
+      to,
+      subject: 'Você foi convidado',
+      html: `
+        <p>Você foi convidado para acessar o sistema.</p>
+        <p><a href="${inviteUrl}">Clique aqui para cadastrar sua senha</a></p>
+        <p>Este link é válido por 24 horas.</p>
+      `,
+    });
+    if (error) throw new Error(`Email delivery failed: ${error.message}`);
+  }
 }

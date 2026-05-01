@@ -52,4 +52,24 @@ describe('EmailService', () => {
       service.sendPasswordReset('user@example.com', 'https://acme.scheduler.app/reset-password?token=abc123'),
     ).rejects.toThrow('Email delivery failed: Invalid API key');
   });
+
+  it('envia e-mail de convite com link de ativação via Resend', async () => {
+    await service.sendInvite(
+      'invited@example.com',
+      'https://acme.scheduler.app/activate-account?token=xyz789',
+    );
+    expect(mockSend).toHaveBeenCalledWith({
+      from: 'noreply@test.com',
+      to: 'invited@example.com',
+      subject: 'Você foi convidado',
+      html: expect.stringContaining('https://acme.scheduler.app/activate-account?token=xyz789'),
+    });
+  });
+
+  it('lança erro quando Resend retorna error no envio do convite', async () => {
+    mockSend.mockResolvedValueOnce({ data: null, error: { message: 'Quota exceeded' } });
+    await expect(
+      service.sendInvite('invited@example.com', 'https://acme.scheduler.app/activate-account?token=xyz789'),
+    ).rejects.toThrow('Email delivery failed: Quota exceeded');
+  });
 });
