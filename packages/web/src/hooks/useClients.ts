@@ -43,7 +43,7 @@ export function useCreateClient() {
   const { slug } = useTenant()
   return useMutation({
     mutationFn: (body: {
-      name: string; email: string; password: string;
+      name: string; email: string; password?: string; sendInvite?: boolean;
       phone?: string; birthDate?: string; notes?: string;
       active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number; serviceLimitPeriod?: string;

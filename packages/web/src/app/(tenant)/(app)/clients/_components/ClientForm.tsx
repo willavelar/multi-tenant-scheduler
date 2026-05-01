@@ -16,6 +16,7 @@ export type ClientFormData = {
   name: string
   email: string
   password?: string
+  sendInvite?: boolean
   phone?: string
   birthDate?: string
   notes?: string
@@ -101,6 +102,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
   const [limitMode, setLimitMode] = useState<LimitMode>('none')
   const [perServiceLimits, setPerServiceLimits] = useState<PerServiceLimitMap>({})
+  const [sendInvite, setSendInvite] = useState(mode === 'create')
 
   // Initialize edit form once both defaultValues and allProfessionals are ready
   useEffect(() => {
@@ -188,7 +190,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     if (!form.name.trim()) e.name = 'Nome obrigatório'
     if (!form.email.trim()) e.email = 'E-mail obrigatório'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'E-mail inválido'
-    if (mode === 'create') {
+    if (mode === 'create' && !sendInvite) {
       if (!form.password) e.password = 'Senha obrigatória'
       else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
     }
@@ -218,7 +220,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       const data: ClientFormData = {
         name:             form.name.trim(),
         email:            form.email.trim(),
-        ...(mode === 'create' ? { password: form.password } : {}),
+        ...(mode === 'create' ? { password: sendInvite ? undefined : form.password, sendInvite } : {}),
         phone:            form.phone.trim() || undefined,
         birthDate:        form.birthDate || undefined,
         notes:            form.notes.trim() || undefined,
@@ -296,19 +298,35 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             {errors.email && <p className="text-xs text-red-500 mt-1 m-0">{errors.email}</p>}
           </div>
           {mode === 'create' && (
-            <div>
-              <label htmlFor="client-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Senha inicial <span className="text-red-400">*</span>
-              </label>
-              <input
-                id="client-password"
-                type="password"
-                value={form.password}
-                onChange={e => set('password', e.target.value)}
-                className={inputCls(!!errors.password)}
-              />
-              {errors.password && <p className="text-xs text-red-500 mt-1 m-0">{errors.password}</p>}
-            </div>
+            <>
+              <div className="col-span-2 flex items-center gap-2.5 mt-1 mb-1">
+                <input
+                  id="client-send-invite"
+                  type="checkbox"
+                  checked={sendInvite}
+                  onChange={e => setSendInvite(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-indigo-500"
+                />
+                <label htmlFor="client-send-invite" className="text-[13px] font-medium text-gray-700 cursor-pointer select-none">
+                  Enviar convite por e-mail para o usuário cadastrar a senha
+                </label>
+              </div>
+              {!sendInvite && (
+                <div>
+                  <label htmlFor="client-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                    Senha inicial <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    id="client-password"
+                    type="password"
+                    value={form.password}
+                    onChange={e => set('password', e.target.value)}
+                    className={inputCls(!!errors.password)}
+                  />
+                  {errors.password && <p className="text-xs text-red-500 mt-1 m-0">{errors.password}</p>}
+                </div>
+              )}
+            </>
           )}
           <div>
             <label htmlFor="client-phone" className="block text-[13px] font-medium text-gray-700 mb-1.5">
