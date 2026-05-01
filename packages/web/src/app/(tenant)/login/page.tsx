@@ -116,6 +116,17 @@ function LoginContent() {
           </div>
         )}
 
+        {/* Banner de conta ativada */}
+        {reason === 'account_activated' && (
+          <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-[13px] text-green-800 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0 text-green-500">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Senha cadastrada com sucesso. Faça login para continuar.
+          </div>
+        )}
+
         {/* Card */}
         <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
