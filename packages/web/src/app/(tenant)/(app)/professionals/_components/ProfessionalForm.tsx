@@ -13,13 +13,17 @@ import { cn } from '@/lib/utils'
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
 const createSchema = z.object({
-  name:      z.string().min(2, 'Nome obrigatório'),
-  email:     z.string().email('E-mail inválido'),
-  password:  z.string().min(8, 'Mínimo 8 caracteres'),
-  position:  z.string().optional(),
-  bio:       z.string().optional(),
-  avatarUrl: z.string().nullable().optional(),
-})
+  name:       z.string().min(2, 'Nome obrigatório'),
+  email:      z.string().email('E-mail inválido'),
+  sendInvite: z.boolean().optional(),
+  password:   z.string().optional(),
+  position:   z.string().optional(),
+  bio:        z.string().optional(),
+  avatarUrl:  z.string().nullable().optional(),
+}).refine(
+  (d) => d.sendInvite || (!!d.password && d.password.length >= 8),
+  { message: 'Mínimo 8 caracteres', path: ['password'] },
+)
 
 const editSchema = z.object({
   name:      z.string().min(2, 'Nome obrigatório'),
@@ -34,18 +38,20 @@ const editSchema = z.object({
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type FormValues = {
-  name:       string
-  email?:     string
-  password?:  string
-  position?:  string
-  bio?:       string
-  avatarUrl?: string | null
-  timezone?:  string
+  name:        string
+  email?:      string
+  password?:   string
+  sendInvite?: boolean
+  position?:   string
+  bio?:        string
+  avatarUrl?:  string | null
+  timezone?:   string
   timeFormat?: '12h' | '24h'
-  active?:    boolean
+  active?:     boolean
 }
 
 export type ProfessionalFormData = FormValues & {
+  sendInvite?: boolean
   schedule?:   LocalSlot[]
   exceptions?: LocalException[]
 }
@@ -97,7 +103,7 @@ export function ProfessionalForm({
       position:  defaultValues?.position  ?? '',
       bio:       defaultValues?.bio       ?? '',
       avatarUrl: defaultValues?.avatarUrl ?? null,
-      ...(mode === 'create' ? { email: '', password: '' } : {}),
+      ...(mode === 'create' ? { email: '', password: '', sendInvite: true } : {}),
       ...(mode === 'edit' ? {
         active:     defaultValues?.active     ?? true,
         timezone:   defaultValues?.timezone   ?? 'America/Sao_Paulo',
@@ -119,6 +125,7 @@ export function ProfessionalForm({
   const activeValue   = watch('active') ?? true
   const timezoneValue = watch('timezone') ?? 'America/Sao_Paulo'
   const timeFormatValue = watch('timeFormat') ?? '24h'
+  const sendInviteValue = watch('sendInvite') ?? true
   const showStatus    = mode === 'edit' && isAdmin && !isOwnProfile
   const showSchedule  = mode === 'edit' ? !!professionalId && (!!isOwnProfile || !!isAdmin) : true
 
@@ -180,13 +187,28 @@ export function ProfessionalForm({
               <input id="prof-email" type="email" {...register('email')} className={inputCls(!!errors.email)} />
               {errors.email && <p className="mt-1 text-xs text-red-500 m-0">{errors.email.message}</p>}
             </div>
-            <div>
-              <label htmlFor="prof-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Senha inicial <span className="text-red-500">*</span>
+
+            <div className="mb-4 flex items-center gap-2.5">
+              <input
+                id="prof-send-invite"
+                type="checkbox"
+                {...register('sendInvite')}
+                className="w-4 h-4 rounded border-gray-300 text-indigo-500 cursor-pointer accent-indigo-500"
+              />
+              <label htmlFor="prof-send-invite" className="text-[13px] font-medium text-gray-700 cursor-pointer select-none">
+                Enviar convite por e-mail para o usuário cadastrar a senha
               </label>
-              <input id="prof-password" type="password" {...register('password')} className={inputCls(!!errors.password)} />
-              {errors.password && <p className="mt-1 text-xs text-red-500 m-0">{errors.password.message}</p>}
             </div>
+
+            {!sendInviteValue && (
+              <div>
+                <label htmlFor="prof-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Senha inicial <span className="text-red-500">*</span>
+                </label>
+                <input id="prof-password" type="password" {...register('password')} className={inputCls(!!errors.password)} />
+                {errors.password && <p className="mt-1 text-xs text-red-500 m-0">{errors.password.message}</p>}
+              </div>
+            )}
           </>
         )}
       </div>
