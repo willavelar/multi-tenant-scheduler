@@ -123,7 +123,6 @@ export class ProfessionalsService {
         userId:   user.id,
         bio:      dto.bio,
         position: dto.position,
-        timezone: dto.timezone ?? 'America/Sao_Paulo',
       }).returning();
 
       if (dto.schedule?.length) {
