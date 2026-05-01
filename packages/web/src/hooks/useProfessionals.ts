@@ -54,7 +54,7 @@ export function useCreateProfessional() {
   const { slug } = useTenant()
   return useMutation({
     mutationFn: async (body: {
-      name: string; email: string; password: string;
+      name: string; email: string; password?: string; sendInvite?: boolean;
       position?: string; bio?: string; avatarUrl?: string; timezone?: string; timeFormat?: '12h' | '24h';
       schedule?: { dayOfWeek: number; startTime: string; endTime: string }[];
     }) => {

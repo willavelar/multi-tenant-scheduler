@@ -13,18 +13,19 @@ export default function NewProfessionalPage() {
 
   async function handleSubmit(data: ProfessionalFormData) {
     const prof = await createProfessional({
-      name:      data.name,
-      email:     data.email!,
-      password:  data.password!,
-      position:  data.position,
-      bio:       data.bio,
-      avatarUrl: data.avatarUrl ?? undefined,
+      name:       data.name,
+      email:      data.email!,
+      password:   data.sendInvite ? undefined : data.password!,
+      sendInvite: data.sendInvite,
+      position:   data.position,
+      bio:        data.bio,
+      avatarUrl:  data.avatarUrl ?? undefined,
       timezone:   data.timezone,
       timeFormat: data.timeFormat,
-      schedule:  data.schedule?.map(s => ({
-        dayOfWeek:  s.dayOfWeek,
-        startTime:  s.startTime,
-        endTime:    s.endTime,
+      schedule:   data.schedule?.map(s => ({
+        dayOfWeek: s.dayOfWeek,
+        startTime: s.startTime,
+        endTime:   s.endTime,
       })),
     })
 
