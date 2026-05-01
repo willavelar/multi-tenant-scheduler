@@ -12,6 +12,7 @@
     "db:seed": "ts-node seeds/seed.ts"
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.0",
     "@nestjs/core": "^10.0.0",
@@ -20,6 +21,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@scheduler/shared": "workspace:*",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.76.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "date-fns": "^4.1.0",
