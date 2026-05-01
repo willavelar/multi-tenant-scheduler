@@ -11,10 +11,11 @@ export default function NewAdminPage() {
 
   async function handleSubmit(data: AdminFormData) {
     await mutateAsync({
-      name:      data.name,
-      email:     data.email!,
-      password:  data.password!,
-      avatarUrl: data.avatarUrl ?? undefined,
+      name:       data.name,
+      email:      data.email!,
+      password:   data.sendInvite ? undefined : data.password!,
+      sendInvite: data.sendInvite,
+      avatarUrl:  data.avatarUrl ?? undefined,
     })
     router.push('/admins')
   }

@@ -32,7 +32,7 @@ export function useCreateAdmin() {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (body: { name: string; email: string; password: string; avatarUrl?: string }) =>
+    mutationFn: (body: { name: string; email: string; password?: string; sendInvite?: boolean; avatarUrl?: string }) =>
       api('/admins', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admins', slug] }),
   })
