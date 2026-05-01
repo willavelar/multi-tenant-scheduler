@@ -104,7 +104,8 @@ export class AuthService {
     );
 
     const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
-    const resetUrl = `https://${slug}.${domain}/reset-password?token=${token}`;
+    const protocol = domain.startsWith('localhost') ? 'http' : 'https';
+    const resetUrl = `${protocol}://${slug}.${domain}/reset-password?token=${token}`;
     await this.emailService.sendPasswordReset(user.email, resetUrl);
   }
 
@@ -116,7 +117,7 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const raw = await this.redis.get(`password:reset:${token}`);
+    const raw = await this.redis.getdel(`password:reset:${token}`);
     if (!raw) throw new BadRequestException('Token inválido ou expirado');
     const { userId, tenantId } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
 
@@ -129,7 +130,6 @@ export class AuthService {
       tx.update(users).set({ passwordHash }).where(eq(users.id, userId)).returning({ id: users.id }),
     );
     if (!updated.length) throw new BadRequestException('Token inválido ou expirado');
-    await this.redis.del(`password:reset:${token}`);
   }
 
   async login(user: typeof users.$inferSelect) {

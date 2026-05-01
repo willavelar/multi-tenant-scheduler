@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
@@ -75,7 +75,7 @@ function EyeIcon({ open }: { open: boolean }) {
   )
 }
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const { slug } = useTenant()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -327,5 +327,13 @@ export default function ResetPasswordPage() {
 
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense>
+      <ResetPasswordContent />
+    </Suspense>
   )
 }
