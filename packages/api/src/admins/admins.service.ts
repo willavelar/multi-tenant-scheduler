@@ -2,8 +2,13 @@ import { ConflictException, Inject, Injectable, NotFoundException } from '@nestj
 import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { users } from '@scheduler/shared';
 import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
+import Redis from 'ioredis';
+import { ConfigService } from '@nestjs/config';
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
+import { REDIS } from '../redis/redis.module';
+import { EmailQueueProducer } from '../email-queue/email-queue.producer';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
 
@@ -22,7 +27,12 @@ const ADMIN_FIELDS = {
 
 @Injectable()
 export class AdminsService {
-  constructor(@Inject(DB) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DB) private readonly db: DrizzleDB,
+    @Inject(REDIS) private readonly redis: Redis,
+    private readonly config: ConfigService,
+    private readonly emailQueueProducer: EmailQueueProducer,
+  ) {}
 
   async findAll(
     tenantId: string,
@@ -66,8 +76,10 @@ export class AdminsService {
     });
   }
 
-  async create(dto: CreateAdminDto, tenantId: string) {
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+  async create(dto: CreateAdminDto, tenantId: string, slug: string) {
+    const rawPassword = dto.sendInvite ? randomBytes(16).toString('hex') : dto.password!;
+    const passwordHash = await bcrypt.hash(rawPassword, 10);
+
     return withTenant(this.db, tenantId, async (tx) => {
       const [existing] = await tx
         .select({ id: users.id })
@@ -82,7 +94,22 @@ export class AdminsService {
         role:         'tenant_admin',
         name:         dto.name,
         avatarUrl:    dto.avatarUrl,
+        active:       !dto.sendInvite,
       }).returning();
+
+      if (dto.sendInvite) {
+        const token = randomBytes(32).toString('hex');
+        await this.redis.set(
+          `password:invite:${token}`,
+          JSON.stringify({ userId: user.id, email: user.email, tenantId }),
+          'EX',
+          86400,
+        );
+        const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
+        const protocol = domain.startsWith('localhost') ? 'http' : 'https';
+        const inviteUrl = `${protocol}://${slug}.${domain}/activate-account?token=${token}`;
+        await this.emailQueueProducer.addInviteJob({ to: user.email, inviteUrl });
+      }
 
       return {
         id:          user.id,

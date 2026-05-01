@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { AdminsService } from './admins.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -37,8 +38,10 @@ export class AdminsController {
 
   @Post()
   @Roles('tenant_admin')
-  create(@Body() dto: CreateAdminDto, @TenantId() tenantId: string) {
-    return this.service.create(dto, tenantId);
+  create(@Body() dto: CreateAdminDto, @TenantId() tenantId: string, @Req() req: ExpressRequest) {
+    const slugHeader = req.headers['x-tenant-slug'];
+    const slug = Array.isArray(slugHeader) ? slugHeader[0] : (slugHeader ?? '');
+    return this.service.create(dto, tenantId, slug);
   }
 
   @Patch(':id')
