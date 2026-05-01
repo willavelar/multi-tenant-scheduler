@@ -1,6 +1,6 @@
 import {
   IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID,
-  Matches, MaxLength, Min, MinLength, ValidateNested,
+  Matches, MaxLength, Min, MinLength, ValidateIf, ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ServiceLimitItemDto } from './service-limit-item.dto';
@@ -8,6 +8,10 @@ import { ServiceLimitItemDto } from './service-limit-item.dto';
 export class CreateClientDto {
   @IsString() name: string;
   @IsEmail() email: string;
+
+  @IsOptional() @IsBoolean() sendInvite?: boolean;
+
+  @ValidateIf(o => !o.sendInvite)
   @IsString() @MinLength(6) password: string;
 
   @IsOptional() @IsString() phone?: string;
