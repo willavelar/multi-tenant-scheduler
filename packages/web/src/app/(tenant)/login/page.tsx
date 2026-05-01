@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
@@ -50,7 +50,7 @@ function resolveReturnTo(searchParams: ReturnType<typeof useSearchParams>): stri
   return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/appointments'
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const { login, user } = useAuth()
   const { slug } = useTenant()
   const router = useRouter()
@@ -221,5 +221,13 @@ export default function LoginPage() {
 
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   )
 }
