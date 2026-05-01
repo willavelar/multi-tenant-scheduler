@@ -45,4 +45,11 @@ describe('EmailService', () => {
       html: expect.stringContaining('https://acme.scheduler.app/reset-password?token=abc123'),
     });
   });
+
+  it('lança erro quando Resend retorna error', async () => {
+    mockSend.mockResolvedValueOnce({ data: null, error: { message: 'Invalid API key' } });
+    await expect(
+      service.sendPasswordReset('user@example.com', 'https://acme.scheduler.app/reset-password?token=abc123'),
+    ).rejects.toThrow('Email delivery failed: Invalid API key');
+  });
 });

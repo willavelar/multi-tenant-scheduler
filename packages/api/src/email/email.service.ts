@@ -13,7 +13,7 @@ export class EmailService {
   }
 
   async sendPasswordReset(to: string, resetUrl: string): Promise<void> {
-    await this.resend.emails.send({
+    const { error } = await this.resend.emails.send({
       from: this.from,
       to,
       subject: 'Redefinição de senha',
@@ -23,5 +23,6 @@ export class EmailService {
         <p>Este link é válido por 24 horas. Se você não solicitou isso, ignore este e-mail.</p>
       `,
     });
+    if (error) throw new Error(`Email delivery failed: ${error.message}`);
   }
 }
