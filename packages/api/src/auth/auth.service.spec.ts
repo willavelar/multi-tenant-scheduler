@@ -390,6 +390,74 @@ describe('AuthService.resetPassword', () => {
   });
 });
 
+describe('AuthService.validateInviteToken', () => {
+  async function buildService(redis: unknown) {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: makeSimpleDb([]) },
+        { provide: REDIS, useValue: redis },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn(), sendInvite: jest.fn() } },
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    return module.get(AuthService);
+  }
+
+  it('retorna email quando token existe', async () => {
+    const redis = { get: jest.fn().mockResolvedValue(JSON.stringify({ userId: 'u1', email: 'a@b.com', tenantId: 't1' })) };
+    const service = await buildService(redis);
+    const result = await service.validateInviteToken('valid-token');
+    expect(result).toEqual({ email: 'a@b.com' });
+    expect(redis.get).toHaveBeenCalledWith('password:invite:valid-token');
+  });
+
+  it('lança BadRequestException quando token não existe', async () => {
+    const redis = { get: jest.fn().mockResolvedValue(null) };
+    const service = await buildService(redis);
+    await expect(service.validateInviteToken('bad-token')).rejects.toThrow(BadRequestException);
+  });
+});
+
+describe('AuthService.activateAccount', () => {
+  async function buildService(db: unknown, redis: unknown) {
+    const module = await Test.createTestingModule({
+      providers: [
+        AuthService,
+        { provide: DB, useValue: db },
+        { provide: REDIS, useValue: redis },
+        { provide: EmailService, useValue: { sendPasswordReset: jest.fn(), sendInvite: jest.fn() } },
+        { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
+        { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
+      ],
+    }).compile();
+    return module.get(AuthService);
+  }
+
+  it('atualiza passwordHash e active=true quando token é válido', async () => {
+    const payload = JSON.stringify({ userId: 'u1', email: 'a@b.com', tenantId: 't1' });
+    const redis = { getdel: jest.fn().mockResolvedValue(payload) };
+    const db = makeSimpleDb([{ id: 'u1' }]);
+    const service = await buildService(db, redis);
+    await expect(service.activateAccount('valid-token', 'novaSenha123')).resolves.toBeUndefined();
+    expect(redis.getdel).toHaveBeenCalledWith('password:invite:valid-token');
+  });
+
+  it('lança BadRequestException quando token não existe', async () => {
+    const redis = { getdel: jest.fn().mockResolvedValue(null) };
+    const service = await buildService(makeSimpleDb([]), redis);
+    await expect(service.activateAccount('bad-token', 'senha123')).rejects.toThrow(BadRequestException);
+  });
+
+  it('lança BadRequestException quando senha tem menos de 6 caracteres', async () => {
+    const payload = JSON.stringify({ userId: 'u1', email: 'a@b.com', tenantId: 't1' });
+    const redis = { getdel: jest.fn().mockResolvedValue(payload) };
+    const service = await buildService(makeSimpleDb([{ id: 'u1' }]), redis);
+    await expect(service.activateAccount('valid-token', '123')).rejects.toThrow(BadRequestException);
+  });
+});
+
 describe('AuthService.forgotPassword', () => {
   const mockRedis = {
     set: jest.fn().mockResolvedValue('OK'),

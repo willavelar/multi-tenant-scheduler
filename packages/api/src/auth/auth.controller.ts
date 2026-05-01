@@ -6,6 +6,8 @@ import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ValidateTokenDto } from './dto/validate-token.dto';
+import { ValidateInviteTokenDto } from './dto/validate-invite-token.dto';
+import { ActivateAccountDto } from './dto/activate-account.dto';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
@@ -70,5 +72,17 @@ export class AuthController {
   @HttpCode(200)
   async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
     await this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Get('invite/validate')
+  async validateInviteToken(@Query() dto: ValidateInviteTokenDto): Promise<{ email: string }> {
+    return this.authService.validateInviteToken(dto.token);
+  }
+
+  @Post('activate-account')
+  @HttpCode(200)
+  async activateAccount(@Body() dto: ActivateAccountDto): Promise<{ message: string }> {
+    await this.authService.activateAccount(dto.token, dto.newPassword);
+    return { message: 'Conta ativada com sucesso' };
   }
 }

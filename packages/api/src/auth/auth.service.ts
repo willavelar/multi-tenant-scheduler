@@ -132,6 +132,29 @@ export class AuthService {
     if (!updated.length) throw new BadRequestException('Token inválido ou expirado');
   }
 
+  async validateInviteToken(token: string): Promise<{ email: string }> {
+    const raw = await this.redis.get(`password:invite:${token}`);
+    if (!raw) throw new BadRequestException('Token inválido ou expirado');
+    const { email } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
+    return { email };
+  }
+
+  async activateAccount(token: string, newPassword: string): Promise<void> {
+    const raw = await this.redis.getdel(`password:invite:${token}`);
+    if (!raw) throw new BadRequestException('Token inválido ou expirado');
+    const { userId, tenantId } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
+
+    if (newPassword.length < 6) {
+      throw new BadRequestException('A senha deve ter no mínimo 6 caracteres');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const updated = await withTenant(this.db, tenantId, (tx) =>
+      tx.update(users).set({ passwordHash, active: true }).where(eq(users.id, userId)).returning({ id: users.id }),
+    );
+    if (!updated.length) throw new BadRequestException('Token inválido ou expirado');
+  }
+
   async login(user: typeof users.$inferSelect) {
     if (user.tenantId) {
       await withTenant(this.db, user.tenantId, (tx) =>
