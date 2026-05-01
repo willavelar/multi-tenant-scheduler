@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { ProfessionalsService } from './professionals.service';
 import { CreateProfessionalDto } from './dto/create-professional.dto';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
@@ -58,8 +59,10 @@ export class ProfessionalsController {
 
   @Post()
   @Roles('tenant_admin')
-  create(@Body() dto: CreateProfessionalDto, @TenantId() tenantId: string) {
-    return this.service.create(dto, tenantId);
+  create(@Body() dto: CreateProfessionalDto, @TenantId() tenantId: string, @Req() req: ExpressRequest) {
+    const slugHeader = req.headers['x-tenant-slug'];
+    const slug = Array.isArray(slugHeader) ? slugHeader[0] : (slugHeader ?? '');
+    return this.service.create(dto, tenantId, slug);
   }
 
   /** Admin can update any professional; professional can update only themselves (limited fields). */

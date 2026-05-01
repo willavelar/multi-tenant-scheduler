@@ -1,4 +1,4 @@
-import { IsArray, IsEmail, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class ScheduleSlotDto {
@@ -26,6 +26,11 @@ export class CreateProfessionalDto {
   @IsEmail()
   email: string;
 
+  @IsOptional()
+  @IsBoolean()
+  sendInvite?: boolean;
+
+  @ValidateIf(o => !o.sendInvite)
   @IsString()
   @MinLength(8)
   password: string;

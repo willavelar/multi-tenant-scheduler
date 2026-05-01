@@ -6,6 +6,11 @@ import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { CreateProfessionalDto } from './dto/create-professional.dto';
 import { UpdateProfessionalDto } from './dto/update-professional.dto';
+import { randomBytes } from 'crypto';
+import Redis from 'ioredis';
+import { ConfigService } from '@nestjs/config';
+import { REDIS } from '../redis/redis.module';
+import { EmailQueueProducer } from '../email-queue/email-queue.producer';
 
 const PROF_FIELDS = {
   id:          professionals.id,
@@ -27,7 +32,12 @@ const PROF_FIELDS = {
 
 @Injectable()
 export class ProfessionalsService {
-  constructor(@Inject(DB) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DB) private readonly db: DrizzleDB,
+    @Inject(REDIS) private readonly redis: Redis,
+    private readonly config: ConfigService,
+    private readonly emailQueueProducer: EmailQueueProducer,
+  ) {}
 
   async findAll(
     tenantId: string,
@@ -85,8 +95,10 @@ export class ProfessionalsService {
     return prof;
   }
 
-  async create(dto: CreateProfessionalDto, tenantId: string) {
-    const passwordHash = await bcrypt.hash(dto.password, 10);
+  async create(dto: CreateProfessionalDto, tenantId: string, slug: string) {
+    const rawPassword = dto.sendInvite ? randomBytes(16).toString('hex') : dto.password!;
+    const passwordHash = await bcrypt.hash(rawPassword, 10);
+
     return withTenant(this.db, tenantId, async (tx) => {
       const [existing] = await tx
         .select({ id: users.id })
@@ -103,6 +115,7 @@ export class ProfessionalsService {
         avatarUrl:  dto.avatarUrl,
         timezone:   dto.timezone ?? 'America/Sao_Paulo',
         timeFormat: dto.timeFormat ?? '24h',
+        active:     !dto.sendInvite,
       }).returning();
 
       const [prof] = await tx.insert(professionals).values({
@@ -123,6 +136,20 @@ export class ProfessionalsService {
             slotDurationMinutes: s.slotDurationMinutes ?? 60,
           })),
         );
+      }
+
+      if (dto.sendInvite) {
+        const token = randomBytes(32).toString('hex');
+        await this.redis.set(
+          `password:invite:${token}`,
+          JSON.stringify({ userId: user.id, email: user.email, tenantId }),
+          'EX',
+          86400,
+        );
+        const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
+        const protocol = domain.startsWith('localhost') ? 'http' : 'https';
+        const inviteUrl = `${protocol}://${slug}.${domain}/activate-account?token=${token}`;
+        await this.emailQueueProducer.addInviteJob({ to: user.email, inviteUrl });
       }
 
       return {
