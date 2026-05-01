@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Request as ExpressRequest } from 'express';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -36,9 +37,11 @@ export class ClientsController {
   }
 
   @Post()
-  @Roles('tenant_admin')
-  create(@Body() dto: CreateClientDto, @TenantId() tenantId: string) {
-    return this.service.create(dto, tenantId);
+  @Roles('tenant_admin', 'professional')
+  create(@Body() dto: CreateClientDto, @TenantId() tenantId: string, @Req() req: ExpressRequest) {
+    const slugHeader = req.headers['x-tenant-slug'];
+    const slug = Array.isArray(slugHeader) ? slugHeader[0] : (slugHeader ?? '');
+    return this.service.create(dto, tenantId, slug);
   }
 
   @Patch(':id')
