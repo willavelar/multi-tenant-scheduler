@@ -18,7 +18,8 @@ export default function NewClientPage() {
           await mutateAsync({
             name:             data.name,
             email:            data.email,
-            password:         data.password!,
+            password:         data.sendInvite ? undefined : data.password!,
+            sendInvite:       data.sendInvite,
             phone:            data.phone,
             birthDate:        data.birthDate,
             notes:            data.notes,
