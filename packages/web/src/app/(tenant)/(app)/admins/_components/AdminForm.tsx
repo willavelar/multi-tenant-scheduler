@@ -11,11 +11,15 @@ import { cn } from '@/lib/utils'
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
 const createSchema = z.object({
-  name:      z.string().min(2, 'Nome obrigatório'),
-  email:     z.string().email('E-mail inválido'),
-  password:  z.string().min(8, 'Mínimo 8 caracteres'),
-  avatarUrl: z.string().nullable().optional(),
-})
+  name:       z.string().min(2, 'Nome obrigatório'),
+  email:      z.string().email('E-mail inválido'),
+  sendInvite: z.boolean().optional(),
+  password:   z.string().optional(),
+  avatarUrl:  z.string().nullable().optional(),
+}).refine(
+  (d) => d.sendInvite || (!!d.password && d.password.length >= 8),
+  { message: 'Mínimo 8 caracteres', path: ['password'] },
+)
 
 const editSchema = z.object({
   name:       z.string().min(2, 'Nome obrigatório'),
@@ -28,12 +32,13 @@ const editSchema = z.object({
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type FormValues = {
-  name:       string
-  email?:     string
-  password?:  string
-  avatarUrl?: string | null
-  active?:    boolean
-  timezone?:  string
+  name:        string
+  email?:      string
+  password?:   string
+  sendInvite?: boolean
+  avatarUrl?:  string | null
+  active?:     boolean
+  timezone?:   string
   timeFormat?: '12h' | '24h'
 }
 
@@ -74,7 +79,7 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
     defaultValues: {
       name:      defaultValues?.name      ?? '',
       avatarUrl: defaultValues?.avatarUrl ?? null,
-      ...(mode === 'create' ? { email: '', password: '' } : {}),
+      ...(mode === 'create' ? { email: '', password: '', sendInvite: true } : {}),
       ...(mode === 'edit' ? {
         active:     defaultValues?.active     ?? true,
         timezone:   defaultValues?.timezone   ?? 'America/Sao_Paulo',
@@ -91,6 +96,7 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
   const activeValue     = watch('active') ?? true
   const timezoneValue   = watch('timezone') ?? 'America/Sao_Paulo'
   const timeFormatValue = watch('timeFormat') ?? '24h'
+  const sendInviteValue = watch('sendInvite') ?? true
 
   async function submit(data: FormValues) {
     try {
@@ -139,13 +145,28 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
               <input id="admin-email" type="email" {...register('email')} className={inputCls(!!errors.email)} />
               {errors.email && <p className="mt-1 text-xs text-red-500 m-0">{errors.email.message}</p>}
             </div>
-            <div>
-              <label htmlFor="admin-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
-                Senha inicial <span className="text-red-500">*</span>
+
+            <div className="mb-4 flex items-center gap-2.5">
+              <input
+                id="admin-send-invite"
+                type="checkbox"
+                {...register('sendInvite')}
+                className="w-4 h-4 rounded border-gray-300 text-indigo-500 cursor-pointer accent-indigo-500"
+              />
+              <label htmlFor="admin-send-invite" className="text-[13px] font-medium text-gray-700 cursor-pointer select-none">
+                Enviar convite por e-mail para o usuário cadastrar a senha
               </label>
-              <input id="admin-password" type="password" {...register('password')} className={inputCls(!!errors.password)} />
-              {errors.password && <p className="mt-1 text-xs text-red-500 m-0">{errors.password.message}</p>}
             </div>
+
+            {!sendInviteValue && (
+              <div>
+                <label htmlFor="admin-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  Senha inicial <span className="text-red-500">*</span>
+                </label>
+                <input id="admin-password" type="password" {...register('password')} className={inputCls(!!errors.password)} />
+                {errors.password && <p className="mt-1 text-xs text-red-500 m-0">{errors.password.message}</p>}
+              </div>
+            )}
           </>
         )}
 
