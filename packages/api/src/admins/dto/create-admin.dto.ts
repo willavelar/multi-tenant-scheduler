@@ -1,4 +1,4 @@
-import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
 
 export class CreateAdminDto {
   @IsString()
@@ -7,6 +7,11 @@ export class CreateAdminDto {
   @IsEmail()
   email: string;
 
+  @IsOptional()
+  @IsBoolean()
+  sendInvite?: boolean;
+
+  @ValidateIf(o => !o.sendInvite)
   @IsString()
   @MinLength(8)
   password: string;
