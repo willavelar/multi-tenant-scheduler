@@ -13,6 +13,8 @@ export class EmailQueueProcessor extends WorkerHost {
   async process(job: Job<InviteJobData>): Promise<void> {
     if (job.name === 'send-invite') {
       await this.emailService.sendInvite(job.data.to, job.data.inviteUrl);
+    } else {
+      throw new Error(`Unknown job name: ${job.name}`);
     }
   }
 }
