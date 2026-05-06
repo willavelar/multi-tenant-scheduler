@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { RolesGuard, Roles } from '../common/guards/roles.guard';
@@ -63,8 +64,12 @@ export class AppointmentsController {
   }
 
   @Patch(':id/cancel')
-  cancel(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.updateStatus(id, 'cancelled', tenantId);
+  cancel(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @Body() dto: CancelAppointmentDto,
+  ) {
+    return this.service.updateStatus(id, 'cancelled', tenantId, dto.reason);
   }
 
   @Patch(':id/complete')

@@ -289,7 +289,12 @@ export class AppointmentsService {
     });
   }
 
-  async updateStatus(id: string, status: 'confirmed' | 'cancelled' | 'completed', tenantId: string) {
+  async updateStatus(
+    id: string,
+    status: 'confirmed' | 'cancelled' | 'completed',
+    tenantId: string,
+    reason?: string,
+  ) {
     return withTenant(this.db, tenantId, async (tx) => {
       if (status === 'completed') {
         const [tenant] = await tx
@@ -307,9 +312,14 @@ export class AppointmentsService {
         .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)));
       if (!appt) throw new NotFoundException('Appointment not found');
 
+      const setPayload: { status: typeof status; cancellationReason?: string } = { status };
+      if (status === 'cancelled' && reason) {
+        setPayload.cancellationReason = reason;
+      }
+
       const [updated] = await tx
         .update(appointments)
-        .set({ status })
+        .set(setPayload)
         .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)))
         .returning();
       return updated;
