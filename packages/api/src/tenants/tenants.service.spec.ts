@@ -37,4 +37,67 @@ describe('TenantsService', () => {
     const result = await service.resolveTenantId('nonexistent');
     expect(result).toBeNull();
   });
+
+  describe('cancellation deadline fields', () => {
+    const mockReturning  = jest.fn();
+    const mockWhere2     = jest.fn().mockReturnValue({ returning: mockReturning });
+    const mockSet        = jest.fn().mockReturnValue({ where: mockWhere2 });
+    const mockUpdate     = jest.fn().mockReturnValue({ set: mockSet });
+    const mockFromWhere2 = jest.fn();
+    const mockFrom2      = jest.fn().mockReturnValue({ where: mockFromWhere2 });
+    const mockSelect2    = jest.fn().mockReturnValue({ from: mockFrom2 });
+
+    const mockDb2    = { select: mockSelect2, update: mockUpdate };
+    const mockRedis2 = { get: jest.fn(), set: jest.fn() };
+
+    let svc: TenantsService;
+
+    beforeEach(async () => {
+      jest.clearAllMocks();
+      mockSelect2.mockReturnValue({ from: mockFrom2 });
+      mockFrom2.mockReturnValue({ where: mockFromWhere2 });
+      mockUpdate.mockReturnValue({ set: mockSet });
+      mockSet.mockReturnValue({ where: mockWhere2 });
+      mockWhere2.mockReturnValue({ returning: mockReturning });
+
+      const module = await Test.createTestingModule({
+        providers: [
+          TenantsService,
+          { provide: DB,    useValue: mockDb2 },
+          { provide: REDIS, useValue: mockRedis2 },
+        ],
+      }).compile();
+      svc = module.get(TenantsService);
+    });
+
+    it('update patches cancellationDeadlineValue and cancellationDeadlineUnit when provided', async () => {
+      mockReturning.mockResolvedValue([{
+        id: 't1', name: 'Clinic', slug: 'clinic', logoUrl: null,
+        confirmationMode: 'auto', allowPaidStatus: true,
+        cancellationReasonMode: 'no',
+        cancellationDeadlineValue: 2, cancellationDeadlineUnit: 'hours',
+      }]);
+
+      await svc.update('t1', { cancellationDeadlineValue: 2, cancellationDeadlineUnit: 'hours' });
+
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({ cancellationDeadlineValue: 2, cancellationDeadlineUnit: 'hours' }),
+      );
+    });
+
+    it('update patches both fields as null to clear the deadline', async () => {
+      mockReturning.mockResolvedValue([{
+        id: 't1', name: 'Clinic', slug: 'clinic', logoUrl: null,
+        confirmationMode: 'auto', allowPaidStatus: true,
+        cancellationReasonMode: 'no',
+        cancellationDeadlineValue: null, cancellationDeadlineUnit: null,
+      }]);
+
+      await svc.update('t1', { cancellationDeadlineValue: null, cancellationDeadlineUnit: null });
+
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({ cancellationDeadlineValue: null, cancellationDeadlineUnit: null }),
+      );
+    });
+  });
 });

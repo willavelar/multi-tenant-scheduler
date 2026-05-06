@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength, MinLength, ValidateIf } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 
 export class UpdateTenantDto {
   @IsOptional()
@@ -23,4 +23,16 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsIn(['no', 'optional', 'required'])
   cancellationReasonMode?: 'no' | 'optional' | 'required';
+
+  @IsOptional()
+  @ValidateIf((o) => o.cancellationDeadlineValue !== null)
+  @IsInt()
+  @Min(1)
+  @Max(9999)
+  cancellationDeadlineValue?: number | null;
+
+  @IsOptional()
+  @ValidateIf((o) => o.cancellationDeadlineUnit !== null)
+  @IsIn(['minutes', 'hours', 'days'])
+  cancellationDeadlineUnit?: 'minutes' | 'hours' | 'days' | null;
 }
