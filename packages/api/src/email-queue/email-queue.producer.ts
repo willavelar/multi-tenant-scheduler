@@ -10,12 +10,24 @@ export interface InviteJobData {
   inviteUrl: string;
 }
 
+export interface PasswordResetJobData {
+  to: string;
+  resetUrl: string;
+}
+
 @Injectable()
 export class EmailQueueProducer {
   constructor(@InjectQueue(EMAIL_QUEUE) private readonly queue: Queue) {}
 
   async addInviteJob(data: InviteJobData): Promise<void> {
     await this.queue.add('send-invite', data, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+    });
+  }
+
+  async addPasswordResetJob(data: PasswordResetJobData): Promise<void> {
+    await this.queue.add('send-password-reset', data, {
       attempts: 3,
       backoff: { type: 'exponential', delay: 5000 },
     });

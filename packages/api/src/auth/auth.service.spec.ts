@@ -7,7 +7,7 @@ import * as bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
 import { AuthService } from './auth.service';
 import { DB } from '../database/database.module';
-import { EmailService } from '../email/email.service';
+import { EmailQueueProducer } from '../email-queue/email-queue.producer';
 import { REDIS } from '../redis/redis.module';
 
 // Mesmo padrão de mock usado em professionals.service.spec.ts:
@@ -45,7 +45,7 @@ describe('AuthService.validateUser', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() } },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -115,7 +115,7 @@ describe('AuthService.generateTokens (via login)', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() } },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('signed-token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -160,7 +160,7 @@ describe('AuthService.refresh', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() } },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -208,7 +208,7 @@ describe('AuthService.refresh', () => {
         AuthService,
         { provide: DB, useValue: makeSimpleDb([]) },
         { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() } },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -259,7 +259,7 @@ describe('AuthService.logout', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() } },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -290,7 +290,7 @@ describe('AuthService.logout', () => {
         AuthService,
         { provide: DB, useValue: makeSimpleDb([]) },
         { provide: REDIS, useValue: { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() } },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         {
           provide: JwtService,
           useValue: {
@@ -318,7 +318,7 @@ describe('AuthService.validateResetToken', () => {
         AuthService,
         { provide: DB, useValue: makeSimpleDb([]) },
         { provide: REDIS, useValue: redis },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -357,7 +357,7 @@ describe('AuthService.resetPassword', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: redis },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -397,7 +397,7 @@ describe('AuthService.validateInviteToken', () => {
         AuthService,
         { provide: DB, useValue: makeSimpleDb([]) },
         { provide: REDIS, useValue: redis },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn(), sendInvite: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -427,7 +427,7 @@ describe('AuthService.activateAccount', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: redis },
-        { provide: EmailService, useValue: { sendPasswordReset: jest.fn(), sendInvite: jest.fn() } },
+        { provide: EmailQueueProducer, useValue: { addPasswordResetJob: jest.fn(), addInviteJob: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('secret') } },
       ],
@@ -465,7 +465,7 @@ describe('AuthService.forgotPassword', () => {
     del: jest.fn(),
     getdel: jest.fn(),
   };
-  const mockEmailService = { sendPasswordReset: jest.fn().mockResolvedValue(undefined) };
+  const mockProducer = { addPasswordResetJob: jest.fn().mockResolvedValue(undefined), addInviteJob: jest.fn() };
 
   async function buildService(db: unknown) {
     const module = await Test.createTestingModule({
@@ -473,7 +473,7 @@ describe('AuthService.forgotPassword', () => {
         AuthService,
         { provide: DB, useValue: db },
         { provide: REDIS, useValue: mockRedis },
-        { provide: EmailService, useValue: mockEmailService },
+        { provide: EmailQueueProducer, useValue: mockProducer },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token') } },
         { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('scheduler.app') } },
       ],
@@ -489,7 +489,7 @@ describe('AuthService.forgotPassword', () => {
       .resolves.toBeUndefined();
   });
 
-  it('gera token Redis e envia e-mail quando usuário existe', async () => {
+  it('gera token Redis e enfileira e-mail quando usuário existe', async () => {
     const service = await buildService(makeSimpleDb([{ id: 'user-1', email: 'a@b.com' }]));
     await service.forgotPassword('a@b.com', 'tenant-1', 'acme');
 
@@ -499,9 +499,9 @@ describe('AuthService.forgotPassword', () => {
       'EX',
       86400,
     );
-    expect(mockEmailService.sendPasswordReset).toHaveBeenCalledWith(
-      'a@b.com',
-      expect.stringContaining('/reset-password?token='),
-    );
+    expect(mockProducer.addPasswordResetJob).toHaveBeenCalledWith({
+      to: 'a@b.com',
+      resetUrl: expect.stringContaining('/reset-password?token='),
+    });
   });
 });

@@ -2,7 +2,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { EmailService } from '../email/email.service';
-import { EMAIL_QUEUE, InviteJobData } from './email-queue.producer';
+import { EMAIL_QUEUE, InviteJobData, PasswordResetJobData } from './email-queue.producer';
 
 @Processor(EMAIL_QUEUE)
 export class EmailQueueProcessor extends WorkerHost {
@@ -10,9 +10,13 @@ export class EmailQueueProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<InviteJobData>): Promise<void> {
+  async process(job: Job<InviteJobData | PasswordResetJobData>): Promise<void> {
     if (job.name === 'send-invite') {
-      await this.emailService.sendInvite(job.data.to, job.data.inviteUrl);
+      const data = job.data as InviteJobData;
+      await this.emailService.sendInvite(data.to, data.inviteUrl);
+    } else if (job.name === 'send-password-reset') {
+      const data = job.data as PasswordResetJobData;
+      await this.emailService.sendPasswordReset(data.to, data.resetUrl);
     } else {
       throw new Error(`Unknown job name: ${job.name}`);
     }

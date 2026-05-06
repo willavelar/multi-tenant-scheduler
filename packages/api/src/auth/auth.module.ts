@@ -6,7 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
-import { EmailModule } from '../email/email.module';
+import { EmailQueueModule } from '../email-queue/email-queue.module';
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { EmailModule } from '../email/email.module';
         signOptions: { expiresIn: '15m' },
       }),
     }),
-    EmailModule,
+    EmailQueueModule,
   ],
   providers: [AuthService, JwtStrategy, LocalStrategy],
   controllers: [AuthController],

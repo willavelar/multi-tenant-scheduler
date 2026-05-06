@@ -10,7 +10,7 @@ import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { RegisterDto } from './dto/register.dto';
 import { REDIS } from '../redis/redis.module';
-import { EmailService } from '../email/email.service';
+import { EmailQueueProducer } from '../email-queue/email-queue.producer';
 
 export interface JwtPayload {
   sub: string;
@@ -27,7 +27,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     @Inject(REDIS) private readonly redis: Redis,
-    private readonly emailService: EmailService,
+    private readonly emailQueueProducer: EmailQueueProducer,
   ) {}
 
   async register(dto: RegisterDto, tenantId: string) {
@@ -106,7 +106,7 @@ export class AuthService {
     const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
     const protocol = domain.startsWith('localhost') ? 'http' : 'https';
     const resetUrl = `${protocol}://${slug}.${domain}/reset-password?token=${token}`;
-    await this.emailService.sendPasswordReset(user.email, resetUrl);
+    await this.emailQueueProducer.addPasswordResetJob({ to: user.email, resetUrl });
   }
 
   async validateResetToken(token: string): Promise<{ email: string }> {
