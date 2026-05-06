@@ -18,6 +18,7 @@ export const appointments = pgTable('appointments', {
   endsAt: timestamp('ends_at').notNull(),
   status: appointmentStatusEnum('status').notNull().default('pending'),
   notes: text('notes'),
+  cancellationReason: text('cancellation_reason'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
