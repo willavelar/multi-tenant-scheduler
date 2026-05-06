@@ -5,6 +5,14 @@ import { LogoCropField } from '@/components/ui/LogoCropField'
 import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/useTenantSettings'
 import { cn } from '@/lib/utils'
 
+type CancelReasonMode = 'no' | 'optional' | 'required'
+
+const CANCEL_REASON_OPTIONS: { value: CancelReasonMode; label: string }[] = [
+  { value: 'no',       label: 'Não' },
+  { value: 'optional', label: 'Sim' },
+  { value: 'required', label: 'Obrigatório' },
+]
+
 const inputCls = (disabled = false) => cn(
   'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors',
   disabled
@@ -45,9 +53,10 @@ export function TenantGeneralForm() {
   const [error,    setError]    = useState('')
   const [success,  setSuccess]  = useState(false)
 
-  const [allowPaidStatus,  setAllowPaidStatus]  = useState(true)
-  const [requiresConfirm,  setRequiresConfirm]  = useState(false)
-  const [toggleSaving,     setToggleSaving]     = useState<string | null>(null)
+  const [allowPaidStatus,    setAllowPaidStatus]    = useState(true)
+  const [requiresConfirm,    setRequiresConfirm]    = useState(false)
+  const [cancelReasonMode,   setCancelReasonMode]   = useState<CancelReasonMode>('no')
+  const [toggleSaving,       setToggleSaving]       = useState<string | null>(null)
 
   useEffect(() => {
     if (!data) return
@@ -55,6 +64,7 @@ export function TenantGeneralForm() {
     setLogoUrl(data.logoUrl)
     setAllowPaidStatus(data.allowPaidStatus)
     setRequiresConfirm(data.confirmationMode === 'manual')
+    setCancelReasonMode(data.cancellationReasonMode)
   }, [data])
 
   if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
@@ -94,6 +104,19 @@ export function TenantGeneralForm() {
       await mutateAsync({ confirmationMode: value ? 'manual' : 'auto' })
     } catch {
       setRequiresConfirm(!value)
+    } finally {
+      setToggleSaving(null)
+    }
+  }
+
+  async function handleCancelReasonModeChange(value: CancelReasonMode) {
+    const prev = cancelReasonMode
+    setCancelReasonMode(value)
+    setToggleSaving('cancelReason')
+    try {
+      await mutateAsync({ cancellationReasonMode: value })
+    } catch {
+      setCancelReasonMode(prev)
     } finally {
       setToggleSaving(null)
     }
@@ -201,6 +224,45 @@ export function TenantGeneralForm() {
                 onChange={handleToggleConfirmation}
                 disabled={toggleSaving === 'confirm'}
               />
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Segmented control: Cancellation reason mode */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Motivo de cancelamento</p>
+              <p className="text-[12px] text-gray-500 m-0">
+                Define se o usuário precisa informar um motivo ao cancelar um agendamento.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {toggleSaving === 'cancelReason' && (
+                <svg className="animate-spin text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                </svg>
+              )}
+              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                {CANCEL_REASON_OPTIONS.map((opt, i) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    disabled={toggleSaving === 'cancelReason'}
+                    onClick={() => handleCancelReasonModeChange(opt.value)}
+                    className={cn(
+                      'px-3 py-1.5 text-[12px] font-medium border-0 cursor-pointer transition-colors',
+                      cancelReasonMode === opt.value
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-white text-gray-600 hover:bg-gray-50',
+                      i < CANCEL_REASON_OPTIONS.length - 1 && 'border-r border-gray-200',
+                      toggleSaving === 'cancelReason' && 'opacity-50 cursor-not-allowed',
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

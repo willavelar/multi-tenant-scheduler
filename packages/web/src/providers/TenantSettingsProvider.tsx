@@ -4,26 +4,29 @@ import { createContext, useContext, useEffect } from 'react'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 
 type TenantSettingsContextValue = {
-  tenantName:       string
-  tenantLogoUrl:    string | null
-  confirmationMode: 'auto' | 'manual'
-  allowPaidStatus:  boolean
+  tenantName:             string
+  tenantLogoUrl:          string | null
+  confirmationMode:       'auto' | 'manual'
+  allowPaidStatus:        boolean
+  cancellationReasonMode: 'no' | 'optional' | 'required'
 }
 
 const TenantSettingsContext = createContext<TenantSettingsContextValue>({
-  tenantName:       '',
-  tenantLogoUrl:    null,
-  confirmationMode: 'auto',
-  allowPaidStatus:  true,
+  tenantName:             '',
+  tenantLogoUrl:          null,
+  confirmationMode:       'auto',
+  allowPaidStatus:        true,
+  cancellationReasonMode: 'no',
 })
 
 export function TenantSettingsProvider({ children }: { children: React.ReactNode }) {
   const { data } = useTenantSettings()
 
-  const tenantName       = data?.name             ?? ''
-  const tenantLogoUrl    = data?.logoUrl           ?? null
-  const confirmationMode = data?.confirmationMode  ?? 'auto'
-  const allowPaidStatus  = data?.allowPaidStatus   ?? true
+  const tenantName             = data?.name                   ?? ''
+  const tenantLogoUrl          = data?.logoUrl                ?? null
+  const confirmationMode       = data?.confirmationMode       ?? 'auto'
+  const allowPaidStatus        = data?.allowPaidStatus        ?? true
+  const cancellationReasonMode = data?.cancellationReasonMode ?? 'no'
 
   useEffect(() => {
     if (!tenantName) return
@@ -32,7 +35,13 @@ export function TenantSettingsProvider({ children }: { children: React.ReactNode
   }, [tenantName])
 
   return (
-    <TenantSettingsContext.Provider value={{ tenantName, tenantLogoUrl, confirmationMode, allowPaidStatus }}>
+    <TenantSettingsContext.Provider value={{
+      tenantName,
+      tenantLogoUrl,
+      confirmationMode,
+      allowPaidStatus,
+      cancellationReasonMode,
+    }}>
       {children}
     </TenantSettingsContext.Provider>
   )

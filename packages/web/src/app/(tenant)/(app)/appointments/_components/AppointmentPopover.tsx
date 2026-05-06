@@ -5,10 +5,11 @@ import { createPortal } from 'react-dom'
 import type { Appointment } from '@/types'
 import { useFormatTime } from '@/hooks/useFormatTime'
 import { clientColor } from '@/lib/calendarColors'
-import { useCancelAppointment, useCompleteAppointment, useConfirmAppointment } from '@/hooks/useAppointments'
+import { useCompleteAppointment, useConfirmAppointment } from '@/hooks/useAppointments'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import type { StatusVariant } from '@/components/ui/StatusBadge'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
+import { CancelAppointmentModal } from './CancelAppointmentModal'
 
 const POPOVER_WIDTH = 300
 const POPOVER_HEIGHT = 270
@@ -29,9 +30,9 @@ type Props = {
 export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const [statusOpen, setStatusOpen] = useState(false)
+  const [cancelOpen, setCancelOpen] = useState(false)
 
   const confirmMut  = useConfirmAppointment()
-  const cancelMut   = useCancelAppointment()
   const completeMut = useCompleteAppointment()
   const { allowPaidStatus } = useTenantSettingsContext()
   const { formatISOTime } = useFormatTime()
@@ -62,10 +63,9 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
     return s.charAt(0).toUpperCase() + s.slice(1)
   })()
 
-  function handleStatusChange(action: 'confirm' | 'cancel' | 'complete') {
+  function handleStatusChange(action: 'confirm' | 'complete') {
     setStatusOpen(false)
     if (action === 'confirm')  confirmMut.mutate(appointment.id,  { onSuccess: onClose })
-    if (action === 'cancel')   cancelMut.mutate(appointment.id,   { onSuccess: onClose })
     if (action === 'complete') completeMut.mutate(appointment.id, { onSuccess: onClose })
   }
 
@@ -103,7 +103,10 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
                 </button>
               )}
               {status !== 'cancelled' && (
-                <button className="w-full text-left px-3 py-2 text-[12.5px] text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-none bg-transparent" onClick={() => handleStatusChange('cancel')}>
+                <button
+                  className="w-full text-left px-3 py-2 text-[12.5px] text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-none bg-transparent"
+                  onClick={() => { setStatusOpen(false); setCancelOpen(true) }}
+                >
                   <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />Cancelar
                 </button>
               )}
@@ -171,5 +174,14 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
     </div>
   )
 
-  return createPortal(popover, document.body)
+  return (
+    <>
+      {createPortal(popover, document.body)}
+      <CancelAppointmentModal
+        appointmentId={cancelOpen ? appointment.id : null}
+        onClose={() => setCancelOpen(false)}
+        onSuccess={onClose}
+      />
+    </>
+  )
 }
