@@ -313,7 +313,7 @@ export class AppointmentsService {
       if (!appt) throw new NotFoundException('Appointment not found');
 
       const setPayload: { status: typeof status; cancellationReason?: string } = { status };
-      if (status === 'cancelled' && reason) {
+      if (status === 'cancelled' && reason?.trim()) {
         setPayload.cancellationReason = reason;
       }
 
