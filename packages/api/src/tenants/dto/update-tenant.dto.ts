@@ -19,4 +19,8 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsBoolean()
   allowPaidStatus?: boolean;
+
+  @IsOptional()
+  @IsIn(['no', 'optional', 'required'])
+  cancellationReasonMode?: 'no' | 'optional' | 'required';
 }
