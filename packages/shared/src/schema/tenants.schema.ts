@@ -1,6 +1,7 @@
 import { boolean, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const confirmationModeEnum = pgEnum('confirmation_mode', ['auto', 'manual']);
+export const cancellationReasonModeEnum = pgEnum('cancellation_reason_mode', ['no', 'optional', 'required']);
 
 export const tenants = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -9,6 +10,7 @@ export const tenants = pgTable('tenants', {
   logoUrl: text('logo_url'),
   confirmationMode: confirmationModeEnum('confirmation_mode').notNull().default('auto'),
   allowPaidStatus: boolean('allow_paid_status').notNull().default(true),
+  cancellationReasonMode: cancellationReasonModeEnum('cancellation_reason_mode').notNull().default('no'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
