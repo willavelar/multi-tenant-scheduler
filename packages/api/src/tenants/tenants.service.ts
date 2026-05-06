@@ -34,13 +34,15 @@ export class TenantsService {
   async findCurrent(tenantId: string) {
     const [tenant] = await this.db
       .select({
-        id:                     tenants.id,
-        name:                   tenants.name,
-        slug:                   tenants.slug,
-        logoUrl:                tenants.logoUrl,
-        confirmationMode:       tenants.confirmationMode,
-        allowPaidStatus:        tenants.allowPaidStatus,
-        cancellationReasonMode: tenants.cancellationReasonMode,
+        id:                        tenants.id,
+        name:                      tenants.name,
+        slug:                      tenants.slug,
+        logoUrl:                   tenants.logoUrl,
+        confirmationMode:          tenants.confirmationMode,
+        allowPaidStatus:           tenants.allowPaidStatus,
+        cancellationReasonMode:    tenants.cancellationReasonMode,
+        cancellationDeadlineValue: tenants.cancellationDeadlineValue,
+        cancellationDeadlineUnit:  tenants.cancellationDeadlineUnit,
       })
       .from(tenants)
       .where(eq(tenants.id, tenantId));
@@ -51,11 +53,13 @@ export class TenantsService {
 
   async update(tenantId: string, dto: UpdateTenantDto) {
     const patch: Partial<typeof tenants.$inferInsert> = {};
-    if (dto.name                   !== undefined) patch.name                   = dto.name;
-    if (dto.logoUrl                !== undefined) patch.logoUrl                = dto.logoUrl;
-    if (dto.confirmationMode       !== undefined) patch.confirmationMode       = dto.confirmationMode;
-    if (dto.allowPaidStatus        !== undefined) patch.allowPaidStatus        = dto.allowPaidStatus;
-    if (dto.cancellationReasonMode !== undefined) patch.cancellationReasonMode = dto.cancellationReasonMode;
+    if (dto.name                      !== undefined) patch.name                      = dto.name;
+    if (dto.logoUrl                   !== undefined) patch.logoUrl                   = dto.logoUrl;
+    if (dto.confirmationMode          !== undefined) patch.confirmationMode          = dto.confirmationMode;
+    if (dto.allowPaidStatus           !== undefined) patch.allowPaidStatus           = dto.allowPaidStatus;
+    if (dto.cancellationReasonMode    !== undefined) patch.cancellationReasonMode    = dto.cancellationReasonMode;
+    if (dto.cancellationDeadlineValue !== undefined) patch.cancellationDeadlineValue = dto.cancellationDeadlineValue;
+    if (dto.cancellationDeadlineUnit  !== undefined) patch.cancellationDeadlineUnit  = dto.cancellationDeadlineUnit;
 
     if (Object.keys(patch).length === 0) {
       throw new BadRequestException('No updatable fields provided');
@@ -66,13 +70,15 @@ export class TenantsService {
       .set(patch)
       .where(eq(tenants.id, tenantId))
       .returning({
-        id:                     tenants.id,
-        name:                   tenants.name,
-        slug:                   tenants.slug,
-        logoUrl:                tenants.logoUrl,
-        confirmationMode:       tenants.confirmationMode,
-        allowPaidStatus:        tenants.allowPaidStatus,
-        cancellationReasonMode: tenants.cancellationReasonMode,
+        id:                        tenants.id,
+        name:                      tenants.name,
+        slug:                      tenants.slug,
+        logoUrl:                   tenants.logoUrl,
+        confirmationMode:          tenants.confirmationMode,
+        allowPaidStatus:           tenants.allowPaidStatus,
+        cancellationReasonMode:    tenants.cancellationReasonMode,
+        cancellationDeadlineValue: tenants.cancellationDeadlineValue,
+        cancellationDeadlineUnit:  tenants.cancellationDeadlineUnit,
       });
 
     if (!updated) throw new NotFoundException('Tenant not found');
