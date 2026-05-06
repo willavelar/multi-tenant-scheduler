@@ -128,10 +128,16 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
       {/* Content */}
       <div className="p-4">
         <div className="flex items-center gap-2.5 mb-3">
-          <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: color }} />
+          {appointment.clientAvatarUrl ? (
+            <img src={appointment.clientAvatarUrl} alt={appointment.clientName} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+          ) : (
+            <span className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[11px] font-bold" style={{ background: color }}>
+              {appointment.clientName.charAt(0).toUpperCase()}
+            </span>
+          )}
           <span className="text-[15px] font-bold text-gray-900 leading-tight">{appointment.clientName}</span>
         </div>
-        <div className="pl-[22px] space-y-1.5">
+        <div className="pl-[38px] space-y-1.5">
           <div className="flex items-start gap-2 text-gray-500 text-[12.5px]">
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0 mt-0.5">
               <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -148,9 +154,13 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
             <span>{appointment.serviceName}</span>
           </div>
           <div className="flex items-center gap-2 text-gray-500 text-[12.5px]">
-            <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-            </svg>
+            {appointment.professionalAvatarUrl ? (
+              <img src={appointment.professionalAvatarUrl} alt={appointment.professionalName} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+            ) : (
+              <span className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500 text-[8px] font-bold">
+                {appointment.professionalName.charAt(0).toUpperCase()}
+              </span>
+            )}
             <span>{appointment.professionalName}</span>
           </div>
           <div className="pt-0.5">
