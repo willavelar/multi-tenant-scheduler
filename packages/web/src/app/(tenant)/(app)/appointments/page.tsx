@@ -115,7 +115,7 @@ export default function AppointmentsPage() {
           {/* View mode toggle */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex">
             <button
-              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors ${viewMode === 'calendar' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer ${viewMode === 'calendar' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
               onClick={() => setViewMode('calendar')}
             >
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@ export default function AppointmentsPage() {
               Calendário
             </button>
             <button
-              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors ${viewMode === 'list' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
               onClick={() => setViewMode('list')}
             >
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
