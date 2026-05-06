@@ -34,7 +34,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
   return (
     <div
       className={cn(
-        'absolute rounded-md cursor-pointer overflow-hidden select-none px-1.5 py-0.5 hover:brightness-90 transition-all z-10',
+        'absolute rounded-md cursor-pointer overflow-hidden select-none px-1.5 py-0.5 z-10',
         isPast && 'opacity-60',
       )}
       style={{
