@@ -4,6 +4,10 @@ import type { Appointment } from '@/types'
 import { useFormatTime } from '@/hooks/useFormatTime'
 import { cn } from '@/lib/utils'
 
+const STATUS_LABELS: Record<Appointment['status'], string> = {
+  pending: 'Pendente', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Pago',
+}
+
 type Props = {
   appointment: Appointment
   color: string
@@ -61,7 +65,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
             )}
             style={isCancelled ? { color, opacity: 0.8 } : undefined}
           >
-            {appointment.serviceName}
+            {appointment.serviceName} ({STATUS_LABELS[appointment.status]})
           </p>
           <p
             className={cn(
