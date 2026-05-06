@@ -57,6 +57,13 @@
       "when": 1778100654897,
       "tag": "0009_classy_tag",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1778111178054,
+      "tag": "0010_youthful_pete_wisdom",
+      "breakpoints": true
     }
   ]
 }
