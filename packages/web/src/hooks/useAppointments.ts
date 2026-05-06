@@ -56,7 +56,10 @@ export function useConfirmAppointment() {
   return useMutation({
     mutationFn: (id: string) =>
       api(`/appointments/${id}/confirm`, { method: 'PATCH' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', slug] })
+      queryClient.invalidateQueries({ queryKey: ['appointments-calendar', slug] })
+    },
   })
 }
 
@@ -67,7 +70,10 @@ export function useCancelAppointment() {
   return useMutation({
     mutationFn: (id: string) =>
       api(`/appointments/${id}/cancel`, { method: 'PATCH' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', slug] })
+      queryClient.invalidateQueries({ queryKey: ['appointments-calendar', slug] })
+    },
   })
 }
 
@@ -78,7 +84,10 @@ export function useCompleteAppointment() {
   return useMutation({
     mutationFn: (id: string) =>
       api(`/appointments/${id}/complete`, { method: 'PATCH' }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', slug] })
+      queryClient.invalidateQueries({ queryKey: ['appointments-calendar', slug] })
+    },
   })
 }
 
