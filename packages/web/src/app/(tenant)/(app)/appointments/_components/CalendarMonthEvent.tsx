@@ -24,7 +24,7 @@ export function CalendarMonthEvent({ appointment, color, onClick }: Props) {
   return (
     <button
       className={cn(
-        'w-full flex items-center gap-1 rounded px-1 py-0.5 mb-0.5 text-left overflow-hidden cursor-pointer hover:brightness-90 transition-all border-none',
+        'w-full flex items-center gap-1 rounded px-1 py-0.5 mb-0.5 text-left overflow-hidden cursor-pointer border-none',
         isPast && 'opacity-60',
       )}
       style={{
