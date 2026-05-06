@@ -68,8 +68,11 @@ export function useCancelAppointment() {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (id: string) =>
-      api(`/appointments/${id}/cancel`, { method: 'PATCH' }),
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      api(`/appointments/${id}/cancel`, {
+        method: 'PATCH',
+        body: JSON.stringify({ reason }),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments', slug] })
       queryClient.invalidateQueries({ queryKey: ['appointments-calendar', slug] })

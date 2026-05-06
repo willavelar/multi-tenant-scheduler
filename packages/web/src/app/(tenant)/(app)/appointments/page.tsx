@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAppointments, useCancelAppointment } from '@/hooks/useAppointments'
+import { useAppointments } from '@/hooks/useAppointments'
 import { useServices } from '@/hooks/useServices'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import type { Appointment } from '@/types'
 import { AppointmentFilters } from './_components/AppointmentFilters'
 import { CalendarView } from './_components/CalendarView'
+import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
   pending:   'Aguardando confirmação',
@@ -72,7 +73,6 @@ export default function AppointmentsPage() {
 
   const filters = { dateFrom: effectiveDateFrom, dateTo: effectiveDateTo, serviceId, status, clientId, professionalId }
   const { data, isLoading } = useAppointments(page, filters)
-  const cancel = useCancelAppointment()
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1) }, [timeRange, dateFrom, dateTo, serviceId, status, clientId, professionalId])
@@ -99,11 +99,6 @@ export default function AppointmentsPage() {
   function handleClientInput(value: string) {
     setClientDisplayValue(value)
     if (clientId) setClientId('')
-  }
-
-  function confirmCancel() {
-    if (!cancelId) return
-    cancel.mutate(cancelId, { onSuccess: () => setCancelId(null) })
   }
 
   return (
@@ -284,51 +279,10 @@ export default function AppointmentsPage() {
         )}
       </div>
 
-      {/* Cancel confirmation modal */}
-      {cancelId && (
-        <div
-          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-          onClick={() => !cancel.isPending && setCancelId(null)}
-        >
-          <div
-            className="bg-white rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Icon */}
-            <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mb-4">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-            </div>
-
-            <h2 className="text-base font-bold text-gray-900 m-0 mb-2">
-              Cancelar agendamento
-            </h2>
-            <p className="text-[13.5px] text-gray-500 m-0 mb-6 leading-relaxed">
-              Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
-            </p>
-
-            <div className="flex gap-2.5 justify-end">
-              <button
-                onClick={() => setCancelId(null)}
-                disabled={cancel.isPending}
-                className="px-4 py-[9px] border border-gray-200 bg-white text-gray-700 text-[13.5px] font-semibold rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                Voltar
-              </button>
-              <button
-                onClick={confirmCancel}
-                disabled={cancel.isPending}
-                className="px-5 py-[9px] bg-red-600 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 disabled:opacity-65 transition-colors"
-              >
-                {cancel.isPending ? 'Cancelando...' : 'Sim, cancelar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CancelAppointmentModal
+        appointmentId={cancelId}
+        onClose={() => setCancelId(null)}
+      />
     </>
   )
 }
