@@ -4,28 +4,29 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useAdmin } from '@/hooks/useAdmins'
 import { useMyProfessionalProfile } from '@/hooks/useProfessionals'
 import { useClient } from '@/hooks/useClients'
+import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
 import { AdminDetailView } from '../admins/_components/AdminDetailView'
 import { ProfessionalDetailView } from '../professionals/_components/ProfessionalDetailView'
 import { ClientDetailView } from '../clients/_components/ClientDetailView'
 
 function AdminMe({ userId }: { userId: string }) {
   const { data: admin, isLoading } = useAdmin(userId)
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  if (!admin)    return <div className="p-12 text-gray-400 text-sm">Perfil não encontrado.</div>
+  if (isLoading) return <DetailSkeleton />
+  if (!admin)    return <div className="p-12 text-muted-foreground text-sm">Perfil não encontrado.</div>
   return <AdminDetailView admin={admin} profilePage />
 }
 
 function ProfessionalMe() {
   const { data: prof, isLoading } = useMyProfessionalProfile()
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  if (!prof)     return <div className="p-12 text-gray-400 text-sm">Perfil não encontrado.</div>
+  if (isLoading) return <DetailSkeleton />
+  if (!prof)     return <div className="p-12 text-muted-foreground text-sm">Perfil não encontrado.</div>
   return <ProfessionalDetailView prof={prof} isAdmin={false} isOwnProfile profilePage />
 }
 
 function ClientMe({ userId }: { userId: string }) {
   const { data: client, isLoading } = useClient(userId)
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  if (!client)   return <div className="p-12 text-gray-400 text-sm">Perfil não encontrado.</div>
+  if (isLoading) return <DetailSkeleton />
+  if (!client)   return <div className="p-12 text-muted-foreground text-sm">Perfil não encontrado.</div>
   return <ClientDetailView client={client} isAdmin={false} isOwnProfile profilePage />
 }
 
