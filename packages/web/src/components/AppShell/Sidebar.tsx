@@ -122,7 +122,7 @@ export function Sidebar() {
                 </svg>
               </div>
               <span className="text-[15px] font-bold text-slate-100 tracking-[-0.01em]">
-                {tenantName || 'Scheduler'}
+                {tenantName || process.env.NEXT_PUBLIC_APP_NAME || 'TimoUp'}
               </span>
             </>
           )}

@@ -43,7 +43,7 @@ function getBreadcrumbs(pathname: string): Crumb[] {
   if (segments[0] === 'professionals' && segments.length === 2)
     return [{ label: 'Profissionais', href: '/professionals' }, { label: 'Profissional' }]
 
-  return [{ label: 'Scheduler' }]
+  return [{ label: process.env.NEXT_PUBLIC_APP_NAME ?? 'TimoUp' }]
 }
 
 function initials(name: string) {
