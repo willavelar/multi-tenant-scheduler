@@ -2,6 +2,7 @@
 
 import { useProfessionals } from '@/hooks/useProfessionals'
 import { Card } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Professional } from '@/types'
 
 type Props = {
@@ -15,9 +16,26 @@ function initials(email: string) {
 export function StepProfessional({ onSelect }: Props) {
   const { data: professionals, isLoading, error } = useProfessionals()
 
-  if (isLoading) return <p className="text-gray-500">Carregando profissionais...</p>
+  if (isLoading) return (
+    <div className="space-y-3">
+      <Skeleton className="h-7 w-56" />
+      <div className="grid gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="p-4 border border-border rounded-xl">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
   if (error) return <p className="text-red-500">Erro ao carregar profissionais.</p>
-  if (!professionals?.length) return <p className="text-gray-500">Nenhum profissional disponível.</p>
+  if (!professionals?.length) return <p className="text-muted-foreground">Nenhum profissional disponível.</p>
 
   return (
     <div className="space-y-3">
@@ -43,7 +61,7 @@ export function StepProfessional({ onSelect }: Props) {
               </div>
               <div>
                 <p className="font-medium">Profissional</p>
-                {prof.bio && <p className="text-sm text-gray-500">{prof.bio}</p>}
+                {prof.bio && <p className="text-sm text-muted-foreground">{prof.bio}</p>}
               </div>
             </div>
           </Card>
