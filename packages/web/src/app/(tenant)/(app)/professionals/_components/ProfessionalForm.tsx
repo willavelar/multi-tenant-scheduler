@@ -9,6 +9,7 @@ import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { ScheduleCard, type LocalSlot } from './ScheduleCard'
 import { ExceptionsCard, type LocalException } from './ExceptionsCard'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -69,9 +70,9 @@ export type ProfessionalFormProps = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const inputCls = (hasError = false) => cn(
-  'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors',
+  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
   'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-  hasError ? 'border-red-400' : 'border-gray-200',
+  hasError ? 'border-red-400' : 'border-border',
 )
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -152,8 +153,8 @@ export function ProfessionalForm({
     <form onSubmit={handleSubmit(submit)} noValidate>
 
       {/* ── Card 1: Dados pessoais ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
+      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Dados pessoais</p>
 
         <div className="mb-5">
           <AvatarCropField
@@ -165,14 +166,14 @@ export function ProfessionalForm({
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label htmlFor="prof-name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="prof-name" className="block text-[13px] font-medium text-foreground mb-1.5">
               Nome completo <span className="text-red-500">*</span>
             </label>
             <input id="prof-name" type="text" {...register('name')} className={inputCls(!!errors.name)} />
             {errors.name && <p className="mt-1 text-xs text-red-500 m-0">{errors.name.message}</p>}
           </div>
           <div>
-            <label htmlFor="prof-position" className="block text-[13px] font-medium text-gray-700 mb-1.5">Cargo</label>
+            <label htmlFor="prof-position" className="block text-[13px] font-medium text-foreground mb-1.5">Cargo</label>
             <input id="prof-position" type="text" {...register('position')} className={inputCls(!!errors.position)} />
             {errors.position && <p className="mt-1 text-xs text-red-500 m-0">{errors.position.message}</p>}
           </div>
@@ -181,7 +182,7 @@ export function ProfessionalForm({
         {mode === 'create' && (
           <>
             <div className="mb-4">
-              <label htmlFor="prof-email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="prof-email" className="block text-[13px] font-medium text-foreground mb-1.5">
                 E-mail <span className="text-red-500">*</span>
               </label>
               <input id="prof-email" type="email" {...register('email')} className={inputCls(!!errors.email)} />
@@ -193,16 +194,16 @@ export function ProfessionalForm({
                 id="prof-send-invite"
                 type="checkbox"
                 {...register('sendInvite')}
-                className="w-4 h-4 rounded border-gray-300 text-indigo-500 cursor-pointer accent-indigo-500"
+                className="w-4 h-4 rounded border-border text-indigo-500 cursor-pointer accent-indigo-500"
               />
-              <label htmlFor="prof-send-invite" className="text-[13px] font-medium text-gray-700 cursor-pointer select-none">
+              <label htmlFor="prof-send-invite" className="text-[13px] font-medium text-foreground cursor-pointer select-none">
                 Enviar convite por e-mail para o usuário cadastrar a senha
               </label>
             </div>
 
             {!sendInviteValue && (
               <div>
-                <label htmlFor="prof-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label htmlFor="prof-password" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Senha inicial <span className="text-red-500">*</span>
                 </label>
                 <input id="prof-password" type="password" {...register('password')} className={inputCls(!!errors.password)} />
@@ -214,22 +215,22 @@ export function ProfessionalForm({
       </div>
 
       {/* ── Card 2: Perfil ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Perfil</p>
+      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Perfil</p>
 
         <div className="mb-4">
-          <label htmlFor="prof-bio" className="block text-[13px] font-medium text-gray-700 mb-1.5">Observações</label>
+          <label htmlFor="prof-bio" className="block text-[13px] font-medium text-foreground mb-1.5">Observações</label>
           <textarea
             id="prof-bio"
             {...register('bio')}
             rows={3}
-            className="w-full px-3 py-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+            className="w-full px-3 py-2.5 text-sm text-foreground bg-background rounded-lg border border-border outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
           />
         </div>
 
         {showStatus && (
           <div className="max-w-[220px]">
-            <label htmlFor="prof-active" className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
+            <label htmlFor="prof-active" className="block text-[13px] font-medium text-foreground mb-1.5">Status</label>
             <div className="relative">
               <select
                 id="prof-active"
@@ -240,7 +241,7 @@ export function ProfessionalForm({
                 <option value="true">Ativo</option>
                 <option value="false">Inativo</option>
               </select>
-              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
             </div>
@@ -290,35 +291,26 @@ export function ProfessionalForm({
 
       {/* ── Footer ── */}
       {errors.root && (
-        <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
+        <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 dark:bg-red-500 dark:border-red-500 dark:text-white">
           {errors.root.message}
         </div>
       )}
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
-          className="h-[42px] px-6 bg-indigo-500 text-white text-sm font-semibold rounded-lg border-0 cursor-pointer inline-flex items-center gap-2 hover:bg-indigo-600 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
+          variant="primary"
+          size="lg"
+          loading={isSubmitting}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>}
         >
-          {isSubmitting ? (
-            <>
-              <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-              </svg>
-              Salvando...
-            </>
-          ) : mode === 'create' ? 'Cadastrar profissional' : 'Salvar alterações'}
-        </button>
+          {mode === 'create' ? 'Cadastrar profissional' : 'Salvar alterações'}
+        </Button>
 
         {mode === 'edit' && onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="h-[42px] px-5 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-50 transition-colors"
-          >
+          <Button type="button" variant="secondary" size="lg" onClick={onCancel}>
             Cancelar
-          </button>
+          </Button>
         )}
       </div>
 

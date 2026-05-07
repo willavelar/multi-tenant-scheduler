@@ -8,6 +8,7 @@ import { AvatarName } from '@/components/ui/AvatarName'
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { FormSkeleton } from '@/components/ui/FormSkeleton'
 import type { Professional, Service, ClientDetail } from '@/types'
 
@@ -670,27 +671,18 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       )}
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="submit"
-          disabled={isSubmitting}
-          className="h-[42px] px-6 bg-indigo-500 text-white text-sm font-semibold rounded-lg border-0 cursor-pointer inline-flex items-center gap-2 hover:bg-indigo-600 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
+          variant="primary"
+          size="lg"
+          loading={isSubmitting}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>}
         >
-          {isSubmitting ? (
-            <>
-              <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-              </svg>
-              Salvando...
-            </>
-          ) : mode === 'create' ? 'Cadastrar cliente' : 'Salvar alterações'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="h-[42px] px-5 bg-background text-foreground border border-border rounded-lg text-sm font-medium cursor-pointer hover:bg-accent transition-colors"
-        >
+          {mode === 'create' ? 'Cadastrar cliente' : 'Salvar alterações'}
+        </Button>
+        <Button type="button" variant="secondary" size="lg" onClick={onCancel}>
           Cancelar
-        </button>
+        </Button>
       </div>
 
     </form>
