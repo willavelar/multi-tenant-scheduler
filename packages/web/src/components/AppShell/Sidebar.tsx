@@ -37,15 +37,6 @@ function BriefcaseIcon() {
   )
 }
 
-function UserIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-      <circle cx="12" cy="7" r="4"/>
-    </svg>
-  )
-}
-
 function ShieldIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -102,10 +93,10 @@ export function Sidebar() {
   const settingsItems = SETTINGS_ITEMS.filter(item => role && item.roles.includes(role))
 
   return (
-    <aside className="w-[260px] min-h-screen bg-white fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-gray-200">
+    <aside className="w-[260px] min-h-screen bg-sidebar fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-sidebar-border">
 
       {/* Brand */}
-      <div className="px-5 pt-5 pb-4 border-b border-gray-100">
+      <div className="px-5 pt-5 pb-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
           {tenantLogoUrl ? (
             <img
@@ -121,7 +112,7 @@ export function Sidebar() {
                   <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
               </div>
-              <span className="text-[15px] font-bold text-gray-900 tracking-[-0.01em]">
+              <span className="text-[15px] font-bold text-sidebar-foreground tracking-[-0.01em]">
                 {tenantName || process.env.NEXT_PUBLIC_APP_NAME || 'TimoUp'}
               </span>
             </>
@@ -131,7 +122,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="px-3 pt-4 flex-1">
-        <p className="text-[10px] font-semibold text-gray-400 tracking-[0.08em] uppercase px-3 mb-2">
+        <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-[0.08em] uppercase px-3 mb-2">
           Menu
         </p>
         {items.map(item => {
@@ -143,8 +134,8 @@ export function Sidebar() {
               className={cn(
                 'flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
                 active
-                  ? 'bg-indigo-50 text-indigo-600'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
               )}
             >
               {item.icon}
@@ -155,7 +146,7 @@ export function Sidebar() {
 
         {settingsItems.length > 0 && (
           <>
-            <p className="text-[10px] font-semibold text-gray-400 tracking-[0.08em] uppercase px-3 mb-2 mt-5">
+            <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-[0.08em] uppercase px-3 mb-2 mt-5">
               Configurações
             </p>
             {settingsItems.map(item => {
@@ -167,8 +158,8 @@ export function Sidebar() {
                   className={cn(
                     'flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
                     active
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   )}
                 >
                   {item.icon}
@@ -181,7 +172,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-100 text-[11px] text-gray-400 text-center">
+      <div className="p-3 border-t border-sidebar-border text-[11px] text-sidebar-foreground/40 text-center">
         {slug}
       </div>
     </aside>
