@@ -10,6 +10,7 @@ import { DateTimeCell } from '@/components/ui/DateTimeCell'
 import { ScheduleCard } from './ScheduleCard'
 import { ExceptionsCard } from './ExceptionsCard'
 import type { Professional } from '@/types'
+import { Button } from '@/components/ui/button'
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
 function pickColor(str: string) {
@@ -44,12 +45,9 @@ export function ProfessionalDetailView({ prof, isAdmin, isOwnProfile, profilePag
           : <div />
         }
         {showEdit && (
-          <button
-            className="px-4 py-2 bg-indigo-500 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
-            onClick={() => router.push(`/professionals/${prof.id}/edit`)}
-          >
+          <Button variant="primary" size="md" onClick={() => router.push(`/professionals/${prof.id}/edit`)}>
             {profilePage ? 'Editar' : 'Editar profissional'}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -65,9 +63,9 @@ export function ProfessionalDetailView({ prof, isAdmin, isOwnProfile, profilePag
           </div>
         )}
         <div>
-          <h2 className="m-0 mb-0.5 text-lg font-bold text-gray-900">{prof.name}</h2>
-          <p className="m-0 mb-1 text-[13px] text-gray-500">{prof.email}</p>
-          <code className="text-[11px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+          <h2 className="m-0 mb-0.5 text-lg font-bold text-foreground">{prof.name}</h2>
+          <p className="m-0 mb-1 text-[13px] text-muted-foreground">{prof.email}</p>
+          <code className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
             ID: {prof.id}
           </code>
         </div>
