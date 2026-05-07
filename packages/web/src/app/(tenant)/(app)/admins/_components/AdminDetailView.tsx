@@ -7,6 +7,7 @@ import { FieldRow } from '@/components/ui/FieldRow'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
 import type { Admin } from '@/types'
+import { Button } from '@/components/ui/button'
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
 function pickColor(str: string) {
@@ -32,12 +33,9 @@ export function AdminDetailView({ admin, profilePage }: Props) {
           ? <div />
           : <BackButton href="/admins">Voltar para administradores</BackButton>
         }
-        <button
-          className="px-4 py-2 bg-indigo-500 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
-          onClick={() => router.push(`/admins/${admin.id}/edit`)}
-        >
+        <Button variant="primary" size="md" onClick={() => router.push(`/admins/${admin.id}/edit`)}>
           {profilePage ? 'Editar' : 'Editar administrador'}
-        </button>
+        </Button>
       </div>
 
       <div className="flex items-center gap-4 mb-7">
@@ -52,9 +50,9 @@ export function AdminDetailView({ admin, profilePage }: Props) {
           </div>
         )}
         <div>
-          <h2 className="m-0 mb-0.5 text-lg font-bold text-gray-900">{admin.name}</h2>
-          <p className="m-0 mb-1 text-[13px] text-gray-500">{admin.email}</p>
-          <code className="text-[11px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+          <h2 className="m-0 mb-0.5 text-lg font-bold text-foreground">{admin.name}</h2>
+          <p className="m-0 mb-1 text-[13px] text-muted-foreground">{admin.email}</p>
+          <code className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
             ID: {admin.id}
           </code>
         </div>

@@ -8,6 +8,7 @@ import { DangerZone } from '@/components/ui/DangerZone'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { AvatarName } from '@/components/ui/AvatarName'
 import type { ClientDetail } from '@/types'
+import { Button } from '@/components/ui/button'
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
 function pickColor(str: string) {
@@ -54,12 +55,9 @@ export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, o
           : <div />
         }
         {showEdit && (
-          <button
-            className="px-4 py-2 bg-indigo-500 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
-            onClick={() => router.push(`/clients/${client.id}/edit`)}
-          >
+          <Button variant="primary" size="md" onClick={() => router.push(`/clients/${client.id}/edit`)}>
             {profilePage ? 'Editar' : 'Editar cliente'}
-          </button>
+          </Button>
         )}
       </div>
 
@@ -75,9 +73,9 @@ export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, o
           </div>
         )}
         <div>
-          <h2 className="m-0 mb-0.5 text-lg font-bold text-gray-900">{client.name}</h2>
-          <p className="m-0 mb-1 text-[13px] text-gray-500">{client.email}</p>
-          <code className="text-[11px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+          <h2 className="m-0 mb-0.5 text-lg font-bold text-foreground">{client.name}</h2>
+          <p className="m-0 mb-1 text-[13px] text-muted-foreground">{client.email}</p>
+          <code className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
             ID: {client.id}
           </code>
         </div>
@@ -99,7 +97,7 @@ export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, o
           client.allProfessionals ? (
             <span className="text-green-700 font-medium">Todos os profissionais</span>
           ) : client.linkedProfessionals.length === 0 ? (
-            <span className="text-gray-400 font-normal">Sem restrição</span>
+            <span className="text-muted-foreground font-normal">Sem restrição</span>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {client.linkedProfessionals.map(p => (
@@ -114,7 +112,7 @@ export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, o
           client.allServices ? (
             <span className="text-green-700 font-medium">Todos os serviços</span>
           ) : client.linkedServices.length === 0 ? (
-            <span className="text-gray-400 font-normal">Sem restrição</span>
+            <span className="text-muted-foreground font-normal">Sem restrição</span>
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {client.linkedServices.map(s => (
