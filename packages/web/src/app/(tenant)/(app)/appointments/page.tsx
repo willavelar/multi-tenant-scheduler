@@ -13,6 +13,7 @@ import type { Appointment } from '@/types'
 import { AppointmentFilters } from './_components/AppointmentFilters'
 import { CalendarView } from './_components/CalendarView'
 import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
+import { CancellationDeadlineBanner } from './_components/CancellationDeadlineBanner'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
   pending:   'Aguardando confirmação',
@@ -146,6 +147,8 @@ export default function AppointmentsPage() {
             Novo agendamento
           </button>
         </div>
+
+        <CancellationDeadlineBanner />
 
         {/* Filters — always visible, viewMode controls what's shown inside */}
         <AppointmentFilters
