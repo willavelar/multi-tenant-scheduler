@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ApiError } from '@/lib/api'
+import { Button } from '@/components/ui/button'
 
 type BlockingAppointment = {
   id: string
@@ -79,72 +80,56 @@ export function DangerZone({ title, description, onDelete, onForceDelete, delete
   if (blocking !== null) {
     return (
       <div className="mt-2">
-        <h3 className="text-sm font-bold text-red-600 m-0 mb-3">Zona de perigo</h3>
-        <div className="bg-white border border-red-200 rounded-xl px-6 py-5 shadow-sm">
-          <p className="text-sm font-semibold text-gray-900 m-0 mb-1.5">{title}</p>
-          <p className="text-[13px] text-red-600 m-0 mb-3">
+        <h3 className="text-sm font-bold text-red-500 m-0 mb-3">Zona de perigo</h3>
+        <div className="bg-card border border-red-200 dark:border-red-900/50 rounded-xl px-6 py-5 shadow-sm">
+          <p className="text-sm font-semibold text-foreground m-0 mb-1.5">{title}</p>
+          <p className="text-[13px] text-red-500 m-0 mb-3">
             Não é possível excluir: {blocking.length} agendamento{blocking.length !== 1 ? 's' : ''} futuro{blocking.length !== 1 ? 's' : ''} vinculado{blocking.length !== 1 ? 's' : ''}.
           </p>
 
           <ul className="m-0 mb-4 p-0 list-none flex flex-col gap-2">
             {blocking.map(apt => (
-              <li key={apt.id} className="text-[13px] text-gray-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              <li key={apt.id} className="text-[13px] text-foreground bg-red-500/8 border border-red-500/20 rounded-lg px-3 py-2">
                 <span className="font-medium">{formatDateTime(apt.startsAt)}</span>
                 {apt.serviceName && <>{' — '}{apt.serviceName}</>}
-                {apt.clientName       && <span className="text-gray-500"> · {apt.clientName}</span>}
-                {apt.professionalName && <span className="text-gray-500"> · {apt.professionalName}</span>}
+                {apt.clientName       && <span className="text-muted-foreground"> · {apt.clientName}</span>}
+                {apt.professionalName && <span className="text-muted-foreground"> · {apt.professionalName}</span>}
               </li>
             ))}
           </ul>
 
           {onForceDelete && !forceConfirm && (
             <div className="flex items-center gap-3">
-              <button
-                onClick={() => setForceConfirm(true)}
-                className="px-4 py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 transition-colors"
-              >
+              <Button variant="destructive" size="md" onClick={() => setForceConfirm(true)}>
                 Cancelar todos e excluir
-              </button>
-              <button
-                onClick={() => setBlocking(null)}
-                className="px-4 py-2 bg-white text-gray-700 text-[13px] font-medium rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-              >
+              </Button>
+              <Button variant="secondary" size="md" onClick={() => setBlocking(null)}>
                 Manter
-              </button>
+              </Button>
             </div>
           )}
 
           {onForceDelete && forceConfirm && (
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-[13px] text-red-700 font-medium">
+              <span className="text-[13px] text-red-500 font-medium">
                 Isso cancelará {blocking.length} agendamento{blocking.length !== 1 ? 's' : ''}. Confirma?
               </span>
-              <button
-                onClick={handleForceDelete}
-                disabled={forcePending}
-                className="px-4 py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
-              >
+              <Button variant="destructive" size="md" loading={forcePending} onClick={handleForceDelete}>
                 {forcePending ? 'Excluindo...' : 'Sim, cancelar e excluir'}
-              </button>
-              <button
-                onClick={() => setForceConfirm(false)}
-                className="px-4 py-2 bg-white text-gray-700 text-[13px] font-medium rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-              >
+              </Button>
+              <Button variant="secondary" size="md" onClick={() => setForceConfirm(false)}>
                 Não
-              </button>
+              </Button>
             </div>
           )}
 
           {!onForceDelete && (
-            <button
-              onClick={() => setBlocking(null)}
-              className="px-4 py-2 bg-white text-gray-700 text-[13px] font-medium rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-            >
+            <Button variant="secondary" size="md" onClick={() => setBlocking(null)}>
               Fechar
-            </button>
+            </Button>
           )}
 
-          {error && <p className="text-xs text-red-600 mt-2.5 m-0">{error}</p>}
+          {error && <p className="text-xs text-red-500 mt-2.5 m-0">{error}</p>}
         </div>
       </div>
     )
@@ -152,38 +137,28 @@ export function DangerZone({ title, description, onDelete, onForceDelete, delete
 
   return (
     <div className="mt-2">
-      <h3 className="text-sm font-bold text-red-600 m-0 mb-3">Zona de perigo</h3>
-      <div className="bg-white border border-red-200 rounded-xl px-6 py-5 shadow-sm">
-        <p className="text-sm font-semibold text-gray-900 m-0 mb-1.5">{title}</p>
-        <p className="text-[13px] text-gray-500 m-0 mb-4">{description}</p>
+      <h3 className="text-sm font-bold text-red-500 m-0 mb-3">Zona de perigo</h3>
+      <div className="bg-card border border-red-200 dark:border-red-900/50 rounded-xl px-6 py-5 shadow-sm">
+        <p className="text-sm font-semibold text-foreground m-0 mb-1.5">{title}</p>
+        <p className="text-[13px] text-muted-foreground m-0 mb-4">{description}</p>
 
         {!confirm ? (
-          <button
-            onClick={() => setConfirm(true)}
-            className="px-4 py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 transition-colors"
-          >
+          <Button variant="destructive" size="md" onClick={() => setConfirm(true)}>
             {deleteLabel}
-          </button>
+          </Button>
         ) : (
           <div className="flex items-center gap-3">
-            <span className="text-[13px] text-red-700 font-medium">Tem certeza?</span>
-            <button
-              onClick={handleDelete}
-              disabled={pending}
-              className="px-4 py-2 bg-red-600 text-white text-[13px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
-            >
+            <span className="text-[13px] text-red-500 font-medium">Tem certeza?</span>
+            <Button variant="destructive" size="md" loading={pending} onClick={handleDelete}>
               {pending ? 'Excluindo...' : 'Sim, excluir'}
-            </button>
-            <button
-              onClick={() => setConfirm(false)}
-              className="px-4 py-2 bg-white text-gray-700 text-[13px] font-medium rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors"
-            >
+            </Button>
+            <Button variant="secondary" size="md" onClick={() => setConfirm(false)}>
               Cancelar
-            </button>
+            </Button>
           </div>
         )}
 
-        {error && <p className="text-xs text-red-600 mt-2.5 m-0">{error}</p>}
+        {error && <p className="text-xs text-red-500 mt-2.5 m-0">{error}</p>}
       </div>
     </div>
   )
