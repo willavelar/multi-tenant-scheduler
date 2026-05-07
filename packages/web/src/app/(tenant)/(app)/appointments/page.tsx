@@ -14,6 +14,7 @@ import { AppointmentFilters } from './_components/AppointmentFilters'
 import { CalendarView } from './_components/CalendarView'
 import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
 import { CancellationDeadlineBanner } from './_components/CancellationDeadlineBanner'
+import { TableSkeleton } from '@/components/ui/TableSkeleton'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
   pending:   'Aguardando confirmação',
@@ -109,9 +110,9 @@ export default function AppointmentsPage() {
         {/* Page header: toggle left + "Novo agendamento" right */}
         <div className="flex items-center justify-between mb-4">
           {/* View mode toggle */}
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm flex">
+          <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm flex">
             <button
-              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer ${viewMode === 'calendar' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer ${viewMode === 'calendar' ? 'bg-indigo-500 text-white' : 'text-muted-foreground hover:bg-accent'}`}
               onClick={() => setViewMode('calendar')}
             >
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -122,7 +123,7 @@ export default function AppointmentsPage() {
               Calendário
             </button>
             <button
-              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-indigo-500 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+              className={`flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-indigo-500 text-white' : 'text-muted-foreground hover:bg-accent'}`}
               onClick={() => setViewMode('list')}
             >
               <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -183,9 +184,9 @@ export default function AppointmentsPage() {
           <CalendarView filters={{ serviceId, status, clientId, professionalId }} />
         ) : (
           /* List view — table + pagination */
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
             {isLoading ? (
-              <div className="p-12 text-center text-gray-400 text-sm">Carregando...</div>
+              <TableSkeleton cols={7} />
             ) : !appointments.length ? (
               <EmptyState
                 title="Nenhum agendamento"
@@ -196,9 +197,9 @@ export default function AppointmentsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse text-[13px]">
                     <thead>
-                      <tr className="border-b border-gray-100">
+                      <tr className="border-b border-border">
                         {['Agendado em', 'Cliente', 'Profissional', 'Serviço', 'Status', 'Cadastrado em', 'Ação'].map(col => (
-                          <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-[0.06em] whitespace-nowrap">
+                          <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
                             {col}
                           </th>
                         ))}
@@ -206,7 +207,7 @@ export default function AppointmentsPage() {
                     </thead>
                     <tbody>
                       {appointments.map((appt: Appointment) => (
-                        <tr key={appt.id} className="border-b border-gray-50 transition-colors hover:bg-gray-50">
+                        <tr key={appt.id} className="border-b border-border transition-colors hover:bg-accent">
                           <td className="px-4 py-3.5">
                             <DateTimeCell iso={appt.startsAt} />
                           </td>
@@ -220,7 +221,7 @@ export default function AppointmentsPage() {
                               <AvatarName name={appt.professionalName} avatarUrl={appt.professionalAvatarUrl} />
                             </Link>
                           </td>
-                          <td className="px-4 py-3.5 whitespace-nowrap text-gray-500">
+                          <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
                             {appt.serviceName}
                           </td>
                           <td className="px-4 py-3.5">
@@ -235,7 +236,7 @@ export default function AppointmentsPage() {
                           <td className="px-4 py-3.5">
                             {(appt.status === 'pending' || appt.status === 'confirmed') && (
                               <button
-                                className="px-3 py-[5px] border border-red-200 bg-white text-red-600 rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                className="px-3 py-[5px] bg-red-500 text-white rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                 onClick={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}
                               >
                                 Cancelar
@@ -249,13 +250,13 @@ export default function AppointmentsPage() {
                 </div>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-                  <p className="text-[13px] text-gray-500 m-0">
+                <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                  <p className="text-[13px] text-muted-foreground m-0">
                     Página {page} de {totalPages}
                   </p>
                   <div className="flex gap-2">
                     <button
-                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-border bg-background text-foreground rounded-md text-[13px] font-medium cursor-pointer hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       onClick={() => setPage(p => p - 1)}
                       disabled={page <= 1}
                     >
@@ -265,7 +266,7 @@ export default function AppointmentsPage() {
                       Anterior
                     </button>
                     <button
-                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-gray-200 bg-white text-gray-700 rounded-md text-[13px] font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-border bg-background text-foreground rounded-md text-[13px] font-medium cursor-pointer hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       onClick={() => setPage(p => p + 1)}
                       disabled={page >= totalPages}
                     >

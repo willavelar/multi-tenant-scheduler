@@ -15,6 +15,7 @@ import { CalendarDayGrid } from './CalendarDayGrid'
 import { CalendarMonthGrid } from './CalendarMonthGrid'
 import { AppointmentPopover } from './AppointmentPopover'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type CalendarMode = 'day' | 'week' | 'month'
 
@@ -93,9 +94,9 @@ export function CalendarView({ filters }: Props) {
     : []
 
   return (
-    <div className="flex flex-col bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm h-[calc(100vh-240px)] min-h-[500px]">
+    <div className="flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm h-[calc(100vh-240px)] min-h-[500px]">
       {/* Calendar nav header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-3">
           <button
             className="px-3 py-1.5 bg-indigo-500 text-white text-[12.5px] font-semibold rounded-lg border-none cursor-pointer hover:bg-indigo-600 transition-colors"
@@ -105,28 +106,28 @@ export function CalendarView({ filters }: Props) {
           </button>
           <div className="flex gap-0.5">
             <button
-              className="w-8 h-8 flex items-center justify-center border border-gray-200 bg-white rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-gray-600"
+              className="w-8 h-8 flex items-center justify-center border border-border bg-background rounded-lg cursor-pointer hover:bg-accent transition-colors text-muted-foreground"
               onClick={() => navigate('prev')}
             >
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
             </button>
             <button
-              className="w-8 h-8 flex items-center justify-center border border-gray-200 bg-white rounded-lg cursor-pointer hover:bg-gray-50 transition-colors text-gray-600"
+              className="w-8 h-8 flex items-center justify-center border border-border bg-background rounded-lg cursor-pointer hover:bg-accent transition-colors text-muted-foreground"
               onClick={() => navigate('next')}
             >
               <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </button>
           </div>
-          <span className="text-[15px] font-bold text-gray-900">{title}</span>
+          <span className="text-[15px] font-bold text-foreground">{title}</span>
         </div>
 
-        <div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
+        <div className="flex bg-muted rounded-lg p-0.5 gap-0.5">
           {(['day', 'week', 'month'] as const).map(m => (
             <button
               key={m}
               className={cn(
                 'px-3 py-1.5 text-[12.5px] font-semibold rounded-md border-none cursor-pointer transition-colors',
-                mode === m ? 'bg-indigo-500 text-white shadow-sm' : 'bg-transparent text-gray-600 hover:bg-white'
+                mode === m ? 'bg-indigo-500 text-white shadow-sm' : 'bg-transparent text-muted-foreground hover:bg-background'
               )}
               onClick={() => setMode(m)}
             >
@@ -139,8 +140,12 @@ export function CalendarView({ filters }: Props) {
       {/* Grid area */}
       <div className="flex-1 overflow-hidden relative">
         {isLoading && (
-          <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-20">
-            <span className="text-sm text-gray-400">Carregando...</span>
+          <div className="absolute inset-0 bg-background/60 flex items-center justify-center z-20">
+            <div className="flex flex-col gap-2 w-32">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-4/5" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
           </div>
         )}
         {mode === 'week' && (
