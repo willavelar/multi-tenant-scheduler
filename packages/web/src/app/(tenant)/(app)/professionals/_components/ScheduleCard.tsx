@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   useWeeklyAvailability,
   useCreateWeeklyAvailability,
@@ -28,25 +29,6 @@ export type LocalSlot = { _key: string; dayOfWeek: number; startTime: string; en
 
 // ── Shared small components ───────────────────────────────────────────────────
 
-function TextBtn({ label, onClick, disabled, variant = 'default' }: { label: string; onClick: () => void; disabled?: boolean; variant?: 'default' | 'danger' }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        'h-7 px-2.5 text-xs font-medium rounded-md border cursor-pointer transition-colors',
-        variant === 'danger'
-          ? 'border-red-200 text-red-500 hover:bg-red-50'
-          : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground',
-        disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
-      )}
-    >
-      {label}
-    </button>
-  )
-}
-
 function AddForm({ onConfirm, onCancel }: { onConfirm: (s: string, e: string) => void; onCancel: () => void }) {
   const [start, setStart] = useState('08:00')
   const [end, setEnd]     = useState('18:00')
@@ -67,10 +49,7 @@ function AddForm({ onConfirm, onCancel }: { onConfirm: (s: string, e: string) =>
         className="h-7 px-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-md cursor-pointer hover:bg-emerald-600 transition-colors">
         Confirmar
       </button>
-      <button type="button" onClick={onCancel}
-        className="h-7 px-2.5 border border-border text-muted-foreground text-xs font-medium rounded-md cursor-pointer hover:bg-accent transition-colors">
-        Cancelar
-      </button>
+      <Button variant="secondary" size="xs" type="button" onClick={onCancel}>Cancelar</Button>
     </div>
   )
 }
@@ -143,7 +122,7 @@ function CreateDayRows({ dayValue, slots, adding, onAdd, onRemove, onOpenAdd, on
         {slots.length === 0 && !adding && (
           <div className="flex items-center gap-2">
             <span className="text-[13px] text-muted-foreground italic">Indisponível</span>
-            <TextBtn label="Adicionar" onClick={onOpenAdd} />
+            <Button variant="secondary" size="xs" onClick={onOpenAdd}>Adicionar</Button>
           </div>
         )}
         {slots.map((slot, idx) => (
@@ -152,8 +131,8 @@ function CreateDayRows({ dayValue, slots, adding, onAdd, onRemove, onOpenAdd, on
             <span className="text-muted-foreground text-sm">–</span>
             <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
             <div className="flex items-center gap-1 ml-1">
-              <TextBtn label="Remover" onClick={() => onRemove(slot._key)} variant="danger" />
-              {idx === 0 && <TextBtn label="Adicionar" onClick={onOpenAdd} />}
+              <Button variant="destructive-outline" size="xs" onClick={() => onRemove(slot._key)}>Remover</Button>
+              {idx === 0 && <Button variant="secondary" size="xs" onClick={onOpenAdd}>Adicionar</Button>}
             </div>
           </div>
         ))}
@@ -248,7 +227,7 @@ function EditDayRows({ dayValue, slots, adding, busy, onAdd, onRemove, onOpenAdd
         {slots.length === 0 && !adding && (
           <div className="flex items-center gap-2">
             <span className="text-[13px] text-muted-foreground italic">Indisponível</span>
-            <TextBtn label="Adicionar" onClick={onOpenAdd} disabled={busy} />
+            <Button variant="secondary" size="xs" disabled={busy} onClick={onOpenAdd}>Adicionar</Button>
           </div>
         )}
         {slots.map((slot, idx) => (
@@ -257,8 +236,8 @@ function EditDayRows({ dayValue, slots, adding, busy, onAdd, onRemove, onOpenAdd
             <span className="text-muted-foreground text-sm">–</span>
             <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
             <div className="flex items-center gap-1 ml-1">
-              <TextBtn label="Remover" onClick={() => onRemove(slot.id)} disabled={busy} variant="danger" />
-              {idx === 0 && <TextBtn label="Adicionar" onClick={onOpenAdd} disabled={busy} />}
+              <Button variant="destructive-outline" size="xs" disabled={busy} onClick={() => onRemove(slot.id)}>Remover</Button>
+              {idx === 0 && <Button variant="secondary" size="xs" disabled={busy} onClick={onOpenAdd}>Adicionar</Button>}
             </div>
           </div>
         ))}
