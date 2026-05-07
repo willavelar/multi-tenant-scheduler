@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useService, useUpdateService } from '@/hooks/useServices'
 import { BackButton } from '@/components/ui/BackButton'
 import { ServiceForm, type ServiceFormData } from '../../_components/ServiceForm'
+import { FormSkeleton } from '@/components/ui/FormSkeleton'
 
 export default function EditServicePage() {
   const { id } = useParams<{ id: string }>()
@@ -13,7 +14,7 @@ export default function EditServicePage() {
   const { mutateAsync } = useUpdateService(id)
 
   if (isLoading || !service) {
-    return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
+    return <FormSkeleton fields={4} />
   }
 
   return (
