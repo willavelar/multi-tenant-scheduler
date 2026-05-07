@@ -15,6 +15,7 @@ import { BackButton } from '@/components/ui/BackButton'
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { ClientSearchField } from '@/components/ui/ClientSearchField'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Professional, Service, ClientDetail } from '@/types'
 
 function today() {
@@ -55,26 +56,26 @@ function Section({ step, current, title, children }: {
 
   return (
     <div className={cn(
-      'bg-white border transition-colors',
-      active ? 'border-indigo-500 shadow-[0_0_0_3px_rgba(99,102,241,0.10)]' : 'border-gray-200 shadow-sm',
+      'bg-card border transition-colors',
+      active ? 'border-indigo-500 shadow-[0_0_0_3px_rgba(99,102,241,0.10)]' : 'border-border shadow-sm',
       'rounded-xl',
     )}>
       <div className={cn(
         'flex items-center gap-3 px-5 py-3.5 transition-colors',
-        locked ? 'bg-gray-50' : 'bg-white',
-        active ? 'border-b border-gray-200' : '',
+        locked ? 'bg-muted' : 'bg-card',
+        active ? 'border-b border-border' : '',
         locked ? 'rounded-xl' : 'rounded-t-xl',
       )}>
         <div className={cn(
           'w-[26px] h-[26px] rounded-full shrink-0 flex items-center justify-center text-xs font-bold',
-          done || active ? 'bg-indigo-500 text-white' : 'bg-gray-200 text-gray-400',
+          done || active ? 'bg-indigo-500 text-white' : 'bg-muted text-muted-foreground',
         )}
         >
           {done
             ? <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
             : step}
         </div>
-        <span className={cn('text-sm font-semibold', locked ? 'text-gray-400' : 'text-gray-900')}>
+        <span className={cn('text-sm font-semibold', locked ? 'text-muted-foreground' : 'text-foreground')}>
           {title}
         </span>
       </div>
@@ -88,10 +89,10 @@ function Section({ step, current, title, children }: {
 function SelectionSummary({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <>
-      <span className="text-[13.5px] text-gray-700 font-medium">{label}</span>
+      <span className="text-[13.5px] text-foreground font-medium">{label}</span>
       <button
         onClick={onClear}
-        className="text-xs text-indigo-500 font-semibold bg-transparent border-none cursor-pointer px-2 py-0.5 rounded-md transition-colors hover:bg-indigo-50"
+        className="text-xs text-indigo-500 font-semibold bg-transparent border-none cursor-pointer px-2 py-0.5 rounded-md transition-colors hover:bg-indigo-500/10"
       >
         Alterar
       </button>
@@ -212,7 +213,7 @@ export default function CreateAppointmentPage() {
           <Section step={1} current={step} title="Cliente">
             {step === 1 ? (
               <div>
-                <p className="text-[13px] text-gray-500 mb-3">
+                <p className="text-[13px] text-muted-foreground mb-3">
                   Busque pelo nome ou e-mail do cliente (mínimo 3 caracteres).
                 </p>
                 <ClientSearchField
@@ -233,9 +234,16 @@ export default function CreateAppointmentPage() {
         <Section step={isAdminOrProfessional ? 2 : 1} current={step} title="Serviço">
           {step === (isAdminOrProfessional ? 2 : 1) ? (
             loadingServices || (isAdminOrProfessional && loadingProfile && !!clientId) ? (
-              <p className="text-[13px] text-gray-400">Carregando...</p>
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="px-3.5 py-3 border border-border rounded-lg">
+                    <Skeleton className="h-4 w-3/4 mb-1.5" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                ))}
+              </div>
             ) : availableServices.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Nenhum serviço disponível para este cliente.</p>
+              <p className="text-[13px] text-muted-foreground">Nenhum serviço disponível para este cliente.</p>
             ) : (
               <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
                 {availableServices.map((svc: Service) => (
@@ -243,13 +251,13 @@ export default function CreateAppointmentPage() {
                     key={svc.id}
                     onClick={() => setServiceId(svc.id)}
                     className={cn(
-                      'px-3.5 py-3 border-[1.5px] rounded-lg cursor-pointer text-left transition-[border-color,background] hover:border-indigo-300 hover:bg-indigo-50/60',
-                      serviceId === svc.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white',
+                      'px-3.5 py-3 border-[1.5px] rounded-lg cursor-pointer text-left transition-[border-color,background] hover:border-indigo-400 hover:bg-indigo-500/10',
+                      serviceId === svc.id ? 'border-indigo-500 bg-indigo-500/15' : 'border-border bg-card',
                     )}
                   >
-                    <p className="m-0 mb-1 text-[13.5px] font-semibold text-gray-900">{svc.name}</p>
-                    <p className="m-0 text-xs text-gray-500">{svc.durationMinutes} min</p>
-                    {svc.description && <p className="mt-1 m-0 text-xs text-gray-400">{svc.description}</p>}
+                    <p className="m-0 mb-1 text-[13.5px] font-semibold text-foreground">{svc.name}</p>
+                    <p className="m-0 text-xs text-muted-foreground">{svc.durationMinutes} min</p>
+                    {svc.description && <p className="mt-1 m-0 text-xs text-muted-foreground">{svc.description}</p>}
                   </button>
                 ))}
               </div>
@@ -266,9 +274,16 @@ export default function CreateAppointmentPage() {
         <Section step={isAdminOrProfessional ? 3 : 2} current={step} title="Profissional">
           {step === (isAdminOrProfessional ? 3 : 2) ? (
             loadingProfs || (isAdminOrProfessional && loadingProfile && !!clientId) ? (
-              <p className="text-[13px] text-gray-400">Carregando...</p>
+              <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="px-3.5 py-3 border border-border rounded-lg">
+                    <Skeleton className="h-9 w-9 rounded-full mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                ))}
+              </div>
             ) : availableProfessionals.length === 0 ? (
-              <p className="text-[13px] text-gray-400">Nenhum profissional disponível para este cliente.</p>
+              <p className="text-[13px] text-muted-foreground">Nenhum profissional disponível para este cliente.</p>
             ) : (
               <div className="grid gap-2.5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
                 {availableProfessionals.map((prof: Professional) => (
@@ -276,8 +291,8 @@ export default function CreateAppointmentPage() {
                     key={prof.id}
                     onClick={() => setProfessionalId(prof.id)}
                     className={cn(
-                      'px-3.5 py-3 border-[1.5px] rounded-lg cursor-pointer text-left transition-[border-color,background] hover:border-indigo-300 hover:bg-indigo-50/60',
-                      professionalId === prof.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 bg-white',
+                      'px-3.5 py-3 border-[1.5px] rounded-lg cursor-pointer text-left transition-[border-color,background] hover:border-indigo-400 hover:bg-indigo-500/10',
+                      professionalId === prof.id ? 'border-indigo-500 bg-indigo-500/15' : 'border-border bg-card',
                     )}
                   >
                     {prof.avatarUrl ? (
@@ -287,8 +302,8 @@ export default function CreateAppointmentPage() {
                         {prof.name.slice(0, 2).toUpperCase()}
                       </div>
                     )}
-                    <p className="m-0 text-[13.5px] font-semibold text-gray-900">{prof.name}</p>
-                    {prof.position && <p className="mt-0.5 m-0 text-xs text-gray-400">{prof.position}</p>}
+                    <p className="m-0 text-[13.5px] font-semibold text-foreground">{prof.name}</p>
+                    {prof.position && <p className="mt-0.5 m-0 text-xs text-muted-foreground">{prof.position}</p>}
                   </button>
                 ))}
               </div>
@@ -303,7 +318,7 @@ export default function CreateAppointmentPage() {
           {step === (isAdminOrProfessional ? 4 : 3) ? (
             <div>
               <div className="mb-5">
-                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-[0.06em]">
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-[0.06em]">
                   Data
                 </label>
                 <DatePickerField
@@ -316,13 +331,17 @@ export default function CreateAppointmentPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-2.5 uppercase tracking-[0.06em]">
+                <label className="block text-xs font-semibold text-muted-foreground mb-2.5 uppercase tracking-[0.06em]">
                   Horários disponíveis
                 </label>
                 {loadingSlots ? (
-                  <p className="text-[13px] text-gray-400">Carregando horários...</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <Skeleton key={i} className="h-9 w-16 rounded-lg" />
+                    ))}
+                  </div>
                 ) : slots.length === 0 ? (
-                  <p className="text-[13px] text-gray-400">Nenhum horário disponível para esta data.</p>
+                  <p className="text-[13px] text-muted-foreground">Nenhum horário disponível para esta data.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {slots.map((slot: string) => (
@@ -332,10 +351,10 @@ export default function CreateAppointmentPage() {
                         className={cn(
                           'px-3.5 py-2 border-[1.5px] rounded-lg text-[13px] font-semibold transition-[border-color,background,color]',
                           limitExceeded && startTime !== slot
-                            ? 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed opacity-60'
+                            ? 'border-border bg-muted text-muted-foreground cursor-not-allowed opacity-60'
                             : startTime === slot
-                              ? 'border-indigo-500 bg-indigo-50 text-indigo-700 cursor-pointer'
-                              : 'border-gray-200 bg-white text-gray-700 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700',
+                              ? 'border-indigo-500 bg-indigo-500/15 text-indigo-500 cursor-pointer'
+                              : 'border-border bg-card text-foreground cursor-pointer hover:border-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-500',
                         )}
                       >
                         {formatTime(slot)}
@@ -362,7 +381,7 @@ export default function CreateAppointmentPage() {
         <Section step={confirmStep} current={step} title="Confirmar agendamento">
           {step === confirmStep && (
             <div>
-              <div className="bg-gray-50 rounded-lg px-4 py-3.5 mb-5 flex flex-col gap-2">
+              <div className="bg-muted rounded-lg px-4 py-3.5 mb-5 flex flex-col gap-2">
                 {[
                   ...(isAdminOrProfessional ? [{ label: 'Cliente', value: clientName }] : []),
                   { label: 'Serviço',      value: `${selectedService?.name} · ${selectedService?.durationMinutes} min` },
@@ -371,15 +390,15 @@ export default function CreateAppointmentPage() {
                   { label: 'Horário',      value: startTime ? formatTime(startTime) : '' },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-[13.5px]">
-                    <span className="text-gray-500">{label}</span>
-                    <span className="font-semibold text-gray-900">{value}</span>
+                    <span className="text-muted-foreground">{label}</span>
+                    <span className="font-semibold text-foreground">{value}</span>
                   </div>
                 ))}
               </div>
 
               {showStatusPicker && (
                 <div className="mb-5">
-                  <label className="block text-xs font-semibold text-gray-500 mb-2.5 uppercase tracking-[0.06em]">
+                  <label className="block text-xs font-semibold text-muted-foreground mb-2.5 uppercase tracking-[0.06em]">
                     Status inicial
                   </label>
                   <div className="flex gap-2">
@@ -391,8 +410,8 @@ export default function CreateAppointmentPage() {
                         className={cn(
                           'px-3.5 py-2.5 border-[1.5px] rounded-lg cursor-pointer text-[13px] font-semibold transition-[border-color,background,color]',
                           initialStatus === s
-                            ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:bg-indigo-50/60 hover:text-indigo-700',
+                            ? 'border-indigo-500 bg-indigo-500/15 text-indigo-500'
+                            : 'border-border bg-card text-foreground hover:border-indigo-400 hover:bg-indigo-500/10 hover:text-indigo-500',
                         )}
                       >
                         {s === 'pending' ? 'Aguardando confirmação' : 'Confirmado'}
