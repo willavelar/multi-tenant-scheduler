@@ -5,6 +5,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useProfessional, useUpdateProfessional } from '@/hooks/useProfessionals'
 import { BackButton } from '@/components/ui/BackButton'
 import { ProfessionalForm, type ProfessionalFormData } from '../../_components/ProfessionalForm'
+import { FormSkeleton } from '@/components/ui/FormSkeleton'
 
 export default function EditProfessionalPage() {
   const { id } = useParams<{ id: string }>()
@@ -16,9 +17,8 @@ export default function EditProfessionalPage() {
   const isOwnProfile = !!prof && prof.userId === me?.id
   const { mutateAsync } = useUpdateProfessional(id)
 
-  if (isLoading || !prof) {
-    return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  }
+  if (isLoading) return <FormSkeleton />
+  if (!prof)     return <div className="p-12 text-muted-foreground text-sm">Profissional não encontrado.</div>
 
   async function handleSubmit(data: ProfessionalFormData) {
     await mutateAsync({

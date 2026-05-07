@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useProfessional, useDeleteProfessional, useForceDeleteProfessional } from '@/hooks/useProfessionals'
 import { ProfessionalDetailView } from '../_components/ProfessionalDetailView'
+import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
 
 export default function ProfessionalDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,8 +16,8 @@ export default function ProfessionalDetailPage() {
   const del      = useDeleteProfessional()
   const forceDel = useForceDeleteProfessional()
 
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  if (!prof)     return <div className="p-12 text-gray-400 text-sm">Profissional não encontrado.</div>
+  if (isLoading) return <DetailSkeleton />
+  if (!prof)     return <div className="p-12 text-muted-foreground text-sm">Profissional não encontrado.</div>
 
   const isOwnProfile = prof.userId === me?.id
   const canDelete    = isAdmin && !isOwnProfile
