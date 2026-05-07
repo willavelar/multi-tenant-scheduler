@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useCancelAppointment } from '@/hooks/useAppointments'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { useAuth } from '@/providers/AuthProvider'
+import { Button } from '@/components/ui/button'
 
 const UNIT_MS = { minutes: 60_000, hours: 3_600_000, days: 86_400_000 } as const
 
@@ -36,7 +37,7 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
         onClick={onClose}
       >
         <div
-          className="bg-white rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
+          className="bg-card rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
           onClick={e => e.stopPropagation()}
         >
           <div className="w-11 h-11 rounded-full bg-amber-50 flex items-center justify-center mb-4">
@@ -46,19 +47,16 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
               <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
           </div>
-          <h2 className="text-base font-bold text-gray-900 m-0 mb-2">
+          <h2 className="text-base font-bold text-foreground m-0 mb-2">
             Prazo de cancelamento encerrado
           </h2>
-          <p className="text-[13.5px] text-gray-500 m-0 mb-5 leading-relaxed">
+          <p className="text-[13.5px] text-muted-foreground m-0 mb-5 leading-relaxed">
             O prazo para cancelar este agendamento já passou. Entre em contato com o estabelecimento caso precise de ajuda.
           </p>
           <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-[9px] border border-gray-200 bg-white text-gray-700 text-[13.5px] font-semibold rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-            >
+            <Button variant="secondary" size="md" onClick={onClose}>
               Fechar
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -88,10 +86,10 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
       onClick={() => !cancelMut.isPending && onClose()}
     >
       <div
-        className="bg-white rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
+        className="bg-card rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center mb-4">
+        <div className="w-11 h-11 rounded-full bg-red-50 dark:bg-red-500/20 flex items-center justify-center mb-4">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round">
             <circle cx="12" cy="12" r="10"/>
             <line x1="12" y1="8" x2="12" y2="12"/>
@@ -99,30 +97,30 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
           </svg>
         </div>
 
-        <h2 className="text-base font-bold text-gray-900 m-0 mb-2">
+        <h2 className="text-base font-bold text-foreground m-0 mb-2">
           Cancelar agendamento
         </h2>
-        <p className="text-[13.5px] text-gray-500 m-0 mb-5 leading-relaxed">
+        <p className="text-[13.5px] text-muted-foreground m-0 mb-5 leading-relaxed">
           Tem certeza que deseja cancelar este agendamento? Esta ação não pode ser desfeita.
         </p>
 
         {showTextarea && (
           <div className="mb-5">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[13px] font-medium text-gray-700">
+              <label className="text-[13px] font-medium text-foreground">
                 Motivo
                 {cancellationReasonMode === 'required' && (
                   <span className="text-red-400 ml-0.5">*</span>
                 )}
               </label>
-              <span className="text-[11px] text-gray-400">{reason.length}/255</span>
+              <span className="text-[11px] text-muted-foreground">{reason.length}/255</span>
             </div>
             <textarea
               value={reason}
               onChange={e => setReason(e.target.value.slice(0, 255))}
               placeholder="Informe o motivo do cancelamento"
               rows={3}
-              className="w-full px-3 py-2 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none resize-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+              className="w-full px-3 py-2 text-sm text-foreground bg-background rounded-lg border border-border outline-none resize-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
             />
             {cancellationReasonMode === 'required' && reason.trim().length > 0 && reason.trim().length < 3 && (
               <p className="text-[11px] text-red-500 mt-1 m-0">Mínimo de 3 caracteres.</p>
@@ -131,20 +129,23 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
         )}
 
         <div className="flex gap-2.5 justify-end">
-          <button
+          <Button
+            variant="secondary"
+            size="md"
             onClick={onClose}
             disabled={cancelMut.isPending}
-            className="px-4 py-[9px] border border-gray-200 bg-white text-gray-700 text-[13.5px] font-semibold rounded-lg cursor-pointer hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             Voltar
-          </button>
-          <button
-            onClick={handleConfirm}
+          </Button>
+          <Button
+            variant="destructive"
+            size="md"
+            loading={cancelMut.isPending}
             disabled={submitDisabled}
-            className="px-5 py-[9px] bg-red-600 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-red-700 disabled:opacity-65 transition-colors"
+            onClick={handleConfirm}
           >
             {cancelMut.isPending ? 'Cancelando...' : 'Sim, cancelar'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
