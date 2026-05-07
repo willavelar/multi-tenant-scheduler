@@ -22,7 +22,7 @@ const jetbrains = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Scheduler',
+  title: process.env.NEXT_PUBLIC_APP_NAME ?? 'TimoUp',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

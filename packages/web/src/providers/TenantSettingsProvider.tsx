@@ -36,7 +36,7 @@ export function TenantSettingsProvider({ children }: { children: React.ReactNode
 
   useEffect(() => {
     if (!tenantName) return
-    const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'Scheduler'
+    const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'TimoUp'
     document.title = `${tenantName} | ${appName}`
   }, [tenantName])
 
