@@ -1,11 +1,17 @@
 'use client'
 
 import { BackButton } from './BackButton'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import type { ReactNode } from 'react'
 
 type Props = {
   back?: { href: string; label: string }
-  action?: { label: string; onClick: () => void; variant?: 'primary' | 'destructive' }
+  action?: {
+    label: string
+    onClick: () => void
+    variant?: 'primary' | 'destructive'
+    icon?: ReactNode
+  }
 }
 
 export function PageHeader({ back, action }: Props) {
@@ -17,17 +23,14 @@ export function PageHeader({ back, action }: Props) {
         )}
       </div>
       {action && (
-        <button
+        <Button
+          variant={action.variant === 'destructive' ? 'destructive' : 'secondary'}
+          size="md"
+          icon={action.icon}
           onClick={action.onClick}
-          className={cn(
-            'px-4 py-2 text-[13px] font-semibold rounded-lg cursor-pointer transition-colors',
-            action.variant === 'destructive'
-              ? 'bg-red-600 text-white border-0 hover:bg-red-700'
-              : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
-          )}
         >
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   )
