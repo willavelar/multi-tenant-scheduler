@@ -21,11 +21,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!hydrated || !user) return null
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <Sidebar />
       <div className="ml-[260px] flex-1 flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 bg-gray-50 p-7">
+        <main className="flex-1 bg-background p-7">
           {children}
         </main>
       </div>
