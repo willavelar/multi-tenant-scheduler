@@ -61,7 +61,7 @@ export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
               {slots.map((slot: string) => (
                 <Button
                   key={slot}
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   onClick={() => onSelect(toLocalDateString(selectedDate!), slot)}
                 >

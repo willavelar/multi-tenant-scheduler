@@ -123,8 +123,8 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
         <Badge variant={result.status === 'confirmed' ? 'default' : 'secondary'}>
           {result.status === 'confirmed' ? 'Confirmado' : 'Aguardando confirmação'}
         </Badge>
-        <p className="text-sm text-gray-500">{date} às {formatTime(startTime)}</p>
-        <Button variant="outline" onClick={onDone}>
+        <p className="text-sm text-muted-foreground">{date} às {formatTime(startTime)}</p>
+        <Button variant="secondary" onClick={onDone}>
           Fazer outro agendamento
         </Button>
       </div>
@@ -134,13 +134,13 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold">Confirmar agendamento</h2>
-      <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+      <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
         <div className="flex justify-between">
-          <span className="text-gray-500">Data</span>
+          <span className="text-muted-foreground">Data</span>
           <span className="font-medium">{date}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-gray-500">Horário</span>
+          <span className="text-muted-foreground">Horário</span>
           <span className="font-medium">{formatTime(startTime)}</span>
         </div>
       </div>
@@ -152,13 +152,14 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
       )}
 
       <Button
+        variant="primary"
         className="w-full"
         onClick={handleConfirm}
-        disabled={bookMutation.isPending}
+        loading={bookMutation.isPending}
       >
         {bookMutation.isPending ? 'Agendando...' : user ? 'Confirmar' : 'Entrar e confirmar'}
       </Button>
-      <button onClick={onBack} className="text-sm text-gray-500 hover:underline block mx-auto">
+      <button onClick={onBack} className="text-sm text-muted-foreground hover:underline block mx-auto">
         ← Voltar
       </button>
 
@@ -185,7 +186,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
                 {loginForm.formState.errors.root && (
                   <p className="text-sm text-red-500">{loginForm.formState.errors.root.message}</p>
                 )}
-                <Button type="submit" className="w-full" disabled={loginForm.formState.isSubmitting}>
+                <Button variant="primary" type="submit" className="w-full" loading={loginForm.formState.isSubmitting}>
                   Entrar
                 </Button>
               </form>
@@ -207,7 +208,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
                 {registerForm.formState.errors.root && (
                   <p className="text-sm text-red-500">{registerForm.formState.errors.root.message}</p>
                 )}
-                <Button type="submit" className="w-full" disabled={registerForm.formState.isSubmitting}>
+                <Button variant="primary" type="submit" className="w-full" loading={registerForm.formState.isSubmitting}>
                   Criar conta
                 </Button>
               </form>
