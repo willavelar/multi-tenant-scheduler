@@ -5,6 +5,7 @@ import { LogoCropField } from '@/components/ui/LogoCropField'
 import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/useTenantSettings'
 import { cn } from '@/lib/utils'
 import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { Button } from '@/components/ui/button'
 
 type CancelReasonMode = 'no' | 'optional' | 'required'
 type DeadlineUnit = 'minutes' | 'hours' | 'days'
@@ -169,7 +170,7 @@ export function TenantGeneralForm() {
       <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
         <p className="text-sm font-bold text-foreground m-0 mb-5">Logo</p>
         <p className="text-[13px] text-muted-foreground m-0 mb-4">
-          Aparece no topo do menu lateral. Proporção 3:1 (horizontal).
+          Aparece no topo do menu lateral. Proporção 6:1 (horizontal).
         </p>
         <LogoCropField value={logoUrl} onChange={(v) => { setLogoUrl(v); setSuccess(false) }} />
         {logoUrl && (
@@ -359,18 +360,15 @@ export function TenantGeneralForm() {
       )}
 
       <div className="flex gap-3">
-        <button
+        <Button
           type="submit"
-          disabled={isPending}
-          className="h-[42px] px-6 bg-indigo-500 text-white text-sm font-semibold rounded-lg border-0 cursor-pointer inline-flex items-center gap-2 hover:bg-indigo-600 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
+          variant="primary"
+          size="lg"
+          loading={isPending}
+          icon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>}
         >
-          {isPending ? (
-            <>
-              <Spinner />
-              Salvando...
-            </>
-          ) : 'Salvar alterações'}
-        </button>
+          Salvar alterações
+        </Button>
       </div>
 
     </form>
