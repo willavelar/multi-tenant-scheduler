@@ -7,6 +7,7 @@ import { z } from 'zod/v3'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
 
 const schema = z.object({
@@ -80,15 +81,21 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="relative min-h-screen bg-background flex items-center justify-center p-6">
+
+      {/* Theme toggle — top-right corner */}
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* Heading */}
         <div className="text-center mb-7">
-          <h1 className="text-2xl font-bold text-gray-900 m-0 mb-2 tracking-[-0.015em]">
+          <h1 className="text-2xl font-bold text-foreground m-0 mb-2 tracking-[-0.015em]">
             Bem-vindo de volta
           </h1>
-          <p className="text-sm text-gray-500 m-0">
+          <p className="text-sm text-muted-foreground m-0">
             Acesse sua conta para continuar
           </p>
         </div>
@@ -128,12 +135,12 @@ function LoginContent() {
         )}
 
         {/* Card */}
-        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="bg-card rounded-xl p-8 border border-border shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
             {/* E-mail */}
             <div className="mb-4.5">
-              <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="email" className="block text-[13px] font-medium text-foreground mb-1.5">
                 E-mail
               </label>
               <input
@@ -143,12 +150,12 @@ function LoginContent() {
                 autoComplete="email"
                 {...register('email')}
                 className={cn(
-                  'w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                  errors.email ? 'border-red-400' : 'border-gray-200',
+                  'w-full h-[46px] px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
+                  errors.email ? 'border-destructive' : 'border-border',
                 )}
               />
               {errors.email && (
-                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                <p className="mt-1.5 text-xs text-destructive animate-in fade-in slide-in-from-top-1.5 duration-200">
                   {errors.email.message}
                 </p>
               )}
@@ -157,12 +164,12 @@ function LoginContent() {
             {/* Senha */}
             <div className="mb-5">
               <div className="flex justify-between items-center mb-1.5">
-                <label htmlFor="password" className="text-[13px] font-medium text-gray-700">
+                <label htmlFor="password" className="text-[13px] font-medium text-foreground">
                   Senha
                 </label>
                 <a
                   href="./forgot-password"
-                  className="text-xs text-gray-500 no-underline hover:text-gray-700 underline-offset-4 hover:underline"
+                  className="text-xs text-muted-foreground no-underline hover:text-foreground underline-offset-4 hover:underline"
                 >
                   Esqueceu a senha?
                 </a>
@@ -175,21 +182,21 @@ function LoginContent() {
                   autoComplete="current-password"
                   {...register('password')}
                   className={cn(
-                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                    errors.password ? 'border-red-400' : 'border-gray-200',
+                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
+                    errors.password ? 'border-destructive' : 'border-border',
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   <EyeIcon open={showPassword} />
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-1.5 text-xs text-red-500 animate-in fade-in slide-in-from-top-1.5 duration-200">
+                <p className="mt-1.5 text-xs text-destructive animate-in fade-in slide-in-from-top-1.5 duration-200">
                   {errors.password.message}
                 </p>
               )}
@@ -197,7 +204,7 @@ function LoginContent() {
 
             {/* Erro global */}
             {errors.root && (
-              <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
+              <div className="mb-4 px-3 py-2.5 bg-destructive/10 border border-destructive/20 rounded-lg text-[13px] text-destructive flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
                   <circle cx="12" cy="12" r="10"/>
                   <line x1="12" y1="8" x2="12" y2="12"/>
@@ -220,7 +227,7 @@ function LoginContent() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-5 text-[13px] text-gray-500">
+        <p className="text-center mt-5 text-[13px] text-muted-foreground">
           Ainda não tem conta?{' '}
           <a
             href="./register"
