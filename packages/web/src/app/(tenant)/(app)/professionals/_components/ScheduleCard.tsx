@@ -9,6 +9,7 @@ import {
 } from '@/hooks/useWeeklyAvailability'
 import { TimeDisplay } from '@/components/ui/TimeDisplay'
 import { TimeInputField } from '@/components/ui/TimeInputField'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { WeeklyAvailability } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -37,7 +38,7 @@ function TextBtn({ label, onClick, disabled, variant = 'default' }: { label: str
         'h-7 px-2.5 text-xs font-medium rounded-md border cursor-pointer transition-colors',
         variant === 'danger'
           ? 'border-red-200 text-red-500 hover:bg-red-50'
-          : 'border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800',
+          : 'border-border text-muted-foreground hover:bg-accent hover:text-foreground',
         disabled && 'opacity-40 cursor-not-allowed pointer-events-none',
       )}
     >
@@ -54,20 +55,20 @@ function AddForm({ onConfirm, onCancel }: { onConfirm: (s: string, e: string) =>
       <TimeInputField
         value={start}
         onChange={setStart}
-        className="h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+        className="h-8 w-[110px] px-2 text-[13px] text-foreground bg-background border border-border rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
       />
-      <span className="text-gray-400 text-sm">–</span>
+      <span className="text-muted-foreground text-sm">–</span>
       <TimeInputField
         value={end}
         onChange={setEnd}
-        className="h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
+        className="h-8 w-[110px] px-2 text-[13px] text-foreground bg-background border border-border rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
       />
       <button type="button" onClick={() => onConfirm(start, end)}
         className="h-7 px-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-md cursor-pointer hover:bg-emerald-600 transition-colors">
         Confirmar
       </button>
       <button type="button" onClick={onCancel}
-        className="h-7 px-2.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+        className="h-7 px-2.5 border border-border text-muted-foreground text-xs font-medium rounded-md cursor-pointer hover:bg-accent transition-colors">
         Cancelar
       </button>
     </div>
@@ -100,8 +101,8 @@ function ScheduleCardCreate({ value, onChange }: Omit<CreateProps, 'mode'>) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-5">Horários (Disponível)</p>
+    <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-5">Horários (Disponível)</p>
       <div className="space-y-3">
         {DAYS.map(({ value: dayValue }) => {
           const daySlots = byDay(dayValue)
@@ -135,21 +136,21 @@ function CreateDayRows({ dayValue, slots, adding, onAdd, onRemove, onOpenAdd, on
 }) {
   return (
     <div className="flex gap-3">
-      <span className="w-10 shrink-0 text-[13px] font-semibold text-gray-700 pt-1.5">
+      <span className="w-10 shrink-0 text-[13px] font-semibold text-foreground pt-1.5">
         {DAYS.find(d => d.value === dayValue)?.label}
       </span>
       <div className="flex flex-col gap-1.5 flex-1">
         {slots.length === 0 && !adding && (
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-gray-400 italic">Indisponível</span>
+            <span className="text-[13px] text-muted-foreground italic">Indisponível</span>
             <TextBtn label="Adicionar" onClick={onOpenAdd} />
           </div>
         )}
         {slots.map((slot, idx) => (
           <div key={slot._key} className="flex items-center gap-2 h-8">
-            <span className="text-[13px] text-gray-700"><TimeDisplay time={slot.startTime} /></span>
-            <span className="text-gray-400 text-sm">–</span>
-            <span className="text-[13px] text-gray-700"><TimeDisplay time={slot.endTime} /></span>
+            <span className="text-[13px] text-foreground"><TimeDisplay time={slot.startTime} /></span>
+            <span className="text-muted-foreground text-sm">–</span>
+            <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
             <div className="flex items-center gap-1 ml-1">
               <TextBtn label="Remover" onClick={() => onRemove(slot._key)} variant="danger" />
               {idx === 0 && <TextBtn label="Adicionar" onClick={onOpenAdd} />}
@@ -192,10 +193,17 @@ function ScheduleCardEdit({ professionalId }: Omit<EditProps, 'mode'>) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-5">Horários (Disponível)</p>
+    <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-5">Horários (Disponível)</p>
       {isLoading ? (
-        <div className="text-[13px] text-gray-400">Carregando...</div>
+        <div className="space-y-3">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-4 w-8 shrink-0 mt-1" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="space-y-3">
           {DAYS.map(({ value: dayValue }) => {
@@ -233,21 +241,21 @@ function EditDayRows({ dayValue, slots, adding, busy, onAdd, onRemove, onOpenAdd
 }) {
   return (
     <div className="flex gap-3">
-      <span className="w-10 shrink-0 text-[13px] font-semibold text-gray-700 pt-1.5">
+      <span className="w-10 shrink-0 text-[13px] font-semibold text-foreground pt-1.5">
         {DAYS.find(d => d.value === dayValue)?.label}
       </span>
       <div className="flex flex-col gap-1.5 flex-1">
         {slots.length === 0 && !adding && (
           <div className="flex items-center gap-2">
-            <span className="text-[13px] text-gray-400 italic">Indisponível</span>
+            <span className="text-[13px] text-muted-foreground italic">Indisponível</span>
             <TextBtn label="Adicionar" onClick={onOpenAdd} disabled={busy} />
           </div>
         )}
         {slots.map((slot, idx) => (
           <div key={slot.id} className="flex items-center gap-2 h-8">
-            <span className="text-[13px] text-gray-700"><TimeDisplay time={slot.startTime} /></span>
-            <span className="text-gray-400 text-sm">–</span>
-            <span className="text-[13px] text-gray-700"><TimeDisplay time={slot.endTime} /></span>
+            <span className="text-[13px] text-foreground"><TimeDisplay time={slot.startTime} /></span>
+            <span className="text-muted-foreground text-sm">–</span>
+            <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
             <div className="flex items-center gap-1 ml-1">
               <TextBtn label="Remover" onClick={() => onRemove(slot.id)} disabled={busy} variant="danger" />
               {idx === 0 && <TextBtn label="Adicionar" onClick={onOpenAdd} disabled={busy} />}
@@ -272,27 +280,34 @@ function ScheduleCardView({ professionalId }: Omit<ViewProps, 'mode'>) {
   const byDay = (day: number) => slots.filter(s => s.dayOfWeek === day).sort((a, b) => a.startTime.localeCompare(b.startTime))
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-5">Horários (Disponível)</p>
+    <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-5">Horários (Disponível)</p>
       {isLoading ? (
-        <div className="text-[13px] text-gray-400">Carregando...</div>
+        <div className="space-y-3">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-4 w-8 shrink-0 mt-1" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="space-y-3">
           {DAYS.map(({ value: dayValue }) => {
             const daySlots = byDay(dayValue)
             return (
               <div key={dayValue} className="flex gap-3">
-                <span className="w-10 shrink-0 text-[13px] font-semibold text-gray-700 pt-1.5">
+                <span className="w-10 shrink-0 text-[13px] font-semibold text-foreground pt-1.5">
                   {DAYS.find(d => d.value === dayValue)?.label}
                 </span>
                 <div className="flex flex-col gap-1.5 flex-1">
                   {daySlots.length === 0 ? (
-                    <span className="text-[13px] text-gray-400 italic pt-1.5">Indisponível</span>
+                    <span className="text-[13px] text-muted-foreground italic pt-1.5">Indisponível</span>
                   ) : daySlots.map(slot => (
                     <div key={slot.id} className="flex items-center gap-2 h-8">
-                      <span className="text-[13px] text-gray-700"><TimeDisplay time={slot.startTime} /></span>
-                      <span className="text-gray-400 text-sm">–</span>
-                      <span className="text-[13px] text-gray-700"><TimeDisplay time={slot.endTime} /></span>
+                      <span className="text-[13px] text-foreground"><TimeDisplay time={slot.startTime} /></span>
+                      <span className="text-muted-foreground text-sm">–</span>
+                      <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
                     </div>
                   ))}
                 </div>

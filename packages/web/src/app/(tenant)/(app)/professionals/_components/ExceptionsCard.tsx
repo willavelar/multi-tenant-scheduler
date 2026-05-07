@@ -10,6 +10,7 @@ import {
   useDeleteException,
 } from '@/hooks/useWeeklyAvailability'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { ScheduleException } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ function TimeField({ label, value, onChange, disabled }: {
 }) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">
+      <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.05em] mb-1">
         {label}
       </label>
       <TimeInputField
@@ -65,7 +66,7 @@ function TimeField({ label, value, onChange, disabled }: {
         onChange={onChange}
         disabled={disabled}
         className={cn(
-          'h-8 w-[110px] px-2 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors',
+          'h-8 w-[110px] px-2 text-[13px] text-foreground bg-background border border-border rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors',
           disabled && 'opacity-40 cursor-not-allowed',
         )}
       />
@@ -83,10 +84,10 @@ function ExceptionForm({ onConfirm, onCancel }: {
   const [end, setEnd]       = useState('18:00')
 
   return (
-    <div className="border border-gray-100 rounded-lg p-3 bg-gray-50 space-y-3">
+    <div className="border border-border rounded-lg p-3 bg-muted space-y-3">
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1">
+          <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.05em] mb-1">
             Data
           </label>
           <DatePickerField
@@ -106,7 +107,7 @@ function ExceptionForm({ onConfirm, onCancel }: {
             onChange={e => setAllDay(e.target.checked)}
             className="w-4 h-4 accent-indigo-500 cursor-pointer"
           />
-          <span className="text-[13px] text-gray-700">Dia todo</span>
+          <span className="text-[13px] text-foreground">Dia todo</span>
         </label>
       </div>
       <div className="flex gap-2">
@@ -121,7 +122,7 @@ function ExceptionForm({ onConfirm, onCancel }: {
         <button
           type="button"
           onClick={onCancel}
-          className="h-7 px-2.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
+          className="h-7 px-2.5 border border-border text-muted-foreground text-xs font-medium rounded-md cursor-pointer hover:bg-accent transition-colors"
         >
           Cancelar
         </button>
@@ -139,10 +140,10 @@ function ExceptionRow({ date, startTime, endTime, onRemove, disabled }: {
 }) {
   const allDayFlag = isAllDay(startTime, endTime)
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-gray-50 last:border-0">
-      <div className="flex items-center gap-3 text-[13px] text-gray-700">
+    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-border last:border-0">
+      <div className="flex items-center gap-3 text-[13px] text-foreground">
         <span className="font-medium w-24 shrink-0">{formatDate(date)}</span>
-        <span className="text-gray-400">–</span>
+        <span className="text-muted-foreground">–</span>
         {allDayFlag
           ? <span>Dia todo</span>
           : <span><TimeDisplay time={startTime} /> – <TimeDisplay time={endTime} /></span>
@@ -164,7 +165,7 @@ function ExceptionRow({ date, startTime, endTime, onRemove, disabled }: {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-[0.05em] mt-4 mb-1.5 first:mt-0">
+    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.05em] mt-4 mb-1.5 first:mt-0">
       {children}
     </p>
   )
@@ -194,8 +195,8 @@ function ExceptionsCardCreate({ value, onChange }: Omit<CreateProps, 'mode'>) {
   const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date))
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-4">Dias e Horários (Não Disponível)</p>
+    <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-4">Dias e Horários (Não Disponível)</p>
 
       {sorted.length > 0 && (
         <div className="mb-3">
@@ -220,7 +221,7 @@ function ExceptionsCardCreate({ value, onChange }: Omit<CreateProps, 'mode'>) {
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="h-8 px-3 border border-dashed border-gray-300 text-gray-500 text-[13px] rounded-lg cursor-pointer hover:border-indigo-400 hover:text-indigo-500 transition-colors"
+          className="h-8 px-3 border border-dashed border-border text-muted-foreground text-[13px] rounded-lg cursor-pointer hover:border-indigo-400 hover:text-indigo-500 transition-colors"
         >
           + Adicionar Data e Horário
         </button>
@@ -268,11 +269,15 @@ function ExceptionsCardEdit({ professionalId }: Omit<EditProps, 'mode'>) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-4">Dias e Horários (Não Disponível)</p>
+    <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-4">Dias e Horários (Não Disponível)</p>
 
       {isLoading ? (
-        <div className="text-[13px] text-gray-400">Carregando...</div>
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-lg" />
+          ))}
+        </div>
       ) : (
         <>
           {future.length > 0 && (
@@ -306,7 +311,7 @@ function ExceptionsCardEdit({ professionalId }: Omit<EditProps, 'mode'>) {
           )}
 
           {!future.length && !past.length && !adding && (
-            <p className="text-[13px] text-gray-400 italic mb-3">Nenhuma data bloqueada.</p>
+            <p className="text-[13px] text-muted-foreground italic mb-3">Nenhuma data bloqueada.</p>
           )}
         </>
       )}
@@ -321,7 +326,7 @@ function ExceptionsCardEdit({ professionalId }: Omit<EditProps, 'mode'>) {
           type="button"
           onClick={() => setAdding(true)}
           disabled={busy}
-          className="mt-3 h-8 px-3 border border-dashed border-gray-300 text-gray-500 text-[13px] rounded-lg cursor-pointer hover:border-indigo-400 hover:text-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="mt-3 h-8 px-3 border border-dashed border-border text-muted-foreground text-[13px] rounded-lg cursor-pointer hover:border-indigo-400 hover:text-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           + Adicionar Data e Horário
         </button>
@@ -344,12 +349,16 @@ function ExceptionsCardView({ professionalId }: Omit<ViewProps, 'mode'>) {
     .sort((a, b) => a.date.localeCompare(b.date))
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-4">Dias e Horários (Não Disponível)</p>
+    <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-4">Dias e Horários (Não Disponível)</p>
       {isLoading ? (
-        <div className="text-[13px] text-gray-400">Carregando...</div>
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-lg" />
+          ))}
+        </div>
       ) : future.length === 0 ? (
-        <p className="text-[13px] text-gray-400 italic m-0">Nenhuma data bloqueada futura.</p>
+        <p className="text-[13px] text-muted-foreground italic m-0">Nenhuma data bloqueada futura.</p>
       ) : (
         future.map(ex => (
           <ExceptionRow
