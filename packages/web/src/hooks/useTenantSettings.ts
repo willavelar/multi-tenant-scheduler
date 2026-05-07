@@ -4,13 +4,15 @@ import { useTenant } from '@/providers/TenantProvider'
 import { useAuth } from '@/providers/AuthProvider'
 
 export type TenantSettings = {
-  id:                     string
-  name:                   string
-  slug:                   string
-  logoUrl:                string | null
-  confirmationMode:       'auto' | 'manual'
-  allowPaidStatus:        boolean
-  cancellationReasonMode: 'no' | 'optional' | 'required'
+  id:                        string
+  name:                      string
+  slug:                      string
+  logoUrl:                   string | null
+  confirmationMode:          'auto' | 'manual'
+  allowPaidStatus:           boolean
+  cancellationReasonMode:    'no' | 'optional' | 'required'
+  cancellationDeadlineValue: number | null
+  cancellationDeadlineUnit:  'minutes' | 'hours' | 'days' | null
 }
 
 export function useTenantSettings() {
@@ -30,11 +32,13 @@ export function useUpdateTenantSettings() {
   const { slug } = useTenant()
   return useMutation({
     mutationFn: (body: {
-      name?:                   string
-      logoUrl?:                string | null
-      confirmationMode?:       'auto' | 'manual'
-      allowPaidStatus?:        boolean
-      cancellationReasonMode?: 'no' | 'optional' | 'required'
+      name?:                      string
+      logoUrl?:                   string | null
+      confirmationMode?:          'auto' | 'manual'
+      allowPaidStatus?:           boolean
+      cancellationReasonMode?:    'no' | 'optional' | 'required'
+      cancellationDeadlineValue?: number | null
+      cancellationDeadlineUnit?:  'minutes' | 'hours' | 'days' | null
     }) =>
       api('/tenants/me', { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () =>
