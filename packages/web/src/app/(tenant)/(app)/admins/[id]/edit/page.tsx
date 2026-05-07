@@ -5,6 +5,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useAdmin, useUpdateAdmin } from '@/hooks/useAdmins'
 import { BackButton } from '@/components/ui/BackButton'
 import { AdminForm, type AdminFormData } from '../../_components/AdminForm'
+import { FormSkeleton } from '@/components/ui/FormSkeleton'
 
 export default function EditAdminPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,9 +16,8 @@ export default function EditAdminPage() {
   const isOwnProfile = me?.id === id
   const { mutateAsync } = useUpdateAdmin(id)
 
-  if (isLoading || !admin) {
-    return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  }
+  if (isLoading) return <FormSkeleton />
+  if (!admin)    return <div className="p-12 text-muted-foreground text-sm">Administrador não encontrado.</div>
 
   async function handleSubmit(data: AdminFormData) {
     await mutateAsync({
