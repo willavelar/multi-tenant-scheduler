@@ -5,6 +5,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useClient, useUpdateClient } from '@/hooks/useClients'
 import { BackButton } from '@/components/ui/BackButton'
 import { ClientForm, type ClientFormData } from '../../_components/ClientForm'
+import { FormSkeleton } from '@/components/ui/FormSkeleton'
 
 export default function EditClientPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,9 +16,8 @@ export default function EditClientPage() {
   const { data: client, isLoading } = useClient(id)
   const { mutateAsync } = useUpdateClient(id)
 
-  if (isLoading || !client) {
-    return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  }
+  if (isLoading) return <FormSkeleton />
+  if (!client)   return <div className="p-12 text-muted-foreground text-sm">Cliente não encontrado.</div>
 
   return (
     <div>

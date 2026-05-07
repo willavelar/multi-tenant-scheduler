@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useClient, useDeleteClient, useForceDeleteClient } from '@/hooks/useClients'
 import { ClientDetailView } from '../_components/ClientDetailView'
+import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -16,8 +17,8 @@ export default function ClientDetailPage() {
   const del      = useDeleteClient()
   const forceDel = useForceDeleteClient()
 
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
-  if (!client)   return <div className="p-12 text-gray-400 text-sm">Cliente não encontrado.</div>
+  if (isLoading) return <DetailSkeleton />
+  if (!client)   return <div className="p-12 text-muted-foreground text-sm">Cliente não encontrado.</div>
 
   const canDelete = isAdmin && !isOwnProfile
 
