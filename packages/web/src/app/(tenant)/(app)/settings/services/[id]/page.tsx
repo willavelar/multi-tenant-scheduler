@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useService, useDeleteService, useForceDeleteService } from '@/hooks/useServices'
 import { ServiceDetailView } from '../_components/ServiceDetailView'
+import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
 
 export default function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -12,9 +13,9 @@ export default function ServiceDetailPage() {
   const del      = useDeleteService()
   const forceDel = useForceDeleteService()
 
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
+  if (isLoading) return <DetailSkeleton fields={5} />
   if (isError) return <div className="p-12 text-red-500 text-sm">Erro ao carregar serviço.</div>
-  if (!service)  return <div className="p-12 text-gray-400 text-sm">Serviço não encontrado.</div>
+  if (!service)  return <div className="p-12 text-muted-foreground text-sm">Serviço não encontrado.</div>
 
   async function handleDelete() {
     await del.mutateAsync(service!.id)

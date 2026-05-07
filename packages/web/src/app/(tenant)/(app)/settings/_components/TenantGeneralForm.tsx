@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { LogoCropField } from '@/components/ui/LogoCropField'
 import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/useTenantSettings'
 import { cn } from '@/lib/utils'
+import { FormSkeleton } from '@/components/ui/FormSkeleton'
 
 type CancelReasonMode = 'no' | 'optional' | 'required'
 type DeadlineUnit = 'minutes' | 'hours' | 'days'
@@ -21,9 +22,9 @@ const DEADLINE_UNIT_OPTIONS: { value: DeadlineUnit; label: string }[] = [
 ]
 
 const inputCls = (disabled = false) => cn(
-  'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors',
+  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border border-border outline-none transition-colors',
   disabled
-    ? 'opacity-60 cursor-not-allowed bg-gray-50'
+    ? 'opacity-60 cursor-not-allowed bg-muted'
     : 'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
 )
 
@@ -37,13 +38,13 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
       onClick={() => onChange(!checked)}
       className={cn(
         'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2',
-        checked ? 'bg-indigo-500' : 'bg-gray-200',
+        checked ? 'bg-indigo-500' : 'bg-muted',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
       <span
         className={cn(
-          'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+          'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-background shadow ring-0 transition duration-200 ease-in-out',
           checked ? 'translate-x-4' : 'translate-x-0',
         )}
       />
@@ -53,7 +54,7 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
 
 function Spinner() {
   return (
-    <svg className="animate-spin text-gray-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg className="animate-spin text-muted-foreground" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
     </svg>
   )
@@ -86,7 +87,7 @@ export function TenantGeneralForm() {
     setDeadlineUnit(data.cancellationDeadlineUnit ?? 'hours')
   }, [data])
 
-  if (isLoading) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
+  if (isLoading) return <FormSkeleton fields={5} />
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -165,9 +166,9 @@ export function TenantGeneralForm() {
     <form onSubmit={handleSubmit} noValidate>
 
       {/* ── Logo ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Logo</p>
-        <p className="text-[13px] text-gray-500 m-0 mb-4">
+      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Logo</p>
+        <p className="text-[13px] text-muted-foreground m-0 mb-4">
           Aparece no topo do menu lateral. Proporção 3:1 (horizontal).
         </p>
         <LogoCropField value={logoUrl} onChange={(v) => { setLogoUrl(v); setSuccess(false) }} />
@@ -183,12 +184,12 @@ export function TenantGeneralForm() {
       </div>
 
       {/* ── Dados ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Informações</p>
+      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Informações</p>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="tenant-name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="tenant-name" className="block text-[13px] font-medium text-foreground mb-1.5">
               Nome <span className="text-red-400">*</span>
             </label>
             <input
@@ -200,7 +201,7 @@ export function TenantGeneralForm() {
             />
           </div>
           <div>
-            <label htmlFor="tenant-slug" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="tenant-slug" className="block text-[13px] font-medium text-foreground mb-1.5">
               Host (slug)
             </label>
             <input
@@ -210,22 +211,22 @@ export function TenantGeneralForm() {
               disabled
               className={inputCls(true)}
             />
-            <p className="text-[11px] text-gray-400 mt-1 m-0">O host não pode ser alterado.</p>
+            <p className="text-[11px] text-muted-foreground mt-1 m-0">O host não pode ser alterado.</p>
           </div>
         </div>
       </div>
 
       {/* ── Comportamento ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Comportamento</p>
+      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Comportamento</p>
 
         <div className="space-y-5">
 
           {/* Toggle: Paid status */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Habilitar status "Pago"</p>
-              <p className="text-[12px] text-gray-500 m-0">
+              <p className="text-[13px] font-medium text-foreground m-0 mb-0.5">Habilitar status "Pago"</p>
+              <p className="text-[12px] text-muted-foreground m-0">
                 Permite marcar agendamentos como pagos. Quando desativado, a opção é removida do sistema.
               </p>
             </div>
@@ -235,13 +236,13 @@ export function TenantGeneralForm() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100" />
+          <div className="border-t border-border" />
 
           {/* Toggle: Confirmation required */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Exigir confirmação de agendamentos</p>
-              <p className="text-[12px] text-gray-500 m-0">
+              <p className="text-[13px] font-medium text-foreground m-0 mb-0.5">Exigir confirmação de agendamentos</p>
+              <p className="text-[12px] text-muted-foreground m-0">
                 Novos agendamentos criados por clientes ficam como "Aguardando confirmação" até serem confirmados.
               </p>
             </div>
@@ -251,19 +252,19 @@ export function TenantGeneralForm() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100" />
+          <div className="border-t border-border" />
 
           {/* Segmented control: Cancellation reason mode */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Motivo de cancelamento</p>
-              <p className="text-[12px] text-gray-500 m-0">
+              <p className="text-[13px] font-medium text-foreground m-0 mb-0.5">Motivo de cancelamento</p>
+              <p className="text-[12px] text-muted-foreground m-0">
                 Define se o usuário precisa informar um motivo ao cancelar um agendamento.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {toggleSaving === 'cancelReason' && <Spinner />}
-              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+              <div className="flex border border-border rounded-lg overflow-hidden">
                 {CANCEL_REASON_OPTIONS.map((opt, i) => (
                   <button
                     key={opt.value}
@@ -274,8 +275,8 @@ export function TenantGeneralForm() {
                       'px-3 py-1.5 text-[12px] font-medium border-0 cursor-pointer transition-colors',
                       cancelReasonMode === opt.value
                         ? 'bg-indigo-500 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-50',
-                      i < CANCEL_REASON_OPTIONS.length - 1 && 'border-r border-gray-200',
+                        : 'bg-background text-muted-foreground hover:bg-accent',
+                      i < CANCEL_REASON_OPTIONS.length - 1 && 'border-r border-border',
                       toggleSaving === 'cancelReason' && 'opacity-50 cursor-not-allowed',
                     )}
                   >
@@ -286,13 +287,13 @@ export function TenantGeneralForm() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100" />
+          <div className="border-t border-border" />
 
           {/* Deadline: Cancellation deadline */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[13px] font-medium text-gray-900 m-0 mb-0.5">Prazo máximo de cancelamento</p>
-              <p className="text-[12px] text-gray-500 m-0">
+              <p className="text-[13px] font-medium text-foreground m-0 mb-0.5">Prazo máximo de cancelamento</p>
+              <p className="text-[12px] text-muted-foreground m-0">
                 Define até quando o cliente pode cancelar um agendamento antes do atendimento. Deixe em branco para não limitar.
               </p>
             </div>
@@ -309,13 +310,13 @@ export function TenantGeneralForm() {
                 placeholder="—"
                 disabled={toggleSaving === 'deadline'}
                 className={cn(
-                  'w-16 h-[34px] px-2 text-sm text-center text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
+                  'w-16 h-[34px] px-2 text-sm text-center text-foreground bg-background rounded-lg border border-border outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
                   toggleSaving === 'deadline'
-                    ? 'opacity-50 cursor-not-allowed bg-gray-50'
+                    ? 'opacity-50 cursor-not-allowed bg-muted'
                     : 'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
                 )}
               />
-              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+              <div className="flex border border-border rounded-lg overflow-hidden">
                 {DEADLINE_UNIT_OPTIONS.map((opt, i) => (
                   <button
                     key={opt.value}
@@ -330,8 +331,8 @@ export function TenantGeneralForm() {
                       'px-3 py-1.5 text-[12px] font-medium border-0 cursor-pointer transition-colors',
                       deadlineUnit === opt.value
                         ? 'bg-indigo-500 text-white'
-                        : 'bg-white text-gray-600 hover:bg-gray-50',
-                      i < DEADLINE_UNIT_OPTIONS.length - 1 && 'border-r border-gray-200',
+                        : 'bg-background text-muted-foreground hover:bg-accent',
+                      i < DEADLINE_UNIT_OPTIONS.length - 1 && 'border-r border-border',
                       toggleSaving === 'deadline' && 'opacity-50 cursor-not-allowed',
                     )}
                   >
@@ -347,7 +348,7 @@ export function TenantGeneralForm() {
 
       {/* ── Footer ── */}
       {error && (
-        <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
+        <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 dark:bg-red-500 dark:border-red-500 dark:text-white">
           {error}
         </div>
       )}
