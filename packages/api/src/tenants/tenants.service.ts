@@ -61,6 +61,16 @@ export class TenantsService {
     if (dto.cancellationDeadlineValue !== undefined) patch.cancellationDeadlineValue = dto.cancellationDeadlineValue;
     if (dto.cancellationDeadlineUnit  !== undefined) patch.cancellationDeadlineUnit  = dto.cancellationDeadlineUnit;
 
+    const hasValue = patch.cancellationDeadlineValue !== undefined
+      ? patch.cancellationDeadlineValue !== null
+      : undefined;
+    const hasUnit = patch.cancellationDeadlineUnit !== undefined
+      ? patch.cancellationDeadlineUnit !== null
+      : undefined;
+    if (hasValue !== undefined && hasUnit !== undefined && hasValue !== hasUnit) {
+      throw new BadRequestException('cancellationDeadlineValue and cancellationDeadlineUnit must both be set or both be null');
+    }
+
     if (Object.keys(patch).length === 0) {
       throw new BadRequestException('No updatable fields provided');
     }

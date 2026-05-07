@@ -152,6 +152,10 @@ export function TenantGeneralForm() {
       } else {
         await mutateAsync({ cancellationDeadlineValue: parsed, cancellationDeadlineUnit: unit })
       }
+    } catch {
+      // revert to last saved values on error
+      setDeadlineValue(data?.cancellationDeadlineValue != null ? String(data.cancellationDeadlineValue) : '')
+      setDeadlineUnit(data?.cancellationDeadlineUnit ?? 'hours')
     } finally {
       setToggleSaving(null)
     }
@@ -298,6 +302,7 @@ export function TenantGeneralForm() {
                 type="number"
                 min={1}
                 max={9999}
+                step={1}
                 value={deadlineValue}
                 onChange={e => setDeadlineValue(e.target.value)}
                 onBlur={() => handleDeadlineSave(deadlineValue, deadlineUnit)}
@@ -316,7 +321,8 @@ export function TenantGeneralForm() {
                     key={opt.value}
                     type="button"
                     disabled={toggleSaving === 'deadline'}
-                    onClick={() => {
+                    onMouseDown={(e: React.MouseEvent) => {
+                      e.preventDefault() // prevents onBlur on the number input
                       setDeadlineUnit(opt.value)
                       if (deadlineValue !== '') handleDeadlineSave(deadlineValue, opt.value)
                     }}
