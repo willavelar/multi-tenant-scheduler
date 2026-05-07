@@ -15,6 +15,7 @@ import { CalendarView } from './_components/CalendarView'
 import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
 import { CancellationDeadlineBanner } from './_components/CancellationDeadlineBanner'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { Button } from '@/components/ui/button'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
   pending:   'Aguardando confirmação',
@@ -138,15 +139,14 @@ export default function AppointmentsPage() {
           </div>
 
           {/* Novo agendamento */}
-          <button
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
+          <Button
+            variant="primary"
+            size="md"
             onClick={() => router.push('/appointments/create')}
+            icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
             Novo agendamento
-          </button>
+          </Button>
         </div>
 
         <CancellationDeadlineBanner />
@@ -235,12 +235,9 @@ export default function AppointmentsPage() {
                           </td>
                           <td className="px-4 py-3.5">
                             {(appt.status === 'pending' || appt.status === 'confirmed') && (
-                              <button
-                                className="px-3 py-[5px] bg-red-500 text-white rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                onClick={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}
-                              >
+                              <Button variant="destructive" size="xs" onClick={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}>
                                 Cancelar
-                              </button>
+                              </Button>
                             )}
                           </td>
                         </tr>
@@ -255,26 +252,24 @@ export default function AppointmentsPage() {
                     Página {page} de {totalPages}
                   </p>
                   <div className="flex gap-2">
-                    <button
-                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-border bg-background text-foreground rounded-md text-[13px] font-medium cursor-pointer hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setPage(p => p - 1)}
                       disabled={page <= 1}
+                      icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>}
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <polyline points="15 18 9 12 15 6"/>
-                      </svg>
                       Anterior
-                    </button>
-                    <button
-                      className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-border bg-background text-foreground rounded-md text-[13px] font-medium cursor-pointer hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setPage(p => p + 1)}
                       disabled={page >= totalPages}
                     >
                       Próxima
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <polyline points="9 18 15 12 9 6"/>
-                      </svg>
-                    </button>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </Button>
                   </div>
                 </div>
               </>

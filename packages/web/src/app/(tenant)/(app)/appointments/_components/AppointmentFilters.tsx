@@ -4,6 +4,7 @@ import { DatePickerField } from '@/components/ui/DatePickerField'
 import { ClientSearchField } from '@/components/ui/ClientSearchField'
 import { ProfessionalSearchField } from '@/components/ui/ProfessionalSearchField'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
+import { Button } from '@/components/ui/button'
 import type { Service } from '@/types'
 
 type Props = {
@@ -34,10 +35,10 @@ type Props = {
 }
 
 const selectClass =
-  'h-9 w-full pl-3 pr-8 text-[13px] text-gray-900 bg-white border border-gray-200 rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors'
-const labelClass = 'block text-[11px] font-semibold text-gray-500 uppercase tracking-[0.05em] mb-1'
+  'h-9 w-full pl-3 pr-8 text-[13px] text-foreground bg-background border border-border rounded-lg appearance-none cursor-pointer outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors'
+const labelClass = 'block text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.05em] mb-1'
 const ChevronDown = () => (
-  <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+  <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <polyline points="6 9 12 15 18 9"/>
   </svg>
 )
@@ -54,7 +55,7 @@ export function AppointmentFilters({
   const { allowPaidStatus } = useTenantSettingsContext()
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-5 py-4 mb-4 shadow-sm">
+    <div className="bg-card border border-border rounded-xl px-5 py-4 mb-4 shadow-sm">
       <div className="flex flex-wrap gap-3 items-end">
 
         {/* Period — list mode only */}
@@ -144,12 +145,9 @@ export function AppointmentFilters({
         {/* Clear */}
         {hasFilters && (
           <div className="flex items-end">
-            <button
-              className="h-9 px-3.5 border border-gray-200 bg-white text-gray-500 rounded-lg text-[13px] font-medium cursor-pointer hover:bg-gray-100 hover:text-gray-700 transition-colors whitespace-nowrap"
-              onClick={onClearFilters}
-            >
+            <Button variant="secondary" size="sm" onClick={onClearFilters}>
               Limpar filtros
-            </button>
+            </Button>
           </div>
         )}
       </div>

@@ -8,6 +8,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 import type { Service } from '@/types'
+import { Button } from '@/components/ui/button'
 
 function formatDuration(minutes: number) {
   if (minutes < 60) return `${minutes} min`
@@ -42,15 +43,14 @@ export default function ServicesPage() {
 
       {/* Header row */}
       <div className="flex justify-end mb-4">
-        <button
+        <Button
+          variant="primary"
+          size="md"
           onClick={() => router.push('/settings/services/new')}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
+          icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
           Novo serviço
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
@@ -94,12 +94,9 @@ export default function ServicesPage() {
 
           {hasFilters && (
             <div className="flex items-end">
-              <button
-                className="h-9 px-3.5 bg-background text-muted-foreground border border-border rounded-lg text-[13px] font-medium cursor-pointer hover:bg-accent hover:text-foreground whitespace-nowrap transition-colors"
-                onClick={() => { setQ(''); setActive('') }}
-              >
+              <Button variant="secondary" size="sm" onClick={() => { setQ(''); setActive('') }}>
                 Limpar filtros
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -136,12 +133,9 @@ export default function ServicesPage() {
                       <StatusBadge label={service.active ? 'Ativo' : 'Inativo'} variant={service.active ? 'success' : 'error'} />
                     </td>
                     <td className="px-4 py-3">
-                      <button
-                        className="px-3 py-[5px] bg-indigo-500 text-white rounded-md text-xs font-medium cursor-pointer hover:bg-indigo-600 transition-colors"
-                        onClick={() => router.push(`/settings/services/${service.id}`)}
-                      >
+                      <Button variant="primary" size="xs" onClick={() => router.push(`/settings/services/${service.id}`)}>
                         Visualizar
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}

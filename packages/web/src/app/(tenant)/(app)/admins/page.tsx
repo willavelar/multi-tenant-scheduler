@@ -8,6 +8,7 @@ import { DateTimeCell } from '@/components/ui/DateTimeCell'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Admin } from '@/types'
+import { Button } from '@/components/ui/button'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 
 function AdminStatusBadge({ active }: { active: boolean }) {
@@ -39,15 +40,14 @@ export default function AdminsPage() {
 
       {/* Header */}
       <div className="flex justify-end mb-4">
-        <button
+        <Button
+          variant="primary"
+          size="md"
           onClick={() => router.push('/admins/new')}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-500 text-white text-[13.5px] font-semibold rounded-lg border-0 cursor-pointer hover:bg-indigo-600 transition-colors"
+          icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
           Novo administrador
-        </button>
+        </Button>
       </div>
 
       {/* Filters */}
@@ -92,12 +92,9 @@ export default function AdminsPage() {
           {/* Clear */}
           {hasFilters && (
             <div className="flex items-end">
-              <button
-                className="h-9 px-3.5 bg-background text-muted-foreground border border-border rounded-lg text-[13px] font-medium cursor-pointer hover:bg-accent hover:text-foreground whitespace-nowrap transition-colors"
-                onClick={() => { setQ(''); setActive('') }}
-              >
+              <Button variant="secondary" size="sm" onClick={() => { setQ(''); setActive('') }}>
                 Limpar filtros
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -137,12 +134,9 @@ export default function AdminsPage() {
                         <AdminStatusBadge active={admin.active} />
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          className="px-3 py-[5px] bg-indigo-500 text-white rounded-md text-xs font-medium cursor-pointer hover:bg-indigo-600 transition-colors"
-                          onClick={() => router.push(`/admins/${admin.id}`)}
-                        >
+                        <Button variant="primary" size="xs" onClick={() => router.push(`/admins/${admin.id}`)}>
                           Visualizar
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -156,22 +150,24 @@ export default function AdminsPage() {
                 Página {page} de {totalPages}
               </p>
               <div className="flex gap-2">
-                <button
-                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-border bg-background text-foreground rounded-md text-[13px] font-medium cursor-pointer hover:bg-accent hover:border-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(p => p - 1)}
                   disabled={page <= 1}
+                  icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
                   Anterior
-                </button>
-                <button
-                  className="inline-flex items-center justify-center gap-1 px-3 py-1.5 border border-border bg-background text-foreground rounded-md text-[13px] font-medium cursor-pointer hover:bg-accent hover:border-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => setPage(p => p + 1)}
                   disabled={page >= totalPages}
                 >
                   Próxima
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                </button>
+                </Button>
               </div>
             </div>
           </>
