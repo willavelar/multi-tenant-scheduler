@@ -3,6 +3,7 @@
 import { useServices } from '@/hooks/useServices'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { Service } from '@/types'
 
 type Props = {
@@ -13,9 +14,26 @@ type Props = {
 export function StepService({ onSelect, onBack }: Props) {
   const { data: services, isLoading, error } = useServices()
 
-  if (isLoading) return <p className="text-gray-500">Carregando serviços...</p>
+  if (isLoading) return (
+    <div className="space-y-3">
+      <Skeleton className="h-7 w-40" />
+      <div className="grid gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="p-4 border border-border rounded-xl">
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-6 w-12 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
   if (error) return <p className="text-red-500">Erro ao carregar serviços.</p>
-  if (!services?.length) return <p className="text-gray-500">Nenhum serviço disponível.</p>
+  if (!services?.length) return <p className="text-muted-foreground">Nenhum serviço disponível.</p>
 
   return (
     <div className="space-y-3">
@@ -38,14 +56,14 @@ export function StepService({ onSelect, onBack }: Props) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium">{svc.name}</p>
-                {svc.description && <p className="text-sm text-gray-500">{svc.description}</p>}
+                {svc.description && <p className="text-sm text-muted-foreground">{svc.description}</p>}
               </div>
               <Badge variant="secondary">{svc.durationMinutes} min</Badge>
             </div>
           </Card>
         ))}
       </div>
-      <button onClick={onBack} className="text-sm text-gray-500 hover:underline">
+      <button onClick={onBack} className="text-sm text-muted-foreground hover:underline">
         ← Voltar
       </button>
     </div>

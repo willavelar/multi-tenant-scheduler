@@ -5,6 +5,7 @@ import { Calendar } from '@/components/ui/calendar'
 import { useSlots } from '@/hooks/useSlots'
 import { useFormatTime } from '@/hooks/useFormatTime'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Props = {
   professionalId: string
@@ -43,11 +44,17 @@ export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
       />
       {selectedDate && (
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Horários disponíveis</p>
-          {isLoading && <p className="text-sm text-gray-400">Carregando...</p>}
+          <p className="text-sm font-medium text-foreground">Horários disponíveis</p>
+          {isLoading && (
+            <div className="grid grid-cols-4 gap-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 rounded-md" />
+              ))}
+            </div>
+          )}
           {slotsError && <p className="text-sm text-red-500">Erro ao carregar horários. Tente novamente.</p>}
           {slots && slots.length === 0 && (
-            <p className="text-sm text-gray-400">Nenhum horário disponível neste dia.</p>
+            <p className="text-sm text-muted-foreground">Nenhum horário disponível neste dia.</p>
           )}
           {slots && slots.length > 0 && (
             <div className="grid grid-cols-4 gap-2">
@@ -65,7 +72,7 @@ export function StepDateTime({ professionalId, onSelect, onBack }: Props) {
           )}
         </div>
       )}
-      <button onClick={onBack} className="text-sm text-gray-500 hover:underline">
+      <button onClick={onBack} className="text-sm text-muted-foreground hover:underline">
         ← Voltar
       </button>
     </div>
