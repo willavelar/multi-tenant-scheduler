@@ -179,6 +179,7 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
       {createPortal(popover, document.body)}
       <CancelAppointmentModal
         appointmentId={cancelOpen ? appointment.id : null}
+        startsAt={cancelOpen ? appointment.startsAt : null}
         onClose={() => setCancelOpen(false)}
         onSuccess={onClose}
       />

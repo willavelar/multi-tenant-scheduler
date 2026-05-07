@@ -31,7 +31,7 @@ const STATUS_VARIANTS: Record<Appointment['status'], import('@/components/ui/Sta
 export default function AppointmentsPage() {
   const router = useRouter()
   const [page, setPage] = useState(1)
-  const [cancelId, setCancelId] = useState<string | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<{ id: string; startsAt: string } | null>(null)
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar')
 
   // Filters
@@ -233,7 +233,7 @@ export default function AppointmentsPage() {
                             {(appt.status === 'pending' || appt.status === 'confirmed') && (
                               <button
                                 className="px-3 py-[5px] border border-red-200 bg-white text-red-600 rounded-md text-[12px] font-medium cursor-pointer hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                onClick={() => setCancelId(appt.id)}
+                                onClick={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}
                               >
                                 Cancelar
                               </button>
@@ -280,8 +280,9 @@ export default function AppointmentsPage() {
       </div>
 
       <CancelAppointmentModal
-        appointmentId={cancelId}
-        onClose={() => setCancelId(null)}
+        appointmentId={cancelTarget?.id ?? null}
+        startsAt={cancelTarget?.startsAt ?? null}
+        onClose={() => setCancelTarget(null)}
       />
     </>
   )
