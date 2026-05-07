@@ -8,6 +8,7 @@ import { AvatarName } from '@/components/ui/AvatarName'
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { cn } from '@/lib/utils'
+import { FormSkeleton } from '@/components/ui/FormSkeleton'
 import type { Professional, Service, ClientDetail } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -67,9 +68,9 @@ function applyPhoneMask(raw: string): string {
 }
 
 const inputCls = (hasError = false) => cn(
-  'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors',
+  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
   'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-  hasError ? 'border-red-400' : 'border-gray-200',
+  hasError ? 'border-red-400' : 'border-border',
 )
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  if (!initialized) return <div className="p-12 text-gray-400 text-sm">Carregando...</div>
+  if (!initialized) return <FormSkeleton />
 
   const set = (k: keyof FormState, v: string | boolean) => {
     setForm(f => ({ ...f, [k]: v }))
@@ -263,8 +264,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     <form onSubmit={handleSubmit} noValidate>
 
       {/* ── Card 1: Dados pessoais ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Dados pessoais</p>
+      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Dados pessoais</p>
 
         <div className="mb-5">
           <AvatarCropField value={avatarUrl} onChange={setAvatarUrl} name={form.name} />
@@ -272,7 +273,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="client-name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="client-name" className="block text-[13px] font-medium text-foreground mb-1.5">
               Nome completo <span className="text-red-400">*</span>
             </label>
             <input
@@ -285,7 +286,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             {errors.name && <p className="text-xs text-red-500 mt-1 m-0">{errors.name}</p>}
           </div>
           <div>
-            <label htmlFor="client-email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="client-email" className="block text-[13px] font-medium text-foreground mb-1.5">
               E-mail <span className="text-red-400">*</span>
             </label>
             <input
@@ -305,15 +306,15 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                   type="checkbox"
                   checked={sendInvite}
                   onChange={e => setSendInvite(e.target.checked)}
-                  className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-indigo-500"
+                  className="w-4 h-4 rounded border-border cursor-pointer accent-indigo-500"
                 />
-                <label htmlFor="client-send-invite" className="text-[13px] font-medium text-gray-700 cursor-pointer select-none">
+                <label htmlFor="client-send-invite" className="text-[13px] font-medium text-foreground cursor-pointer select-none">
                   Enviar convite por e-mail para o usuário cadastrar a senha
                 </label>
               </div>
               {!sendInvite && (
                 <div>
-                  <label htmlFor="client-password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                  <label htmlFor="client-password" className="block text-[13px] font-medium text-foreground mb-1.5">
                     Senha inicial <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -329,7 +330,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             </>
           )}
           <div>
-            <label htmlFor="client-phone" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+            <label htmlFor="client-phone" className="block text-[13px] font-medium text-foreground mb-1.5">
               Telefone
             </label>
             <input
@@ -343,7 +344,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         </div>
 
         <div className="mt-4">
-          <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Data de nascimento</label>
+          <label className="block text-[13px] font-medium text-foreground mb-1.5">Data de nascimento</label>
           <DatePickerField
             value={form.birthDate}
             onChange={iso => set('birthDate', iso)}
@@ -353,34 +354,34 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       </div>
 
       {/* ── Card 2: Perfil ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Perfil</p>
+      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Perfil</p>
 
         <div className="mb-4">
-          <label htmlFor="client-notes" className="block text-[13px] font-medium text-gray-700 mb-1.5">Observações</label>
+          <label htmlFor="client-notes" className="block text-[13px] font-medium text-foreground mb-1.5">Observações</label>
           <textarea
             id="client-notes"
             value={form.notes}
             onChange={e => set('notes', e.target.value)}
             rows={3}
-            className="w-full px-3 py-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+            className="w-full px-3 py-2.5 text-sm text-foreground bg-background rounded-lg border border-border outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
           />
         </div>
 
         {showStatus && (
           <div>
-            <label htmlFor="client-active" className="block text-[13px] font-medium text-gray-700 mb-1.5">Status</label>
+            <label htmlFor="client-active" className="block text-[13px] font-medium text-foreground mb-1.5">Status</label>
             <div className="relative max-w-[180px]">
               <select
                 id="client-active"
                 value={form.active ? 'true' : 'false'}
                 onChange={e => set('active', e.target.value === 'true')}
-                className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                className="w-full h-[42px] pl-3 pr-8 text-sm text-foreground bg-background rounded-lg border border-border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
               >
                 <option value="true">Ativo</option>
                 <option value="false">Inativo</option>
               </select>
-              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
             </div>
@@ -397,9 +398,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       />
 
       {/* ── Card 4: Profissionais vinculados ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm relative">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-5">Profissionais vinculados</p>
-        <p className="text-[13px] text-gray-500 m-0 mb-4">
+      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm relative">
+        <p className="text-sm font-bold text-foreground m-0 mb-5">Profissionais vinculados</p>
+        <p className="text-[13px] text-muted-foreground m-0 mb-4">
           Restringe quais profissionais este cliente pode agendar. Deixe vazio para não restringir.
         </p>
 
@@ -413,8 +414,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             }}
             className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
           />
-          <span className="text-[13.5px] font-medium text-gray-700">Todos os profissionais</span>
-          <span className="text-xs text-gray-400">O cliente poderá agendar com qualquer profissional</span>
+          <span className="text-[13.5px] font-medium text-foreground">Todos os profissionais</span>
+          <span className="text-xs text-muted-foreground">O cliente poderá agendar com qualquer profissional</span>
         </label>
 
         {!allProfs && (
@@ -425,21 +426,21 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
               onChange={e => { setProfSearch(e.target.value); setShowProfDrop(true) }}
               onFocus={() => setShowProfDrop(true)}
               placeholder="Buscar profissional pelo nome..."
-              className="w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+              className="w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border border-border outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
             />
 
             {showProfDrop && profSearch.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1.5 duration-150">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-lg z-10 max-h-[200px] overflow-y-auto animate-in fade-in slide-in-from-top-1.5 duration-150">
                 {filteredProfs.length === 0 ? (
-                  <div className="px-3.5 py-3 text-[13px] text-gray-400">Nenhum profissional encontrado</div>
+                  <div className="px-3.5 py-3 text-[13px] text-muted-foreground">Nenhum profissional encontrado</div>
                 ) : filteredProfs.slice(0, 8).map(p => (
                   <div
                     key={p.id}
                     onMouseDown={() => addProf(p)}
-                    className="px-3.5 py-2.5 cursor-pointer flex items-center gap-2.5 hover:bg-gray-50"
+                    className="px-3.5 py-2.5 cursor-pointer flex items-center gap-2.5 hover:bg-accent"
                   >
                     <AvatarName name={p.name} size={28} />
-                    <span className="text-[13px] text-gray-500">{p.position ?? p.email}</span>
+                    <span className="text-[13px] text-muted-foreground">{p.position ?? p.email}</span>
                   </div>
                 ))}
               </div>
@@ -448,12 +449,12 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             {selectedProfs.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {selectedProfs.map(p => (
-                  <span key={p.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 pl-1.5 bg-blue-50 border border-blue-200 rounded-full text-[13px] text-blue-800">
+                  <span key={p.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 pl-1.5 bg-blue-50 border border-blue-200 rounded-full text-[13px] text-blue-800 dark:bg-blue-500 dark:border-blue-500 dark:text-white">
                     <AvatarName name={p.name} size={20} />
                     {p.name}
                     <button
                       type="button"
-                      className="bg-transparent border-0 cursor-pointer p-0 flex items-center text-blue-300 hover:text-blue-800 transition-colors"
+                      className="bg-transparent border-0 cursor-pointer p-0 flex items-center text-blue-300 hover:text-blue-800 dark:text-white/70 dark:hover:text-white transition-colors"
                       onClick={() => removeProf(p.id)}
                       title="Remover"
                     >
@@ -471,9 +472,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
       {/* ── Card 5: Serviços permitidos ── */}
       {services.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-          <p className="text-sm font-bold text-gray-900 m-0 mb-5">Serviços permitidos</p>
-          <p className="text-[13px] text-gray-500 m-0 mb-4">
+        <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
+          <p className="text-sm font-bold text-foreground m-0 mb-5">Serviços permitidos</p>
+          <p className="text-[13px] text-muted-foreground m-0 mb-4">
             Restringe quais serviços este cliente pode agendar. Deixe vazio para não restringir.
           </p>
 
@@ -487,8 +488,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
               }}
               className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
             />
-            <span className="text-[13.5px] font-medium text-gray-700">Todos os serviços</span>
-            <span className="text-xs text-gray-400">O cliente poderá agendar qualquer serviço</span>
+            <span className="text-[13.5px] font-medium text-foreground">Todos os serviços</span>
+            <span className="text-xs text-muted-foreground">O cliente poderá agendar qualquer serviço</span>
           </label>
 
           {!allSvcs && (
@@ -496,7 +497,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
               {services.map((svc: Service) => (
                 <div
                   key={svc.id}
-                  className="flex items-center gap-2.5 py-2.5 border-b border-gray-100 last:border-b-0 cursor-pointer hover:bg-gray-50 -mx-3 px-3 rounded-md transition-colors"
+                  className="flex items-center gap-2.5 py-2.5 border-b border-border last:border-b-0 cursor-pointer hover:bg-accent -mx-3 px-3 rounded-md transition-colors"
                   onClick={() => toggleService(svc.id)}
                 >
                   <input
@@ -507,8 +508,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                     className="w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
                   />
                   <div>
-                    <span className="text-[13.5px] font-medium text-gray-900">{svc.name}</span>
-                    <span className="text-xs text-gray-400 ml-2">{svc.durationMinutes} min</span>
+                    <span className="text-[13.5px] font-medium text-foreground">{svc.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">{svc.durationMinutes} min</span>
                   </div>
                 </div>
               ))}
@@ -518,9 +519,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       )}
 
       {/* ── Card 6: Limite de serviços ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-gray-900 m-0 mb-2">Limite de serviços</p>
-        <p className="text-[13px] text-gray-500 m-0 mb-5">
+      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-2">Limite de serviços</p>
+        <p className="text-[13px] text-muted-foreground m-0 mb-5">
           Define quantos agendamentos este cliente pode fazer em um determinado período.
         </p>
 
@@ -542,7 +543,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                 key={lm}
                 className={cn(
                   'flex items-start gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors',
-                  limitMode === lm ? 'border-indigo-400 bg-indigo-50/60' : 'border-gray-200 hover:bg-gray-50',
+                  limitMode === lm ? 'border-indigo-400 bg-indigo-500/10' : 'border-border hover:bg-accent',
                 )}
               >
                 <input
@@ -558,8 +559,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                   className="mt-0.5 w-4 h-4 accent-indigo-500 cursor-pointer shrink-0"
                 />
                 <div>
-                  <p className="m-0 text-[13.5px] font-semibold text-gray-800">{labels[lm]}</p>
-                  <p className="m-0 text-xs text-gray-400">{descs[lm]}</p>
+                  <p className="m-0 text-[13.5px] font-semibold text-foreground">{labels[lm]}</p>
+                  <p className="m-0 text-xs text-muted-foreground">{descs[lm]}</p>
                 </div>
               </label>
             )
@@ -570,7 +571,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         {limitMode === 'normal' && (
           <div className="flex gap-3 items-end">
             <div className="[flex:0_0_140px]">
-              <label htmlFor="client-limit-count" className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
+              <label htmlFor="client-limit-count" className="block text-[13px] font-medium text-foreground mb-1.5">Quantidade</label>
               <input
                 id="client-limit-count"
                 type="number"
@@ -583,15 +584,15 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
               {errors.serviceLimitCount && <p className="text-xs text-red-500 mt-1 m-0">{errors.serviceLimitCount}</p>}
             </div>
             <div className="[flex:0_0_180px]">
-              <label htmlFor="client-limit-period" className="block text-[13px] font-medium text-gray-700 mb-1.5">Por período</label>
+              <label htmlFor="client-limit-period" className="block text-[13px] font-medium text-foreground mb-1.5">Por período</label>
               <div className="relative">
                 <select
                   id="client-limit-period"
                   value={form.serviceLimitPeriod}
                   onChange={e => set('serviceLimitPeriod', e.target.value)}
                   className={cn(
-                    'w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-                    errors.serviceLimitPeriod ? 'border-red-400' : 'border-gray-200',
+                    'w-full h-[42px] pl-3 pr-8 text-sm text-foreground bg-background rounded-lg border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+                    errors.serviceLimitPeriod ? 'border-red-400' : 'border-border',
                   )}
                 >
                   <option value="">Selecione…</option>
@@ -599,7 +600,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                   <option value="week">Semana</option>
                   <option value="month">Mês</option>
                 </select>
-                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
               </div>
@@ -612,7 +613,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         {limitMode === 'per_service' && (
           <div className="flex flex-col gap-3">
             {!allSvcs && selectedServiceIds.length === 0 ? (
-              <p className="text-[13px] text-gray-400">
+              <p className="text-[13px] text-muted-foreground">
                 Selecione serviços específicos em &quot;Serviços permitidos&quot; para configurar limites por serviço.
               </p>
             ) : (
@@ -622,10 +623,10 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                 return (
                   <div key={id} className="flex gap-3 items-end">
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium text-gray-700 mb-1.5 truncate">{svc?.name ?? id}</p>
+                      <p className="text-[13px] font-medium text-foreground mb-1.5 truncate">{svc?.name ?? id}</p>
                     </div>
                     <div className="[flex:0_0_120px]">
-                      <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Quantidade</label>
+                      <label className="block text-[13px] font-medium text-foreground mb-1.5">Quantidade</label>
                       <input
                         type="number"
                         min={1}
@@ -636,19 +637,19 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                       />
                     </div>
                     <div className="[flex:0_0_160px]">
-                      <label className="block text-[13px] font-medium text-gray-700 mb-1.5">Período</label>
+                      <label className="block text-[13px] font-medium text-foreground mb-1.5">Período</label>
                       <div className="relative">
                         <select
                           value={sl.period}
                           onChange={e => setPerServiceLimits(prev => ({ ...prev, [id]: { ...sl, period: e.target.value } }))}
-                          className="w-full h-[42px] pl-3 pr-8 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
+                          className="w-full h-[42px] pl-3 pr-8 text-sm text-foreground bg-background rounded-lg border border-border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
                         >
                           <option value="">Selecione…</option>
                           <option value="day">Dia</option>
                           <option value="week">Semana</option>
                           <option value="month">Mês</option>
                         </select>
-                        <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                           <polyline points="6 9 12 15 18 9"/>
                         </svg>
                       </div>
@@ -663,7 +664,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
 
       {/* ── Footer ── */}
       {errors.root && (
-        <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700">
+        <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 dark:bg-red-500 dark:border-red-500 dark:text-white">
           {errors.root}
         </div>
       )}
@@ -686,7 +687,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         <button
           type="button"
           onClick={onCancel}
-          className="h-[42px] px-5 bg-white text-gray-700 border border-gray-200 rounded-lg text-sm font-medium cursor-pointer hover:bg-gray-50 transition-colors"
+          className="h-[42px] px-5 bg-background text-foreground border border-border rounded-lg text-sm font-medium cursor-pointer hover:bg-accent transition-colors"
         >
           Cancelar
         </button>
