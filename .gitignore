@@ -22,3 +22,10 @@ coverage/
 
 # Playwright MCP logs
 .playwright-mcp/
+
+# Local planning docs (superpowers)
+docs/superpowers/
+
+# Claude
+.claude
+
