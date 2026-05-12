@@ -6,25 +6,16 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { useTenant } from '@/providers/TenantProvider'
 import { apiFetch, ApiError } from '@/lib/api'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
+import {Spinner} from "@/components/ui/Spinner";
+import { Alert } from '@/components/ui/Alert';
 
 const schema = z.object({
   email: z.string().min(1, 'Informe seu e-mail').email('Informe um e-mail válido'),
 })
 
 type FormData = z.infer<typeof schema>
-
-function Spinner() {
-  return (
-    <svg
-      className="animate-spin"
-      width="16" height="16" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-    </svg>
-  )
-}
 
 export default function ForgotPasswordPage() {
   const { slug } = useTenant()
@@ -58,31 +49,35 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="relative min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* Heading */}
         <div className="text-center mb-7">
-          <h1 className="text-2xl font-bold text-gray-900 m-0 mb-2 tracking-[-0.015em]">
+          <h1 className="text-2xl font-bold text-foreground m-0 mb-2 tracking-[-0.015em]">
             Esqueceu a senha?
           </h1>
-          <p className="text-sm text-gray-500 m-0">
+          <p className="text-sm text-muted-foreground m-0">
             Informe seu e-mail para receber o link de redefinição
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="bg-card rounded-xl p-8 border border-border shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
 
           {submitted ? (
             /* Success state */
             <div className="flex flex-col items-center gap-3 py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="w-11 h-11 rounded-full bg-green-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-green-50 dark:bg-green-500/20 flex items-center justify-center">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
                   <path d="M20 6 9 17l-5-5"/>
                 </svg>
               </div>
-              <p className="text-sm text-gray-700 text-center leading-relaxed">
+              <p className="text-sm text-foreground text-center leading-relaxed">
                 Se este e-mail estiver cadastrado, você receberá um link de redefinição em breve.
               </p>
             </div>
@@ -92,7 +87,7 @@ export default function ForgotPasswordPage() {
 
               {/* E-mail */}
               <div className="mb-5">
-                <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label htmlFor="email" className="block text-[13px] font-medium text-foreground mb-1.5">
                   E-mail
                 </label>
                 <input
@@ -102,8 +97,8 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   {...register('email')}
                   className={cn(
-                    'w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                    errors.email ? 'border-red-400' : 'border-gray-200',
+                    'w-full h-[46px] px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                    errors.email ? 'border-red-400' : 'border-border',
                   )}
                 />
                 {errors.email && (
@@ -115,14 +110,7 @@ export default function ForgotPasswordPage() {
 
               {/* Erro global */}
               {errors.root && (
-                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                  </svg>
-                  {errors.root.message}
-                </div>
+                <Alert variant="error" size="sm" className="mb-4">{errors.root.message}</Alert>
               )}
 
               {/* Botão */}
@@ -140,7 +128,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-5 text-[13px] text-gray-500">
+        <p className="text-center mt-5 text-[13px] text-muted-foreground">
           Lembrou a senha?{' '}
           <a
             href="./login"
