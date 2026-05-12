@@ -7,7 +7,11 @@ import { z } from 'zod/v3'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
+import {Spinner} from "@/components/ui/Spinner";
+import {EyeIcon} from "@/components/ui/EyeIcon";
+import { Alert } from '@/components/ui/Alert';
 
 const schema = z.object({
   name: z.string().min(2, 'Informe seu nome completo'),
@@ -21,32 +25,6 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-  )
-}
-
-function Spinner() {
-  return (
-    <svg
-      className="animate-spin"
-      width="16" height="16" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-    </svg>
-  )
-}
 
 export default function RegisterPage() {
   const { register: registerUser, user } = useAuth()
@@ -80,26 +58,30 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="relative min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* Heading */}
         <div className="text-center mb-7">
-          <h1 className="text-2xl font-bold text-gray-900 m-0 mb-2 tracking-[-0.015em]">
+          <h1 className="text-2xl font-bold text-foreground m-0 mb-2 tracking-[-0.015em]">
             Crie sua conta
           </h1>
-          <p className="text-sm text-gray-500 m-0">
+          <p className="text-sm text-muted-foreground m-0">
             Preencha os dados para se cadastrar
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="bg-card rounded-xl p-8 border border-border shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
             {/* Nome */}
             <div className="mb-4">
-              <label htmlFor="name" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="name" className="block text-[13px] font-medium text-foreground mb-1.5">
                 Nome completo
               </label>
               <input
@@ -107,8 +89,8 @@ export default function RegisterPage() {
                 autoComplete="name"
                 {...register('name')}
                 className={cn(
-                  'w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                  errors.name ? 'border-red-400' : 'border-gray-200',
+                  'w-full h-[46px] px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                  errors.name ? 'border-red-400' : 'border-border',
                 )}
               />
               {errors.name && (
@@ -120,7 +102,7 @@ export default function RegisterPage() {
 
             {/* E-mail */}
             <div className="mb-4">
-              <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="email" className="block text-[13px] font-medium text-foreground mb-1.5">
                 E-mail
               </label>
               <input
@@ -128,8 +110,8 @@ export default function RegisterPage() {
                 autoComplete="email"
                 {...register('email')}
                 className={cn(
-                  'w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                  errors.email ? 'border-red-400' : 'border-gray-200',
+                  'w-full h-[46px] px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                  errors.email ? 'border-red-400' : 'border-border',
                 )}
               />
               {errors.email && (
@@ -141,21 +123,21 @@ export default function RegisterPage() {
 
             {/* Telefone */}
             <div className="mb-4">
-              <label htmlFor="phone" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="phone" className="block text-[13px] font-medium text-foreground mb-1.5">
                 Telefone{' '}
-                <span className="text-xs font-normal text-gray-400">(opcional)</span>
+                <span className="text-xs font-normal text-muted-foreground">(opcional)</span>
               </label>
               <input
                 id="phone" type="tel" placeholder="(11) 99999-9999"
                 autoComplete="tel"
                 {...register('phone')}
-                className="w-full h-[46px] px-3.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border"
+                className="w-full h-[46px] px-3.5 text-sm text-foreground bg-background rounded-lg border border-border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border"
               />
             </div>
 
             {/* Senha */}
             <div className="mb-4">
-              <label htmlFor="password" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="password" className="block text-[13px] font-medium text-foreground mb-1.5">
                 Senha
               </label>
               <div className="relative">
@@ -166,14 +148,14 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   {...register('password')}
                   className={cn(
-                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                    errors.password ? 'border-red-400' : 'border-gray-200',
+                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                    errors.password ? 'border-red-400' : 'border-border',
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
                   aria-label={showPassword ? 'Ocultar' : 'Mostrar'}
                 >
                   <EyeIcon open={showPassword} />
@@ -188,7 +170,7 @@ export default function RegisterPage() {
 
             {/* Confirmar senha */}
             <div className="mb-5">
-              <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+              <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-foreground mb-1.5">
                 Confirmar senha
               </label>
               <div className="relative">
@@ -199,14 +181,14 @@ export default function RegisterPage() {
                   autoComplete="new-password"
                   {...register('confirmPassword')}
                   className={cn(
-                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                    errors.confirmPassword ? 'border-red-400' : 'border-gray-200',
+                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                    errors.confirmPassword ? 'border-red-400' : 'border-border',
                   )}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPass(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
                   aria-label={showConfirmPass ? 'Ocultar' : 'Mostrar'}
                 >
                   <EyeIcon open={showConfirmPass} />
@@ -221,14 +203,7 @@ export default function RegisterPage() {
 
             {/* Erro global */}
             {errors.root && (
-              <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {errors.root.message}
-              </div>
+              <Alert variant="error" size="sm" className="mb-4">{errors.root.message}</Alert>
             )}
 
             {/* Botão */}
@@ -244,7 +219,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-5 text-[13px] text-gray-500">
+        <p className="text-center mt-5 text-[13px] text-muted-foreground">
           Já tem uma conta?{' '}
           <a
             href="./login"

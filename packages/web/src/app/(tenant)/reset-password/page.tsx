@@ -7,7 +7,11 @@ import { z } from 'zod/v3'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTenant } from '@/providers/TenantProvider'
 import { apiFetch, ApiError } from '@/lib/api'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
+import {Spinner} from "@/components/ui/Spinner";
+import {EyeIcon} from "@/components/ui/EyeIcon";
+import { Alert } from '@/components/ui/Alert';
 
 const schema = z
   .object({
@@ -26,54 +30,7 @@ type PageState =
   | { status: 'valid'; email: string }
   | { status: 'invalid' }
 
-function Spinner() {
-  return (
-    <svg
-      className="animate-spin"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-    </svg>
-  )
-}
 
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  )
-}
 
 function ResetPasswordContent() {
   const { slug } = useTenant()
@@ -134,15 +91,19 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="relative min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* Heading */}
         <div className="text-center mb-7">
-          <h1 className="text-2xl font-bold text-gray-900 m-0 mb-2 tracking-[-0.015em]">
+          <h1 className="text-2xl font-bold text-foreground m-0 mb-2 tracking-[-0.015em]">
             Redefinir senha
           </h1>
-          <p className="text-sm text-gray-500 m-0">
+          <p className="text-sm text-muted-foreground m-0">
             {pageState.status === 'loading'
               ? 'Verificando link...'
               : pageState.status === 'valid'
@@ -152,18 +113,18 @@ function ResetPasswordContent() {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-xl p-8 border border-gray-200 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
+        <div className="bg-card rounded-xl p-8 border border-border shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
 
           {pageState.status === 'loading' && (
             <div className="flex flex-col items-center gap-3 py-4">
               <Spinner />
-              <p className="text-sm text-gray-500">Verificando link de redefinição...</p>
+              <p className="text-sm text-muted-foreground">Verificando link de redefinição...</p>
             </div>
           )}
 
           {pageState.status === 'invalid' && (
             <div className="flex flex-col items-center gap-3 py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="w-11 h-11 rounded-full bg-red-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-full bg-red-50 dark:bg-red-500/20 flex items-center justify-center">
                 <svg
                   width="20"
                   height="20"
@@ -180,7 +141,7 @@ function ResetPasswordContent() {
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
               </div>
-              <p className="text-sm text-gray-700 text-center leading-relaxed">
+              <p className="text-sm text-foreground text-center leading-relaxed">
                 Link inválido ou expirado. Solicite um novo link de redefinição de senha.
               </p>
               <a
@@ -201,7 +162,7 @@ function ResetPasswordContent() {
 
               {/* E-mail (disabled, informational) */}
               <div className="mb-4.5">
-                <label htmlFor="email" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label htmlFor="email" className="block text-[13px] font-medium text-foreground mb-1.5">
                   E-mail
                 </label>
                 <input
@@ -209,13 +170,13 @@ function ResetPasswordContent() {
                   type="email"
                   value={pageState.email}
                   disabled
-                  className="w-full h-[46px] px-3.5 text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200 outline-none cursor-not-allowed box-border"
+                  className="w-full h-[46px] px-3.5 text-sm text-muted-foreground bg-muted rounded-lg border border-border outline-none cursor-not-allowed box-border"
                 />
               </div>
 
               {/* Nova senha */}
               <div className="mb-4.5">
-                <label htmlFor="newPassword" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label htmlFor="newPassword" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Nova senha
                 </label>
                 <div className="relative">
@@ -226,14 +187,14 @@ function ResetPasswordContent() {
                     autoComplete="new-password"
                     {...register('newPassword')}
                     className={cn(
-                      'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                      errors.newPassword ? 'border-red-400' : 'border-gray-200',
+                      'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                      errors.newPassword ? 'border-red-400' : 'border-border',
                     )}
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
                     aria-label={showNewPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     <EyeIcon open={showNewPassword} />
@@ -248,7 +209,7 @@ function ResetPasswordContent() {
 
               {/* Confirmar nova senha */}
               <div className="mb-5">
-                <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+                <label htmlFor="confirmPassword" className="block text-[13px] font-medium text-foreground mb-1.5">
                   Confirmar nova senha
                 </label>
                 <div className="relative">
@@ -259,14 +220,14 @@ function ResetPasswordContent() {
                     autoComplete="new-password"
                     {...register('confirmPassword')}
                     className={cn(
-                      'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-gray-900 bg-white rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
-                      errors.confirmPassword ? 'border-red-400' : 'border-gray-200',
+                      'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border',
+                      errors.confirmPassword ? 'border-red-400' : 'border-border',
                     )}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-gray-400 hover:text-gray-700 hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
                     aria-label={showConfirmPassword ? 'Ocultar confirmação' : 'Mostrar confirmação'}
                   >
                     <EyeIcon open={showConfirmPassword} />
@@ -281,23 +242,7 @@ function ResetPasswordContent() {
 
               {/* Erro global */}
               {errors.root && (
-                <div className="mb-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-[13px] text-red-700 flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    className="shrink-0"
-                  >
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  {errors.root.message}
-                </div>
+                <Alert variant="error" size="sm" className="mb-4">{errors.root.message}</Alert>
               )}
 
               {/* Botão */}
@@ -315,7 +260,7 @@ function ResetPasswordContent() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-5 text-[13px] text-gray-500">
+        <p className="text-center mt-5 text-[13px] text-muted-foreground">
           Lembrou a senha?{' '}
           <a
             href="./login"
