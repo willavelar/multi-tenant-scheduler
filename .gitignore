@@ -19,3 +19,6 @@ coverage/
 
 # Git worktrees
 .worktrees/
+
+# Playwright MCP logs
+.playwright-mcp/
