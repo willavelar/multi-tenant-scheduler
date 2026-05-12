@@ -9,6 +9,9 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
+import { Spinner } from "@/components/ui/Spinner";
+import { EyeIcon } from "@/components/ui/EyeIcon";
+import { Alert } from '@/components/ui/Alert'
 
 const schema = z.object({
   email: z.string().email('Informe um e-mail válido'),
@@ -16,32 +19,6 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  ) : (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-  )
-}
-
-function Spinner() {
-  return (
-    <svg
-      className="animate-spin"
-      width="16" height="16" viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
-    >
-      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-    </svg>
-  )
-}
 
 function resolveReturnTo(searchParams: ReturnType<typeof useSearchParams>): string {
   const stored = sessionStorage.getItem('session.returnTo')
@@ -88,7 +65,7 @@ function LoginContent() {
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="w-full max-w-110 animate-in fade-in slide-in-from-bottom-3 duration-300">
 
         {/* Heading */}
         <div className="text-center mb-7">
@@ -102,36 +79,23 @@ function LoginContent() {
 
         {/* Banner de sessão expirada */}
         {reason === 'session_expired' && (
-          <div className="mb-5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-[13px] text-amber-800 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0 text-amber-500">
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
+          <Alert variant="warning" className="mb-5">
             Sua sessão expirou. Faça login para continuar.
-          </div>
+          </Alert>
         )}
 
         {/* Banner de senha alterada */}
         {reason === 'password_reset' && (
-          <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-[13px] text-green-800 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0 text-green-500">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+          <Alert variant="success" className="mb-5">
             Senha alterada com sucesso. Faça login para continuar.
-          </div>
+          </Alert>
         )}
 
         {/* Banner de conta ativada */}
         {reason === 'account_activated' && (
-          <div className="mb-5 px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-[13px] text-green-800 flex items-center gap-2.5 animate-in fade-in slide-in-from-top-2 duration-300">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0 text-green-500">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
+          <Alert variant="success" className="mb-5">
             Senha cadastrada com sucesso. Faça login para continuar.
-          </div>
+          </Alert>
         )}
 
         {/* Card */}
@@ -150,7 +114,7 @@ function LoginContent() {
                 autoComplete="email"
                 {...register('email')}
                 className={cn(
-                  'w-full h-[46px] px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
+                  'w-full h-11.5 px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
                   errors.email ? 'border-destructive' : 'border-border',
                 )}
               />
@@ -182,7 +146,7 @@ function LoginContent() {
                   autoComplete="current-password"
                   {...register('password')}
                   className={cn(
-                    'w-full h-[46px] pl-3.5 pr-[42px] text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
+                    'w-full h-11.5 pl-3.5 pr-10.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
                     errors.password ? 'border-destructive' : 'border-border',
                   )}
                 />
@@ -204,21 +168,16 @@ function LoginContent() {
 
             {/* Erro global */}
             {errors.root && (
-              <div className="mb-4 px-3 py-2.5 bg-destructive/10 border border-destructive/20 rounded-lg text-[13px] text-destructive flex items-center gap-2 animate-in fade-in slide-in-from-top-1.5 duration-200">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="shrink-0">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="12" y1="8" x2="12" y2="12"/>
-                  <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
+              <Alert variant="error" size="sm" className="mb-4">
                 {errors.root.message}
-              </div>
+              </Alert>
             )}
 
             {/* Botão */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-[46px] bg-blue-600 text-white font-semibold rounded-lg border-0 cursor-pointer flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-px active:translate-y-0 active:shadow-none disabled:opacity-65 disabled:cursor-not-allowed transition-all"
+              className="w-full h-11.5 bg-blue-600 text-white font-semibold rounded-lg border-0 cursor-pointer flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-px active:translate-y-0 active:shadow-none disabled:opacity-65 disabled:cursor-not-allowed transition-all"
             >
               {isSubmitting ? <><Spinner />Entrando...</> : 'Entrar'}
             </button>
