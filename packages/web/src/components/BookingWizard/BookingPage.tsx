@@ -58,7 +58,7 @@ export function BookingPage() {
   return (
     <div className="max-w-lg mx-auto py-10 px-4">
       {user && (
-        <div className="flex items-center justify-between mb-6 text-sm text-gray-500">
+        <div className="flex items-center justify-between mb-6 text-sm text-muted-foreground">
           <span>{user.email}</span>
           <button
             onClick={() => router.push('/appointments')}
@@ -74,10 +74,10 @@ export function BookingPage() {
           <div key={label} className="flex-1">
             <div
               className={`h-1.5 rounded-full ${
-                i + 1 <= state.step ? 'bg-indigo-600' : 'bg-gray-200'
+                i + 1 <= state.step ? 'bg-indigo-600' : 'bg-muted'
               }`}
             />
-            <p className={`text-xs mt-1 ${i + 1 === state.step ? 'text-indigo-600 font-semibold' : 'text-gray-400'}`}>
+            <p className={`text-xs mt-1 ${i + 1 === state.step ? 'text-indigo-600 font-semibold' : 'text-muted-foreground'}`}>
               {label}
             </p>
           </div>

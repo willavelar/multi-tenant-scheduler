@@ -38,9 +38,9 @@ export function AvatarName({ name, subtitle, size = 34, avatarUrl }: Props) {
         </div>
       )}
       <div>
-        <p className="m-0 font-semibold text-xs text-gray-900 leading-[1.3]">{name}</p>
+        <p className="m-0 font-semibold text-xs text-foreground leading-[1.3]">{name}</p>
         {subtitle && (
-          <p className="m-0 mt-px text-xs text-gray-400 leading-[1.3]">{subtitle}</p>
+          <p className="m-0 mt-px text-xs text-muted-foreground leading-[1.3]">{subtitle}</p>
         )}
       </div>
     </div>

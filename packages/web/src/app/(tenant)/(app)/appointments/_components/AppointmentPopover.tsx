@@ -74,31 +74,31 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
   const popover = (
     <div
       ref={ref}
-      className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-visible w-[300px]"
+      className="fixed z-50 bg-card rounded-xl shadow-2xl border border-border overflow-visible w-[300px]"
       style={{ top, left }}
     >
       {/* Action bar */}
-      <div className="flex items-center justify-end gap-1 px-3 py-2.5 bg-gray-50 border-b border-gray-200 rounded-t-xl">
+      <div className="flex items-center justify-end gap-1 px-3 py-2.5 bg-muted border-b border-border rounded-t-xl">
         {/* Status ⋮ */}
         <div className="relative">
           <button
             title="Alterar status"
-            className="w-8 h-8 rounded-full border-none bg-gray-100 flex flex-col items-center justify-center gap-[3px] cursor-pointer hover:bg-gray-200 transition-colors"
+            className="w-8 h-8 rounded-full border-none bg-muted flex flex-col items-center justify-center gap-[3px] cursor-pointer hover:bg-accent transition-colors"
             onClick={() => setStatusOpen(o => !o)}
           >
-            <span className="w-[3px] h-[3px] bg-gray-600 rounded-full" />
-            <span className="w-[3px] h-[3px] bg-gray-600 rounded-full" />
-            <span className="w-[3px] h-[3px] bg-gray-600 rounded-full" />
+            <span className="w-[3px] h-[3px] bg-foreground rounded-full" />
+            <span className="w-[3px] h-[3px] bg-foreground rounded-full" />
+            <span className="w-[3px] h-[3px] bg-foreground rounded-full" />
           </button>
           {statusOpen && (
-            <div className="absolute right-0 top-9 bg-white border border-gray-200 rounded-lg shadow-lg w-44 z-10 overflow-hidden">
+            <div className="absolute right-0 top-9 bg-card border border-border rounded-lg shadow-lg w-44 z-10 overflow-hidden">
               {status !== 'confirmed' && status !== 'completed' && (
-                <button className="w-full text-left px-3 py-2 text-[12.5px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-gray-100" onClick={() => handleStatusChange('confirm')}>
+                <button className="w-full text-left px-3 py-2 text-[12.5px] text-foreground hover:bg-accent flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-border" onClick={() => handleStatusChange('confirm')}>
                   <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />Confirmar
                 </button>
               )}
               {allowPaidStatus && status !== 'completed' && status !== 'cancelled' && (
-                <button className="w-full text-left px-3 py-2 text-[12.5px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-gray-100" onClick={() => handleStatusChange('complete')}>
+                <button className="w-full text-left px-3 py-2 text-[12.5px] text-foreground hover:bg-accent flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-border" onClick={() => handleStatusChange('complete')}>
                   <span className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0" />Marcar como Pago
                 </button>
               )}
@@ -114,7 +114,7 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
           )}
         </div>
 
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+        <div className="w-px h-5 bg-border mx-0.5" />
 
         {/* Close */}
         <button
@@ -138,10 +138,10 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
               {appointment.clientName.charAt(0).toUpperCase()}
             </span>
           )}
-          <span className="text-[15px] font-bold text-gray-900 leading-tight">{appointment.clientName}</span>
+          <span className="text-[15px] font-bold text-foreground leading-tight">{appointment.clientName}</span>
         </div>
         <div className="pl-[38px] space-y-1.5">
-          <div className="flex items-start gap-2 text-gray-500 text-[12.5px]">
+          <div className="flex items-start gap-2 text-muted-foreground text-[12.5px]">
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0 mt-0.5">
               <rect x="3" y="4" width="18" height="18" rx="2"/>
               <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
@@ -149,18 +149,18 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
             </svg>
             <span>{dateStr} · {startStr} – {endStr}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-500 text-[12.5px]">
+          <div className="flex items-center gap-2 text-muted-foreground text-[12.5px]">
             <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" className="flex-shrink-0">
               <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
               <line x1="7" y1="7" x2="7.01" y2="7"/>
             </svg>
             <span>{appointment.serviceName}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-500 text-[12.5px]">
+          <div className="flex items-center gap-2 text-muted-foreground text-[12.5px]">
             {appointment.professionalAvatarUrl ? (
               <img src={appointment.professionalAvatarUrl} alt={appointment.professionalName} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
             ) : (
-              <span className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center text-gray-500 text-[8px] font-bold">
+              <span className="w-4 h-4 rounded-full bg-muted flex-shrink-0 flex items-center justify-center text-muted-foreground text-[8px] font-bold">
                 {appointment.professionalName.charAt(0).toUpperCase()}
               </span>
             )}

@@ -6,6 +6,7 @@ import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/useTenantSet
 import { cn } from '@/lib/utils'
 import { FormSkeleton } from '@/components/ui/FormSkeleton'
 import { Button } from '@/components/ui/button'
+import {Spinner} from "@/components/ui/Spinner";
 
 type CancelReasonMode = 'no' | 'optional' | 'required'
 type DeadlineUnit = 'minutes' | 'hours' | 'days'
@@ -50,14 +51,6 @@ function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (
         )}
       />
     </button>
-  )
-}
-
-function Spinner() {
-  return (
-    <svg className="animate-spin text-muted-foreground" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-    </svg>
   )
 }
 
@@ -232,7 +225,7 @@ export function TenantGeneralForm() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'paid' && <Spinner />}
+              {toggleSaving === 'paid' && <Spinner size={14} />}
               <Toggle checked={allowPaidStatus} onChange={handleTogglePaidStatus} disabled={toggleSaving === 'paid'} />
             </div>
           </div>
@@ -248,7 +241,7 @@ export function TenantGeneralForm() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'confirm' && <Spinner />}
+              {toggleSaving === 'confirm' && <Spinner size={14} />}
               <Toggle checked={requiresConfirm} onChange={handleToggleConfirmation} disabled={toggleSaving === 'confirm'} />
             </div>
           </div>
@@ -264,7 +257,7 @@ export function TenantGeneralForm() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'cancelReason' && <Spinner />}
+              {toggleSaving === 'cancelReason' && <Spinner size={14} />}
               <div className="flex border border-border rounded-lg overflow-hidden">
                 {CANCEL_REASON_OPTIONS.map((opt, i) => (
                   <button
@@ -299,7 +292,7 @@ export function TenantGeneralForm() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'deadline' && <Spinner />}
+              {toggleSaving === 'deadline' && <Spinner size={14} />}
               <input
                 type="number"
                 min={1}

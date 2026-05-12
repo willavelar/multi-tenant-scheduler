@@ -40,7 +40,7 @@ export function CalendarMonthEvent({ appointment, color, onClick }: Props) {
       <span
         className={cn(
           'text-[10px] font-medium truncate',
-          !isCancelled && (isPast ? 'text-gray-700' : 'text-white'),
+          !isCancelled && (isPast ? 'text-muted-foreground' : 'text-white'),
         )}
         style={isCancelled ? { color } : undefined}
       >
