@@ -72,7 +72,7 @@ type AlertProps = React.HTMLAttributes<HTMLDivElement> &
 
 function Alert({ variant = 'error', size = 'md', title, children, className, ...props }: AlertProps) {
   const hasTitle = !!title
-  const variantSafe = variant as AlertVariant
+  const v: AlertVariant = variant ?? 'error'
   return (
     <div
       role="alert"
@@ -83,8 +83,8 @@ function Alert({ variant = 'error', size = 'md', title, children, className, ...
       )}
       {...props}
     >
-      <span className={cn('shrink-0', ICON_CLASS[variantSafe], hasTitle && 'mt-0.5')}>
-        {ICONS[variantSafe]}
+      <span className={cn('shrink-0', ICON_CLASS[v], hasTitle && 'mt-0.5')}>
+        {ICONS[v]}
       </span>
       {hasTitle ? (
         <div>
