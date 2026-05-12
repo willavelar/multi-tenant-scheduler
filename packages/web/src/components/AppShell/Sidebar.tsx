@@ -93,7 +93,7 @@ export function Sidebar() {
   const settingsItems = SETTINGS_ITEMS.filter(item => role && item.roles.includes(role))
 
   return (
-    <aside className="w-[260px] min-h-screen bg-sidebar fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-sidebar-border">
+    <aside className="w-65 min-h-screen bg-sidebar fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-sidebar-border">
 
       {/* Brand */}
       <div className="px-5 pt-5 pb-4 border-b border-sidebar-border">
@@ -132,7 +132,7 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
+                'flex items-center gap-2.5 px-3 py-2.25 rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
                 active
                   ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
                   : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
@@ -156,7 +156,7 @@ export function Sidebar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
+                    'flex items-center gap-2.5 px-3 py-2.25 rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
                     active
                       ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
                       : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'

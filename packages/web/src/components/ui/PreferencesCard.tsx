@@ -11,17 +11,17 @@ type Props = {
 }
 
 const inputCls = cn(
-  'w-full h-[42px] px-3 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors',
+  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border border-border outline-none transition-colors',
   'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
 )
 
 export function PreferencesCard({ timezone, timeFormat, onTimezoneChange, onTimeFormatChange }: Props) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 mb-5 shadow-sm">
-      <p className="text-sm font-bold text-gray-900 m-0 mb-5">Preferências</p>
+    <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
+      <p className="text-sm font-bold text-foreground m-0 mb-5">Preferências</p>
 
       <div className="mb-4">
-        <label htmlFor="pref-timezone" className="block text-[13px] font-medium text-gray-700 mb-1.5">
+        <label htmlFor="pref-timezone" className="block text-[13px] font-medium text-foreground mb-1.5">
           Fuso horário
         </label>
         <div className="relative max-w-[420px]">
@@ -36,7 +36,7 @@ export function PreferencesCard({ timezone, timeFormat, onTimezoneChange, onTime
             ))}
           </select>
           <svg
-            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500"
+            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
             width="12" height="12" viewBox="0 0 24 24"
             fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
           >
@@ -46,7 +46,7 @@ export function PreferencesCard({ timezone, timeFormat, onTimezoneChange, onTime
       </div>
 
       <div>
-        <p className="text-[13px] font-medium text-gray-700 mb-2">Formato de horário</p>
+        <p className="text-[13px] font-medium text-foreground mb-2">Formato de horário</p>
         <div className="flex flex-col gap-2">
           <label className="flex items-center gap-2.5 cursor-pointer select-none">
             <input
@@ -57,7 +57,7 @@ export function PreferencesCard({ timezone, timeFormat, onTimezoneChange, onTime
               onChange={() => onTimeFormatChange('24h')}
               className="w-4 h-4 accent-indigo-500 cursor-pointer"
             />
-            <span className="text-[13.5px] text-gray-700">Formato de 24 horas <span className="text-gray-400">(Ex: 18:00)</span></span>
+            <span className="text-[13.5px] text-foreground">Formato de 24 horas <span className="text-muted-foreground">(Ex: 18:00)</span></span>
           </label>
           <label className="flex items-center gap-2.5 cursor-pointer select-none">
             <input
@@ -68,7 +68,7 @@ export function PreferencesCard({ timezone, timeFormat, onTimezoneChange, onTime
               onChange={() => onTimeFormatChange('12h')}
               className="w-4 h-4 accent-indigo-500 cursor-pointer"
             />
-            <span className="text-[13.5px] text-gray-700">Formato de 12 horas <span className="text-gray-400">(Ex: 6:00 PM)</span></span>
+            <span className="text-[13.5px] text-foreground">Formato de 12 horas <span className="text-muted-foreground">(Ex: 6:00 PM)</span></span>
           </label>
         </div>
       </div>

@@ -22,9 +22,9 @@ export function CalendarMonthGrid({ cells, currentMonth, appointments, today, on
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Weekday headers */}
-      <div className="grid grid-cols-7 border-b border-gray-200 flex-shrink-0">
+      <div className="grid grid-cols-7 border-b border-border flex-shrink-0">
         {WEEKDAY_HEADERS.map(d => (
-          <div key={d} className="py-2 text-center text-[10px] font-semibold text-gray-500 uppercase tracking-wide border-r border-gray-200 last:border-r-0">
+          <div key={d} className="py-2 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wide border-r border-border last:border-r-0">
             {d}
           </div>
         ))}
@@ -47,8 +47,8 @@ export function CalendarMonthGrid({ cells, currentMonth, appointments, today, on
               <div
                 key={cell.toISOString()}
                 className={cn(
-                  'border-r border-b border-gray-200 last:border-r-0 min-h-[110px] p-1.5',
-                  !isCurrentMonth && 'bg-gray-50/60'
+                  'border-r border-b border-border last:border-r-0 min-h-[110px] p-1.5',
+                  !isCurrentMonth && 'bg-muted/60'
                 )}
               >
                 <div
@@ -56,7 +56,7 @@ export function CalendarMonthGrid({ cells, currentMonth, appointments, today, on
                     'w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold mb-1 cursor-pointer',
                     isToday
                       ? 'bg-indigo-500 text-white'
-                      : isCurrentMonth ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400'
+                      : isCurrentMonth ? 'text-foreground hover:bg-accent' : 'text-muted-foreground'
                   )}
                   onClick={() => onDayClick(cell)}
                 >

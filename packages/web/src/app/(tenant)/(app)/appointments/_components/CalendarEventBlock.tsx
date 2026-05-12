@@ -35,7 +35,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
     <div
       className={cn(
         'absolute rounded-md cursor-pointer overflow-hidden select-none px-1.5 py-0.5 z-10',
-        isPast && 'opacity-60',
+        isPast && 'opacity-80',
       )}
       style={{
         top: top + 1,
@@ -50,7 +50,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
       <p
         className={cn(
           'text-[11px] font-semibold truncate leading-tight m-0',
-          !isCancelled && (isPast ? 'text-gray-700' : 'text-white'),
+          !isCancelled && (isPast ? 'text-white/60' : 'text-white'),
         )}
         style={isCancelled ? { color } : undefined}
       >
@@ -61,7 +61,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
           <p
             className={cn(
               'text-[10px] truncate leading-tight m-0',
-              !isCancelled && (isPast ? 'text-gray-500' : 'text-white/85'),
+              !isCancelled && (isPast ? 'text-white/50' : 'text-white/85'),
             )}
             style={isCancelled ? { color, opacity: 0.8 } : undefined}
           >
@@ -70,7 +70,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
           <p
             className={cn(
               'text-[10px] leading-tight m-0',
-              !isCancelled && (isPast ? 'text-gray-400' : 'text-white/75'),
+              !isCancelled && (isPast ? 'text-white/45' : 'text-white/75'),
             )}
             style={isCancelled ? { color, opacity: 0.7 } : undefined}
           >

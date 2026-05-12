@@ -82,14 +82,14 @@ export function Header() {
   }
 
   return (
-    <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
+    <header className="h-18 bg-card border-b border-border flex items-center justify-between px-6 sticky top-0 z-30">
 
       {/* Left: breadcrumb */}
       <nav className="flex items-center gap-1.5">
         {crumbs.map((crumb, i) => (
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-border">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-muted-foreground">
                 <polyline points="9 18 15 12 9 6"/>
               </svg>
             )}
@@ -120,10 +120,10 @@ export function Header() {
               <img
                 src={user.avatarUrl}
                 alt={user.name}
-                className="w-[34px] h-[34px] rounded-full object-cover shrink-0"
+                className="w-8.5 h-8.5 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-[34px] h-[34px] rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
+              <div className="w-8.5 h-8.5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold shrink-0">
                 {user ? initials(user.name) : '??'}
               </div>
             )}
@@ -148,7 +148,7 @@ export function Header() {
 
           {/* Dropdown */}
           {open && (
-            <div className="absolute top-[calc(100%+6px)] right-0 w-[210px] bg-popover border border-border rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1.5 duration-150">
+            <div className="absolute top-[calc(100%+6px)] right-0 w-52.5 bg-popover border border-border rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1.5 duration-150">
 
               {/* User info header */}
               <div className="px-3.5 py-3 border-b border-border">
@@ -172,7 +172,7 @@ export function Header() {
 
               <div className="border-t border-border py-1">
                 <button
-                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-red-600 bg-transparent border-0 cursor-pointer w-full text-left transition-colors hover:bg-accent"
+                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-destructive bg-transparent border-0 cursor-pointer w-full text-left transition-colors hover:bg-accent"
                   onClick={handleLogout}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

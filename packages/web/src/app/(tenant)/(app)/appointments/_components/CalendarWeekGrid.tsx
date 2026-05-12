@@ -26,15 +26,15 @@ export function CalendarWeekGrid({ days, appointments, today, onAppointmentClick
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Day header row */}
-      <div className="flex flex-shrink-0 border-b border-gray-200" style={{ paddingLeft: LABEL_WIDTH }}>
+      <div className="flex flex-shrink-0 border-b border-border" style={{ paddingLeft: LABEL_WIDTH }}>
         {days.map(day => {
           const isToday = isSameDay(day, today)
           return (
-            <div key={day.toISOString()} className="flex-1 text-center py-2 px-1 border-l border-gray-200 first:border-l-0">
-              <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">{weekdayShort(day)}</div>
+            <div key={day.toISOString()} className="flex-1 text-center py-2 px-1 border-l border-border first:border-l-0">
+              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{weekdayShort(day)}</div>
               <div className={cn(
                 'w-7 h-7 rounded-full flex items-center justify-center mx-auto mt-0.5 text-sm font-semibold',
-                isToday ? 'bg-indigo-500 text-white' : 'text-gray-700'
+                isToday ? 'bg-indigo-500 text-white' : 'text-foreground'
               )}>{day.getDate()}</div>
             </div>
           )
@@ -45,9 +45,9 @@ export function CalendarWeekGrid({ days, appointments, today, onAppointmentClick
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         <div className="flex relative" style={{ height: TOTAL_HOURS * HOUR_HEIGHT }}>
           {/* Time labels */}
-          <div className="relative flex-shrink-0 border-r border-gray-200" style={{ width: LABEL_WIDTH }}>
+          <div className="relative flex-shrink-0 border-r border-border" style={{ width: LABEL_WIDTH }}>
             {HOURS.map(h => (
-              <div key={h} className="absolute right-2 text-[10px] text-gray-400 select-none" style={{ top: h * HOUR_HEIGHT - 7 }}>
+              <div key={h} className="absolute right-2 text-[10px] text-muted-foreground select-none" style={{ top: h * HOUR_HEIGHT - 7 }}>
                 {formatHour(h)}
               </div>
             ))}
@@ -58,11 +58,11 @@ export function CalendarWeekGrid({ days, appointments, today, onAppointmentClick
             const dayAppts = appointments.filter(a => isSameDay(new Date(a.startsAt), day))
             const layout = layoutAppointments(dayAppts)
             return (
-              <div key={day.toISOString()} className="flex-1 border-l border-gray-200 relative first:border-l-0">
+              <div key={day.toISOString()} className="flex-1 border-l border-border relative first:border-l-0">
                 {HOURS.map(h => (
                   <div key={h} className="absolute w-full" style={{ top: h * HOUR_HEIGHT }}>
-                    <div className="border-t border-gray-200 w-full" />
-                    <div className="border-t border-dashed border-gray-100 w-full" style={{ marginTop: HOUR_HEIGHT / 2 }} />
+                    <div className="border-t border-border w-full" />
+                    <div className="border-t border-dashed border-border w-full" style={{ marginTop: HOUR_HEIGHT / 2 }} />
                   </div>
                 ))}
                 {layout.map(({ appointment, columnIndex, columnCount }) => {

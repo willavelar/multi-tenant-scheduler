@@ -97,7 +97,7 @@ export function DatePickerField({
           placeholder={placeholder}
           maxLength={10}
           className={cn(
-            'w-full h-[42px] pl-3 pr-10 text-sm text-gray-900 bg-white rounded-lg border border-gray-200 outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+            'w-full h-[42px] pl-3 pr-10 text-sm text-foreground bg-background rounded-lg border border-border outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
             inputClassName
           )}
         />
@@ -105,7 +105,7 @@ export function DatePickerField({
           type="button"
           tabIndex={-1}
           onClick={() => setOpen(o => !o)}
-          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 bg-transparent border-0 cursor-pointer"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-muted-foreground hover:text-foreground bg-transparent border-0 cursor-pointer"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -117,7 +117,7 @@ export function DatePickerField({
       </div>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1.5 duration-150">
+        <div className="absolute top-full left-0 mt-1 z-20 bg-popover border border-border rounded-xl shadow-lg animate-in fade-in slide-in-from-top-1.5 duration-150">
           <Calendar
             mode="single"
             selected={selectedDate}

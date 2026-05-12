@@ -20,8 +20,8 @@ export default function SettingsGeneralPage() {
   return (
     <div>
       <div className="mb-7">
-        <h1 className="text-lg font-bold text-gray-900 m-0">Gerais</h1>
-        <p className="text-[13px] text-gray-500 mt-1 m-0">Configurações gerais do sistema.</p>
+        <h1 className="text-lg font-bold text-foreground m-0">Gerais</h1>
+        <p className="text-[13px] text-muted-foreground mt-1 m-0">Configurações gerais do sistema.</p>
       </div>
       <TenantGeneralForm />
     </div>

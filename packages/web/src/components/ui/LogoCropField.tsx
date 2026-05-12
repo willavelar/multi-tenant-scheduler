@@ -13,9 +13,9 @@ export function LogoCropField({ value, onChange }: LogoCropFieldProps) {
       value={value}
       onChange={onChange}
       shape="rect"
-      aspect={3}
-      outputWidth={480}
-      outputHeight={160}
+      aspect={6}
+      outputWidth={600}
+      outputHeight={100}
     />
   )
 }
