@@ -1,176 +1,176 @@
 # Scheduler
 
-Sistema de agendamento online multi-tenant. Clientes agendam serviços com profissionais, administradores gerenciam a agenda, e cada estabelecimento opera de forma completamente isolada.
+Multi-tenant online scheduling system. Clients book services with professionals, administrators manage the calendar, and each business operates in complete isolation.
 
 ## Stack
 
-| Camada | Tecnologia |
+| Layer | Technology |
 |---|---|
 | **API** | NestJS · Drizzle ORM · Passport JWT |
 | **Web** | Next.js 16 (App Router) · TanStack Query · React Hook Form · Zod |
-| **Banco** | PostgreSQL 16 com Row-Level Security (RLS) |
+| **Database** | PostgreSQL 16 with Row-Level Security (RLS) |
 | **Cache** | Redis 7 |
 | **UI** | shadcn/ui (base-nova) · Tailwind v4 |
 | **Infra** | Docker Compose · pnpm workspaces |
 
-## Estrutura do monorepo
+## Monorepo structure
 
 ```
 scheduler/
 ├── packages/
-│   ├── api/          # NestJS REST API (porta 3001)
-│   ├── web/          # Next.js frontend (porta 3000)
-│   └── shared/       # Schema Drizzle + tipos compartilhados
+│   ├── api/          # NestJS REST API (port 3001)
+│   ├── web/          # Next.js frontend (port 3000)
+│   └── shared/       # Drizzle schema + shared types
 ├── docker-compose.yml
 └── .env
 ```
 
-## Funcionalidades
+## Features
 
-- **Multi-tenancy** — cada tenant tem slug próprio, dados isolados por RLS no PostgreSQL
-- **Wizard de agendamento** — escolha de profissional → serviço → data/horário → confirmação
-- **Painel do profissional/admin** — visão da agenda do dia, próximos agendamentos, estatísticas
-- **Disponibilidade** — grade semanal por profissional + exceções (folgas, feriados)
-- **Controle de acesso** — três roles: `tenant_admin`, `professional`, `client`
-- **Modo de confirmação** — `auto` (confirmado imediatamente) ou `manual` (requer aprovação)
-- **Auth com JWT** — access token + refresh token, persistência em `localStorage` e cookie
+- **Multi-tenancy** — each tenant has its own slug; data is isolated by PostgreSQL RLS policies
+- **Booking wizard** — select professional → service → date/time → confirmation
+- **Professional/admin panel** — day view, upcoming appointments, statistics
+- **Availability** — weekly schedule per professional with exceptions (days off, holidays)
+- **Access control** — three roles: `tenant_admin`, `professional`, `client`
+- **Confirmation mode** — `auto` (confirmed immediately) or `manual` (requires approval)
+- **JWT auth** — access token + refresh token, persisted in `localStorage` and cookie
 
-## Pré-requisitos
+## Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/) + Docker Compose
-- [pnpm](https://pnpm.io/installation) (para rodar fora do Docker)
+- [pnpm](https://pnpm.io/installation) (for running outside Docker)
 
-## Rodando com Docker
+## Running with Docker
 
 ```bash
-# Clone o repositório
+# Clone the repository
 git clone <repo-url>
 cd scheduler
 
-# Crie o arquivo de variáveis de ambiente
+# Create the environment file
 cp .env.example .env
-# Edite .env e preencha JWT_SECRET e JWT_REFRESH_SECRET
+# Edit .env and fill in JWT_SECRET and JWT_REFRESH_SECRET
 
-# Suba todos os serviços
+# Start all services
 docker compose up --build
 
-# Em outro terminal, rode as migrations e o seed
+# In another terminal, run migrations and seed
 docker compose exec api pnpm --filter api db:migrate
 docker compose exec api pnpm --filter api db:seed
 ```
 
-Acesse:
+Access:
 - **Frontend:** http://localhost:3000
 - **API:** http://localhost:3001
-- **Banco (externo):** `postgresql://scheduler:scheduler@localhost:5432/scheduler`
+- **Database (external):** `postgresql://scheduler:scheduler@localhost:5432/scheduler`
 
-## Rodando localmente (sem Docker)
+## Running locally (without Docker)
 
 ```bash
 pnpm install
 
-# Suba apenas banco e Redis via Docker
+# Start only the database and Redis via Docker
 docker compose up db redis -d
 
-# Copie e edite o .env
+# Copy and edit the .env file
 cp .env.example .env
 
-# Migrations e seed
+# Migrations and seed
 pnpm db:migrate
 pnpm db:seed
 
-# API e web em paralelo
+# API and web in parallel
 pnpm dev:api   # terminal 1
 pnpm dev:web   # terminal 2
 ```
 
-## Variáveis de ambiente
+## Environment variables
 
-Crie um arquivo `.env` na raiz com base no exemplo abaixo:
+Create a `.env` file at the root based on the example below:
 
 ```env
-# Banco de dados
+# Database
 DATABASE_URL=postgres://scheduler:scheduler@db:5432/scheduler
 
 # Redis
 REDIS_URL=redis://redis:6379
 
-# JWT — use strings longas e aleatórias
-JWT_SECRET=troque-por-um-secret-seguro
-JWT_REFRESH_SECRET=troque-por-outro-secret-seguro
+# JWT — use long, random strings
+JWT_SECRET=replace-with-a-secure-secret
+JWT_REFRESH_SECRET=replace-with-another-secure-secret
 ```
 
-> `NEXT_PUBLIC_API_URL` é definido como build arg no `docker-compose.yml` e baked no bundle do Next.js. Para desenvolvimento local, o padrão `http://localhost:3001` é usado automaticamente.
+> `NEXT_PUBLIC_API_URL` is set as a build arg in `docker-compose.yml` and baked into the Next.js bundle. For local development, the default `http://localhost:3001` is used automatically.
 
-## Contas de demonstração
+## Demo accounts
 
-Após rodar o seed, o tenant `clinica-demo` é criado com as seguintes contas:
+After running the seed, the `clinica-demo` tenant is created with the following accounts:
 
-| Role | E-mail | Senha |
+| Role | Email | Password |
 |---|---|---|
 | Admin | `admin@clinica-demo.com` | `password123` |
-| Profissional | `prof@clinica-demo.com` | `password123` |
+| Professional | `prof@clinica-demo.com` | `password123` |
 
-Acesse: **http://localhost:3000/clinica-demo**
+Access: **http://localhost:3000/clinica-demo**
 
-## Comandos úteis
+## Useful commands
 
 ```bash
-# Gerar nova migration após alterar o schema
+# Generate a new migration after changing the schema
 pnpm db:generate
 
-# Aplicar migrations pendentes
+# Apply pending migrations
 pnpm db:migrate
 
-# Rodar o seed (dados de demonstração)
+# Run the seed (demo data)
 pnpm db:seed
 
-# Testes da API
+# API unit tests
 pnpm test:api
 
-# Testes e2e da API
+# API end-to-end tests
 pnpm test:api:e2e
 
-# Build de produção (via Docker)
+# Production build (via Docker)
 docker compose build
 ```
 
-## Arquitetura
+## Architecture
 
-### Multi-tenancy e RLS
+### Multi-tenancy and RLS
 
-Cada requisição à API carrega o header `x-tenant-slug`, resolvido pelo `TenantGuard` para o UUID do tenant. Todas as queries são executadas dentro de uma transação que define `app.current_tenant_id` via `set_config` — ativando as políticas de RLS do PostgreSQL que filtram automaticamente os dados por tenant.
+Every API request carries the `x-tenant-slug` header, resolved by `TenantGuard` to the tenant UUID. All queries run inside a transaction that sets `app.current_tenant_id` via `set_config` — activating PostgreSQL RLS policies that automatically filter data by tenant.
 
 ```
 Request → TenantGuard (resolve slug → tenantId)
         → withTenant(db, tenantId, fn)
             → BEGIN
             → SELECT set_config('app.current_tenant_id', tenantId, true)
-            → fn(tx)   ← RLS filtra automaticamente
+            → fn(tx)   ← RLS filters automatically
             → COMMIT
 ```
 
-### Módulos da API
+### API modules
 
-| Módulo | Responsabilidade |
+| Module | Responsibility |
 |---|---|
-| `auth` | Registro, login, geração de JWT |
-| `appointments` | CRUD de agendamentos, validação de slot |
-| `availability` | Grade semanal e exceções por profissional |
-| `professionals` | Gerenciamento de profissionais |
-| `services` | Gerenciamento de serviços oferecidos |
-| `tenants` | Resolução de tenant por slug |
+| `auth` | Registration, login, JWT generation |
+| `appointments` | Appointment CRUD, slot validation |
+| `availability` | Weekly schedule and exceptions per professional |
+| `professionals` | Professional management |
+| `services` | Service catalog management |
+| `tenants` | Tenant resolution by slug |
 
-### Rotas do frontend
+### Frontend routes
 
-| Rota | Acesso | Descrição |
+| Route | Access | Description |
 |---|---|---|
-| `/:slug` | Público | Wizard de agendamento |
-| `/:slug/login` | Público | Login |
-| `/:slug/register` | Público | Cadastro (cria cliente) |
-| `/:slug/appointments` | Cliente | Lista de agendamentos |
-| `/:slug/dashboard` | Admin / Profissional | Painel de controle |
+| `/:slug` | Public | Booking wizard |
+| `/:slug/login` | Public | Login |
+| `/:slug/register` | Public | Sign up (creates client) |
+| `/:slug/appointments` | Client | Appointment list |
+| `/:slug/dashboard` | Admin / Professional | Control panel |
 
-## Licença
+## License
 
 MIT
