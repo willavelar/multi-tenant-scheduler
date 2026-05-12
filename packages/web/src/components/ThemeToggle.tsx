@@ -28,18 +28,19 @@ function MoonIcon() {
 }
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { theme, toggle } = useTheme()
+  const { theme, toggle, mounted } = useTheme()
 
   return (
     <button
       onClick={toggle}
+      disabled={!mounted}
       aria-label={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
       className={cn(
-        'w-9 h-9 flex items-center justify-center rounded-lg border border-border bg-background text-foreground transition-colors hover:bg-accent shrink-0',
+        'w-9 h-9 flex items-center justify-center rounded-lg border border-border bg-transparent text-foreground transition-colors hover:bg-accent shrink-0 cursor-pointer disabled:opacity-0',
         className
       )}
     >
-      {theme === 'light' ? <SunIcon /> : <MoonIcon />}
+      {mounted && (theme === 'light' ? <SunIcon /> : <MoonIcon />)}
     </button>
   )
 }
