@@ -4,6 +4,8 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
+type AlertVariant = 'warning' | 'success' | 'error' | 'info'
+
 const alertVariants = cva(
   'flex border animate-in fade-in slide-in-from-top-2 duration-300',
   {
@@ -26,14 +28,14 @@ const alertVariants = cva(
   }
 )
 
-const ICON_CLASS: Record<string, string> = {
+const ICON_CLASS: Record<AlertVariant, string> = {
   warning: 'text-amber-500 dark:text-white',
   success: 'text-green-500 dark:text-white',
   error:   '',
   info:    'text-blue-500 dark:text-white',
 }
 
-const ICONS: Record<string, React.ReactNode> = {
+const ICONS: Record<AlertVariant, React.ReactNode> = {
   warning: (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
@@ -70,7 +72,7 @@ type AlertProps = React.HTMLAttributes<HTMLDivElement> &
 
 function Alert({ variant = 'error', size = 'md', title, children, className, ...props }: AlertProps) {
   const hasTitle = !!title
-  const v = variant ?? 'error'
+  const variantSafe = variant as AlertVariant
   return (
     <div
       role="alert"
@@ -81,8 +83,8 @@ function Alert({ variant = 'error', size = 'md', title, children, className, ...
       )}
       {...props}
     >
-      <span className={cn('shrink-0', ICON_CLASS[v], hasTitle && 'mt-0.5')}>
-        {ICONS[v]}
+      <span className={cn('shrink-0', ICON_CLASS[variantSafe], hasTitle && 'mt-0.5')}>
+        {ICONS[variantSafe]}
       </span>
       {hasTitle ? (
         <div>
@@ -95,5 +97,7 @@ function Alert({ variant = 'error', size = 'md', title, children, className, ...
     </div>
   )
 }
+
+Alert.displayName = 'Alert'
 
 export { Alert, alertVariants }
