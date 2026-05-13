@@ -50,6 +50,8 @@ export type Client = {
   allServices: boolean | null
   serviceLimitCount: number | null
   serviceLimitPeriod: 'day' | 'week' | 'month' | null
+  cancellationLimitCount: number | null
+  cancellationLimitPeriod: 'day' | 'week' | 'month' | null
 }
 
 export type ClientPage = {
@@ -78,6 +80,7 @@ export type Service = {
   durationMinutes: number
   description: string | null
   active: boolean
+  color: string
 }
 
 export type Appointment = {
@@ -92,8 +95,13 @@ export type Appointment = {
   clientName: string
   clientAvatarUrl: string | null
   serviceName: string
+  serviceColor: string
   professionalName: string
   professionalAvatarUrl: string | null
+}
+
+export type AppointmentDetail = Appointment & {
+  cancellationReason: string | null
 }
 
 export type AppointmentPage = {
