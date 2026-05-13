@@ -7,7 +7,7 @@ import * as schema from '@scheduler/shared';
 
 // Weekday slots 09:00–17:00 (1h each, 8 slots)
 const SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
-const STATUSES: schema.Appointment['status'][] = ['pending', 'confirmed', 'cancelled', 'completed'];
+const STATUSES: schema.Appointment['status'][] = ['pending', 'confirmed', 'cancelled_by_professional', 'completed'];
 
 function avatarUrl(name: string): string {
   return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
@@ -203,7 +203,7 @@ async function seed() {
     const isPast   = day < new Date();
     // Past appointments lean towards completed/cancelled; future lean pending/confirmed
     const status = isPast
-      ? pick(['completed', 'completed', 'cancelled'] as const)
+      ? pick(['completed', 'completed', 'cancelled_by_professional'] as const)
       : pick(['pending', 'confirmed', 'confirmed']   as const);
 
     const startsAt = new Date(`${dateStr}T${slot}:00Z`);
