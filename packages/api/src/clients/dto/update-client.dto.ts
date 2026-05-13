@@ -17,6 +17,9 @@ export class UpdateClientDto {
   @IsOptional() @IsInt() @Min(1) serviceLimitCount?: number | null;
   @IsOptional() @IsIn(['day', 'week', 'month']) serviceLimitPeriod?: 'day' | 'week' | 'month' | null;
 
+  @IsOptional() @IsInt() @Min(1) cancellationLimitCount?: number | null;
+  @IsOptional() @IsIn(['day', 'week', 'month']) cancellationLimitPeriod?: 'day' | 'week' | 'month' | null;
+
   @IsOptional() @IsBoolean() allProfessionals?: boolean;
   @IsOptional() @IsBoolean() allServices?: boolean;
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) professionalIds?: string[];

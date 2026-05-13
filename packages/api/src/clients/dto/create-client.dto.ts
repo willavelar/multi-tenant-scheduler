@@ -23,6 +23,9 @@ export class CreateClientDto {
   @IsOptional() @IsInt() @Min(1) serviceLimitCount?: number;
   @IsOptional() @IsIn(['day', 'week', 'month']) serviceLimitPeriod?: 'day' | 'week' | 'month';
 
+  @IsOptional() @IsInt() @Min(1) cancellationLimitCount?: number;
+  @IsOptional() @IsIn(['day', 'week', 'month']) cancellationLimitPeriod?: 'day' | 'week' | 'month';
+
   @IsOptional() @IsBoolean() allProfessionals?: boolean;
   @IsOptional() @IsBoolean() allServices?: boolean;
   @IsOptional() @IsArray() @IsUUID('4', { each: true }) professionalIds?: string[];
