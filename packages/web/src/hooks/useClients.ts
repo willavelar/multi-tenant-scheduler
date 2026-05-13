@@ -47,6 +47,8 @@ export function useCreateClient() {
       phone?: string; birthDate?: string; notes?: string;
       active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number; serviceLimitPeriod?: string;
+      cancellationLimitCount?: number;
+      cancellationLimitPeriod?: string;
       serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[];
       professionalIds?: string[]; serviceIds?: string[];
       timezone?: string; timeFormat?: '12h' | '24h';
@@ -64,6 +66,8 @@ export function useUpdateClient(id: string) {
       name?: string; email?: string; phone?: string;
       birthDate?: string; notes?: string; active?: boolean; avatarUrl?: string; allProfessionals?: boolean; allServices?: boolean;
       serviceLimitCount?: number | null; serviceLimitPeriod?: string | null;
+      cancellationLimitCount?: number | null;
+      cancellationLimitPeriod?: string | null;
       serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[];
       professionalIds?: string[]; serviceIds?: string[];
       timezone?: string; timeFormat?: '12h' | '24h';
