@@ -5,7 +5,7 @@ import { services } from './services.schema';
 import { users } from './users.schema';
 
 export const appointmentStatusEnum = pgEnum('appointment_status', [
-  'pending', 'confirmed', 'cancelled', 'completed',
+  'pending', 'confirmed', 'cancelled_by_client', 'cancelled_by_professional', 'completed',
 ]);
 
 export const appointments = pgTable('appointments', {
