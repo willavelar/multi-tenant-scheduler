@@ -55,6 +55,18 @@ export function ServiceDetailView({ service, onDelete, onForceDelete }: Props) {
           value={<span className="whitespace-pre-wrap">{service.description || '—'}</span>}
         />
         <FieldRow
+          label="Cor no calendário"
+          value={
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-block w-5 h-5 rounded-full border border-black/10 shadow-sm"
+                style={{ background: service.color }}
+              />
+              <span className="font-mono text-[13px] text-muted-foreground">{service.color.toUpperCase()}</span>
+            </div>
+          }
+        />
+        <FieldRow
           label="Status"
           value={
             <StatusBadge

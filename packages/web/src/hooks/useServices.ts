@@ -27,7 +27,7 @@ export function useCreateService() {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (body: { name: string; durationMinutes: number; description?: string; active?: boolean }) =>
+    mutationFn: (body: { name: string; durationMinutes: number; description?: string; active?: boolean; color: string }) =>
       api('/services', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['services', slug] }),
   })
@@ -38,7 +38,7 @@ export function useUpdateService(id: string) {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (body: { name?: string; durationMinutes?: number; description?: string; active?: boolean }) =>
+    mutationFn: (body: { name?: string; durationMinutes?: number; description?: string; active?: boolean; color?: string }) =>
       api(`/services/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['service', slug, id] })

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { ColorPicker } from '@/components/ui/ColorPicker'
 import type { Service } from '@/types'
 
 export type ServiceFormData = {
@@ -10,11 +11,13 @@ export type ServiceFormData = {
   durationMinutes: number
   description?: string
   active: boolean
+  color: string
 }
 
 export type ServiceFormProps = {
   mode: 'create' | 'edit'
   defaultValues?: Service
+  suggestedColor?: string
   onSubmit: (data: ServiceFormData) => Promise<void>
   onCancel: () => void
 }
@@ -24,6 +27,7 @@ type FormState = {
   durationMinutes: string
   description: string
   active: boolean
+  color: string
 }
 
 const inputCls = (hasError = false) => cn(
@@ -34,13 +38,14 @@ const inputCls = (hasError = false) => cn(
 
 const DURATION_PRESETS = [15, 30, 45, 60, 90, 120]
 
-export function ServiceForm({ mode, defaultValues, onSubmit, onCancel }: ServiceFormProps) {
+export function ServiceForm({ mode, defaultValues, suggestedColor = '#6366f1', onSubmit, onCancel }: ServiceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [form, setForm] = useState<FormState>({
     name:            defaultValues?.name            ?? '',
     durationMinutes: defaultValues?.durationMinutes != null ? String(defaultValues.durationMinutes) : '',
     description:     defaultValues?.description     ?? '',
     active:          defaultValues?.active          ?? true,
+    color:           defaultValues?.color           ?? suggestedColor,
   })
   const [errors, setErrors] = useState<Partial<Record<keyof FormState | 'root', string>>>({})
 
@@ -55,6 +60,7 @@ export function ServiceForm({ mode, defaultValues, onSubmit, onCancel }: Service
     const dur = Number(form.durationMinutes)
     if (!form.durationMinutes) e.durationMinutes = 'Duração obrigatória'
     else if (!Number.isInteger(dur) || dur < 1) e.durationMinutes = 'Duração inválida (mínimo 1 minuto)'
+    if (!form.color || !/^#[0-9a-fA-F]{6}$/.test(form.color)) e.color = 'Cor inválida'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -69,6 +75,7 @@ export function ServiceForm({ mode, defaultValues, onSubmit, onCancel }: Service
         durationMinutes: Number(form.durationMinutes),
         description:     form.description.trim() || undefined,
         active:          form.active,
+        color:           form.color,
       })
     } catch {
       setErrors(e => ({ ...e, root: mode === 'create'
@@ -153,6 +160,16 @@ export function ServiceForm({ mode, defaultValues, onSubmit, onCancel }: Service
             placeholder="Descreva o serviço de forma resumida…"
             className="w-full px-3 py-2.5 text-sm text-foreground bg-background rounded-lg border border-border outline-none resize-y transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
           />
+        </div>
+
+        <div className="mt-5">
+          <ColorPicker
+            label="Cor no calendário"
+            required
+            value={form.color}
+            onChange={v => set('color', v)}
+          />
+          {errors.color && <p className="text-xs text-red-500 mt-1 m-0">{errors.color}</p>}
         </div>
 
         {mode === 'edit' && (

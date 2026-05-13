@@ -31,6 +31,7 @@ export default function EditServicePage() {
             durationMinutes: data.durationMinutes,
             description:     data.description,
             active:          data.active,
+            color:           data.color,
           })
           router.push(`/settings/services/${id}`)
         }}

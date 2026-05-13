@@ -110,9 +110,9 @@ async function seed() {
 
   // ── Services (3) ─────────────────────────────────────────────────────────
   const serviceData = [
-    { name: 'Consulta Inicial',    durationMinutes: 60, description: 'Primeira consulta de avaliação' },
-    { name: 'Sessão de Retorno',   durationMinutes: 45, description: 'Acompanhamento e evolução' },
-    { name: 'Avaliação Completa',  durationMinutes: 90, description: 'Avaliação detalhada e relatório' },
+    { name: 'Consulta Inicial',   durationMinutes: 60, description: 'Primeira consulta de avaliação', color: '#6366f1' },
+    { name: 'Sessão de Retorno',  durationMinutes: 45, description: 'Acompanhamento e evolução',      color: '#10b981' },
+    { name: 'Avaliação Completa', durationMinutes: 90, description: 'Avaliação detalhada e relatório', color: '#f59e0b' },
   ];
 
   const services: schema.Service[] = [];
