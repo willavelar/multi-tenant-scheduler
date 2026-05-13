@@ -5,31 +5,20 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAppointments } from '@/hooks/useAppointments'
 import { useServices } from '@/hooks/useServices'
+import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
+import { ConfirmStatusModal } from './_components/ConfirmStatusModal'
+import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
+import { AppointmentStatusBadge } from './_components/AppointmentStatusBadge'
+import { ViewButton } from '@/components/ui/ViewButton'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Appointment } from '@/types'
 import { AppointmentFilters } from './_components/AppointmentFilters'
 import { CalendarView } from './_components/CalendarView'
-import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
 import { CancellationDeadlineBanner } from './_components/CancellationDeadlineBanner'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 import { Button } from '@/components/ui/button'
-
-const STATUS_LABELS: Record<Appointment['status'], string> = {
-  pending:   'Aguardando confirmação',
-  confirmed: 'Confirmado',
-  cancelled: 'Cancelado',
-  completed: 'Pago',
-}
-
-const STATUS_VARIANTS: Record<Appointment['status'], import('@/components/ui/StatusBadge').StatusVariant> = {
-  pending:   'warning',
-  confirmed: 'success',
-  cancelled: 'error',
-  completed: 'purple',
-}
 
 export default function AppointmentsPage() {
   const router = useRouter()
@@ -59,6 +48,9 @@ export default function AppointmentsPage() {
     const day = String(d.getDate()).padStart(2, '0')
     return `${y}-${m}-${day}`
   }
+
+  const [confirmTarget, setConfirmTarget] = useState<{ id: string; action: 'confirm' | 'complete' } | null>(null)
+  const { allowPaidStatus } = useTenantSettingsContext()
 
   const { data: servicesList = [] } = useServices()
 
@@ -222,23 +214,25 @@ export default function AppointmentsPage() {
                             </Link>
                           </td>
                           <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
-                            {appt.serviceName}
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: appt.serviceColor }} />
+                              {appt.serviceName}
+                            </div>
                           </td>
                           <td className="px-4 py-3.5">
-                            <StatusBadge
-                              label={STATUS_LABELS[appt.status]}
-                              variant={STATUS_VARIANTS[appt.status]}
+                            <AppointmentStatusBadge
+                              status={appt.status}
+                              allowPaidStatus={allowPaidStatus}
+                              onConfirm={() => setConfirmTarget({ id: appt.id, action: 'confirm' })}
+                              onComplete={() => setConfirmTarget({ id: appt.id, action: 'complete' })}
+                              onCancel={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}
                             />
                           </td>
                           <td className="px-4 py-3.5">
                             <DateTimeCell iso={appt.createdAt} />
                           </td>
                           <td className="px-4 py-3.5">
-                            {(appt.status === 'pending' || appt.status === 'confirmed') && (
-                              <Button variant="destructive" size="xs" onClick={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}>
-                                Cancelar
-                              </Button>
-                            )}
+                            <ViewButton onClick={() => router.push(`/appointments/${appt.id}`)} />
                           </td>
                         </tr>
                       ))}
@@ -282,6 +276,11 @@ export default function AppointmentsPage() {
         appointmentId={cancelTarget?.id ?? null}
         startsAt={cancelTarget?.startsAt ?? null}
         onClose={() => setCancelTarget(null)}
+      />
+      <ConfirmStatusModal
+        action={confirmTarget?.action ?? null}
+        appointmentId={confirmTarget?.id ?? null}
+        onClose={() => setConfirmTarget(null)}
       />
     </>
   )

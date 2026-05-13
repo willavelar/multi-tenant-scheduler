@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useApi } from './useApi'
 import { useTenant } from '@/providers/TenantProvider'
-import type { Appointment, AppointmentPage } from '@/types'
+import type { Appointment, AppointmentDetail, AppointmentPage } from '@/types'
 
 type AppointmentFilters = {
   dateFrom?: string
@@ -28,6 +28,19 @@ export function useAppointments(page = 1, filters: AppointmentFilters = {}) {
       const res = await api(`/appointments?${params}`)
       return res.json()
     },
+  })
+}
+
+export function useAppointment(id: string) {
+  const api = useApi()
+  const { slug } = useTenant()
+  return useQuery<AppointmentDetail>({
+    queryKey: ['appointment', slug, id],
+    queryFn: async () => {
+      const res = await api(`/appointments/${id}`)
+      return res.json()
+    },
+    enabled: !!id,
   })
 }
 
