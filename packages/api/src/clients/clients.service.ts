@@ -68,6 +68,8 @@ export class ClientsService {
         allServices: clientProfiles.allServices,
         serviceLimitCount: clientProfiles.serviceLimitCount,
         serviceLimitPeriod: clientProfiles.serviceLimitPeriod,
+        cancellationLimitCount:  clientProfiles.cancellationLimitCount,
+        cancellationLimitPeriod: clientProfiles.cancellationLimitPeriod,
       };
 
       const [{ total }] = await tx
@@ -110,6 +112,8 @@ export class ClientsService {
           allServices: clientProfiles.allServices,
           serviceLimitCount: clientProfiles.serviceLimitCount,
           serviceLimitPeriod: clientProfiles.serviceLimitPeriod,
+          cancellationLimitCount:  clientProfiles.cancellationLimitCount,
+          cancellationLimitPeriod: clientProfiles.cancellationLimitPeriod,
         })
         .from(users)
         .leftJoin(clientProfiles, eq(clientProfiles.userId, users.id))
@@ -191,6 +195,8 @@ export class ClientsService {
           allServices: dto.allServices ?? false,
           serviceLimitCount: dto.serviceLimitCount,
           serviceLimitPeriod: dto.serviceLimitPeriod,
+          cancellationLimitCount:  dto.cancellationLimitCount,
+          cancellationLimitPeriod: dto.cancellationLimitPeriod,
         })
         .returning();
 
@@ -263,6 +269,8 @@ export class ClientsService {
       if (dto.allServices        !== undefined) profilePatch.allServices        = dto.allServices;
       if (dto.serviceLimitCount  !== undefined) profilePatch.serviceLimitCount  = dto.serviceLimitCount;
       if (dto.serviceLimitPeriod !== undefined) profilePatch.serviceLimitPeriod = dto.serviceLimitPeriod;
+      if (dto.cancellationLimitCount  !== undefined) profilePatch.cancellationLimitCount  = dto.cancellationLimitCount;
+      if (dto.cancellationLimitPeriod !== undefined) profilePatch.cancellationLimitPeriod = dto.cancellationLimitPeriod;
 
       const [existingProfile] = await tx
         .select({ id: clientProfiles.id })
