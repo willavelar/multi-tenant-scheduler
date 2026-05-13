@@ -33,6 +33,8 @@ export type ClientFormData = {
   serviceLimitCount?: number | null
   serviceLimitPeriod?: 'day' | 'week' | 'month' | null
   serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[]
+  cancellationLimitCount?: number | null
+  cancellationLimitPeriod?: 'day' | 'week' | 'month' | null
 }
 
 export type ClientFormProps = {
@@ -53,6 +55,8 @@ type FormState = {
   active: boolean
   serviceLimitCount: string
   serviceLimitPeriod: string
+  cancellationLimitCount: string
+  cancellationLimitPeriod: string
 }
 
 type LimitMode = 'none' | 'normal' | 'per_service'
@@ -90,6 +94,8 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     name: '', email: '', password: '', phone: '',
     birthDate: '', notes: '', active: true,
     serviceLimitCount: '', serviceLimitPeriod: '',
+    cancellationLimitCount: '',
+    cancellationLimitPeriod: '',
   })
   const [errors, setErrors] = useState<Partial<Record<keyof FormState | 'root', string>>>({})
 
@@ -120,6 +126,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       serviceLimitCount:  defaultValues.serviceLimitCount != null
                             ? String(defaultValues.serviceLimitCount) : '',
       serviceLimitPeriod: defaultValues.serviceLimitPeriod ?? '',
+      cancellationLimitCount:  defaultValues.cancellationLimitCount != null
+                                 ? String(defaultValues.cancellationLimitCount) : '',
+      cancellationLimitPeriod: defaultValues.cancellationLimitPeriod ?? '',
     })
     setAvatarUrl(defaultValues.avatarUrl ?? null)
     setTimezone(defaultValues.timezone ?? 'America/Sao_Paulo')
@@ -210,6 +219,15 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     if (limitMode === 'per_service' && !allSvcs && selectedServiceIds.length === 0) {
       e.root = 'Para usar limites por serviço, selecione serviços específicos em "Serviços permitidos".'
     }
+    if (form.cancellationLimitCount && isNaN(Number(form.cancellationLimitCount))) {
+      e.cancellationLimitCount = 'Valor inválido'
+    }
+    if (form.cancellationLimitCount && !form.cancellationLimitPeriod) {
+      e.cancellationLimitPeriod = 'Selecione o período'
+    }
+    if (!form.cancellationLimitCount && form.cancellationLimitPeriod) {
+      e.cancellationLimitCount = 'Informe a quantidade'
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -247,6 +265,10 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
                 limitPeriod: perServiceLimits[id].period as 'day' | 'week' | 'month',
               }))
           : [],
+        cancellationLimitCount:  form.cancellationLimitCount
+          ? Number(form.cancellationLimitCount) : null,
+        cancellationLimitPeriod: form.cancellationLimitPeriod
+          ? form.cancellationLimitPeriod as 'day' | 'week' | 'month' : null,
       }
       await onSubmit(data)
     } catch {
@@ -661,6 +683,60 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             )}
           </div>
         )}
+      </div>
+
+      {/* ── Card 7: Limite de cancelamentos ── */}
+      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
+        <p className="text-sm font-bold text-foreground m-0 mb-2">Limite de cancelamentos</p>
+        <p className="text-[13px] text-muted-foreground m-0 mb-5">
+          Define quantos cancelamentos este cliente pode realizar em um determinado período. Deixe em branco para não restringir.
+        </p>
+        <div className="flex gap-3 items-end">
+          <div className="[flex:0_0_140px]">
+            <label htmlFor="client-cancel-limit-count" className="block text-[13px] font-medium text-foreground mb-1.5">
+              Quantidade
+            </label>
+            <input
+              id="client-cancel-limit-count"
+              type="number"
+              min={1}
+              value={form.cancellationLimitCount}
+              onChange={e => set('cancellationLimitCount', e.target.value)}
+              placeholder="Ex: 2"
+              className={inputCls(!!errors.cancellationLimitCount)}
+            />
+            {errors.cancellationLimitCount && (
+              <p className="text-xs text-red-500 mt-1 m-0">{errors.cancellationLimitCount}</p>
+            )}
+          </div>
+          <div className="[flex:0_0_180px]">
+            <label htmlFor="client-cancel-limit-period" className="block text-[13px] font-medium text-foreground mb-1.5">
+              Por período
+            </label>
+            <div className="relative">
+              <select
+                id="client-cancel-limit-period"
+                value={form.cancellationLimitPeriod}
+                onChange={e => set('cancellationLimitPeriod', e.target.value)}
+                className={cn(
+                  'w-full h-[42px] pl-3 pr-8 text-sm text-foreground bg-background rounded-lg border appearance-none cursor-pointer outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+                  errors.cancellationLimitPeriod ? 'border-red-400' : 'border-border',
+                )}
+              >
+                <option value="">Selecione…</option>
+                <option value="day">Dia</option>
+                <option value="week">Semana</option>
+                <option value="month">Mês</option>
+              </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            {errors.cancellationLimitPeriod && (
+              <p className="text-xs text-red-500 mt-1 m-0">{errors.cancellationLimitPeriod}</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ── Footer ── */}
