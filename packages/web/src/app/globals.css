@@ -128,3 +128,9 @@
     @apply font-sans;
   }
 }
+
+@layer utilities {
+  .text-background {
+    color: var(--background);
+  }
+}

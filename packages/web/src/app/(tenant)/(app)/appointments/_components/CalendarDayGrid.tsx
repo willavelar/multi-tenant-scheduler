@@ -3,7 +3,6 @@
 import { useRef, useEffect } from 'react'
 import type { Appointment } from '@/types'
 import { HOUR_HEIGHT, TOTAL_HOURS, layoutAppointments, blockPosition } from '@/lib/calendarUtils'
-import { clientColor } from '@/lib/calendarColors'
 import { CalendarEventBlock } from './CalendarEventBlock'
 import { useFormatTime } from '@/hooks/useFormatTime'
 
@@ -48,7 +47,7 @@ export function CalendarDayGrid({ appointments, onAppointmentClick }: Props) {
                 <CalendarEventBlock
                   key={appointment.id}
                   appointment={appointment}
-                  color={clientColor(appointment.clientId)}
+                  color={appointment.serviceColor}
                   top={top} height={height}
                   columnIndex={columnIndex} columnCount={columnCount}
                   onClick={rect => onAppointmentClick(appointment, rect)}

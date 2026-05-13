@@ -9,6 +9,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { Admin } from '@/types'
 import { Button } from '@/components/ui/button'
+import { ViewButton } from '@/components/ui/ViewButton'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 
 function AdminStatusBadge({ active }: { active: boolean }) {
@@ -134,9 +135,7 @@ export default function AdminsPage() {
                         <AdminStatusBadge active={admin.active} />
                       </td>
                       <td className="px-4 py-3">
-                        <Button variant="primary" size="xs" onClick={() => router.push(`/admins/${admin.id}`)}>
-                          Visualizar
-                        </Button>
+                        <ViewButton onClick={() => router.push(`/admins/${admin.id}`)} />
                       </td>
                     </tr>
                   ))}

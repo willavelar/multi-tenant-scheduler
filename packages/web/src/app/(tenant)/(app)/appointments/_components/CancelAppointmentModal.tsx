@@ -34,6 +34,7 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
     return (
       <div
         className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+        data-appointment-modal
         onClick={onClose}
       >
         <div
@@ -83,6 +84,7 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
   return (
     <div
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+      data-appointment-modal
       onClick={() => !cancelMut.isPending && onClose()}
     >
       <div

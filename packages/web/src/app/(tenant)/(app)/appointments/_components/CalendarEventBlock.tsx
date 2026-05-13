@@ -49,8 +49,8 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
     >
       <p
         className={cn(
-          'text-[11px] font-semibold truncate leading-tight m-0',
-          !isCancelled && (isPast ? 'text-white/60' : 'text-white'),
+          'text-[12px] font-semibold truncate leading-tight m-0',
+          !isCancelled && (isPast ? 'text-white/80' : 'text-white'),
         )}
         style={isCancelled ? { color } : undefined}
       >
@@ -60,19 +60,19 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
         <>
           <p
             className={cn(
-              'text-[10px] truncate leading-tight m-0',
-              !isCancelled && (isPast ? 'text-white/50' : 'text-white/85'),
+              'text-[11px] truncate leading-tight m-0',
+              !isCancelled && (isPast ? 'text-white/70' : 'text-white/85'),
             )}
-            style={isCancelled ? { color, opacity: 0.8 } : undefined}
+            style={isCancelled ? { color, opacity: 0.9 } : undefined}
           >
             {appointment.serviceName} ({STATUS_LABELS[appointment.status]})
           </p>
           <p
             className={cn(
-              'text-[10px] leading-tight m-0',
-              !isCancelled && (isPast ? 'text-white/45' : 'text-white/75'),
+              'text-[11px] leading-tight m-0',
+              !isCancelled && (isPast ? 'text-white/70' : 'text-white/85'),
             )}
-            style={isCancelled ? { color, opacity: 0.7 } : undefined}
+            style={isCancelled ? { color, opacity: 0.9 } : undefined}
           >
             {formatISOTime(appointment.startsAt)} – {formatISOTime(appointment.endsAt)}
           </p>
