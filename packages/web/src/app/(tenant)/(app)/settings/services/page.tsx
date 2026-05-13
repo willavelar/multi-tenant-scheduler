@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 import type { Service } from '@/types'
 import { Button } from '@/components/ui/button'
+import { ViewButton } from '@/components/ui/ViewButton'
 
 function formatDuration(minutes: number) {
   if (minutes < 60) return `${minutes} min`
@@ -126,16 +127,19 @@ export default function ServicesPage() {
               <tbody>
                 {filtered.map((service: Service) => (
                   <tr key={service.id} className="border-b border-border transition-colors hover:bg-accent">
-                    <td className="px-4 py-3 font-medium text-foreground">{service.name}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: service.color }} />
+                        {service.name}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDuration(service.durationMinutes)}</td>
                     <td className="px-4 py-3 text-muted-foreground max-w-[280px] truncate">{service.description ?? '—'}</td>
                     <td className="px-4 py-3">
                       <StatusBadge label={service.active ? 'Ativo' : 'Inativo'} variant={service.active ? 'success' : 'error'} />
                     </td>
                     <td className="px-4 py-3">
-                      <Button variant="primary" size="xs" onClick={() => router.push(`/settings/services/${service.id}`)}>
-                        Visualizar
-                      </Button>
+                      <ViewButton onClick={() => router.push(`/settings/services/${service.id}`)} />
                     </td>
                   </tr>
                 ))}

@@ -1,0 +1,1 @@
+ALTER TABLE "services" ADD COLUMN "color" text DEFAULT '#6366f1' NOT NULL;

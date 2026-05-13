@@ -8,6 +8,7 @@ export const services = pgTable('services', {
   durationMinutes: integer('duration_minutes').notNull(),
   description: text('description'),
   active: boolean('active').notNull().default(true),
+  color: text('color').notNull().default('#6366f1'),
 });
 
 export type Service = typeof services.$inferSelect;

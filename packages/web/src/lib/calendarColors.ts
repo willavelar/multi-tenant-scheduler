@@ -5,8 +5,12 @@ export const CALENDAR_COLORS = [
   '#f43f5e', '#64748b', '#d946ef', '#2dd4bf', '#fb923c',
 ]
 
-export function clientColor(clientId: string): string {
-  let hash = 0
-  for (const ch of clientId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
-  return CALENDAR_COLORS[hash % CALENDAR_COLORS.length]
+export function pickDistinctColor(usedColors: string[]): string {
+  const unused = CALENDAR_COLORS.find(c => !usedColors.includes(c))
+  if (unused) return unused
+  const counts = new Map(CALENDAR_COLORS.map(c => [c, 0]))
+  for (const c of usedColors) if (counts.has(c)) counts.set(c, counts.get(c)! + 1)
+  let min = Infinity, pick = CALENDAR_COLORS[0]
+  for (const [c, n] of counts) { if (n < min) { min = n; pick = c } }
+  return pick
 }
