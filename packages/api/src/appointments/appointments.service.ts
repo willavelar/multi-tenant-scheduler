@@ -240,6 +240,7 @@ export class AppointmentsService {
         clientName:            users.name,
         clientAvatarUrl:       users.avatarUrl,
         serviceName:           services.name,
+        serviceColor:          services.color,
         professionalName:      profUsers.name,
         professionalAvatarUrl: profUsers.avatarUrl,
       };
@@ -286,6 +287,52 @@ export class AppointmentsService {
         .offset(offset);
 
       return { data, total, page, limit };
+    });
+  }
+
+  async findOne(id: string, tenantId: string, userId: string, role: string) {
+    const profUsers = alias(users, 'prof_users');
+    return withTenant(this.db, tenantId, async (tx) => {
+      let roleWhere;
+      if (role === 'client') {
+        roleWhere = and(eq(appointments.id, id), eq(appointments.clientId, userId));
+      } else if (role === 'professional') {
+        const [prof] = await tx
+          .select({ id: professionals.id })
+          .from(professionals)
+          .where(and(eq(professionals.userId, userId), eq(professionals.tenantId, tenantId)));
+        if (!prof) return null;
+        roleWhere = and(eq(appointments.id, id), eq(appointments.professionalId, prof.id));
+      } else {
+        roleWhere = eq(appointments.id, id);
+      }
+
+      const [appt] = await tx
+        .select({
+          id:                    appointments.id,
+          startsAt:              appointments.startsAt,
+          endsAt:                appointments.endsAt,
+          status:                appointments.status,
+          createdAt:             appointments.createdAt,
+          cancellationReason:    appointments.cancellationReason,
+          professionalId:        appointments.professionalId,
+          serviceId:             appointments.serviceId,
+          clientId:              appointments.clientId,
+          clientName:            users.name,
+          clientAvatarUrl:       users.avatarUrl,
+          serviceName:           services.name,
+          serviceColor:          services.color,
+          professionalName:      profUsers.name,
+          professionalAvatarUrl: profUsers.avatarUrl,
+        })
+        .from(appointments)
+        .innerJoin(users, eq(appointments.clientId, users.id))
+        .innerJoin(services, eq(appointments.serviceId, services.id))
+        .innerJoin(professionals, eq(appointments.professionalId, professionals.id))
+        .innerJoin(profUsers, eq(professionals.userId, profUsers.id))
+        .where(roleWhere);
+
+      return appt ?? null;
     });
   }
 

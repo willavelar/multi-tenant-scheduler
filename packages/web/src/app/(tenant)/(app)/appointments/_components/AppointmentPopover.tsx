@@ -2,24 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import type { Appointment } from '@/types'
 import { useFormatTime } from '@/hooks/useFormatTime'
-import { clientColor } from '@/lib/calendarColors'
-import { useCompleteAppointment, useConfirmAppointment } from '@/hooks/useAppointments'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import type { StatusVariant } from '@/components/ui/StatusBadge'
+import { useTenant } from '@/providers/TenantProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { CancelAppointmentModal } from './CancelAppointmentModal'
+import { ConfirmStatusModal } from './ConfirmStatusModal'
+import { AppointmentStatusBadge } from './AppointmentStatusBadge'
 
 const POPOVER_WIDTH = 300
 const POPOVER_HEIGHT = 270
-
-const STATUS_LABELS: Record<Appointment['status'], string> = {
-  pending: 'Aguardando confirmação', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Pago',
-}
-const STATUS_VARIANTS: Record<Appointment['status'], StatusVariant> = {
-  pending: 'warning', confirmed: 'success', cancelled: 'error', completed: 'purple',
-}
 
 type Props = {
   appointment: Appointment
@@ -29,12 +22,12 @@ type Props = {
 
 export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const [statusOpen, setStatusOpen] = useState(false)
-  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelOpen,    setCancelOpen]    = useState(false)
+  const [confirmAction, setConfirmAction] = useState<'confirm' | 'complete' | null>(null)
 
-  const confirmMut  = useConfirmAppointment()
-  const completeMut = useCompleteAppointment()
   const { allowPaidStatus } = useTenantSettingsContext()
+  const router = useRouter()
+  const { slug } = useTenant()
   const { formatISOTime } = useFormatTime()
 
   const { top, left } = useMemo(() => {
@@ -47,13 +40,16 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
 
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
+      const target = e.target as Element
+      if (target.closest('[data-status-portal]')) return
+      if (target.closest('[data-appointment-modal]')) return
+      if (ref.current && !ref.current.contains(target)) onClose()
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [onClose])
 
-  const color = clientColor(appointment.clientId)
+  const color = appointment.serviceColor
   const startStr = formatISOTime(appointment.startsAt)
   const endStr = formatISOTime(appointment.endsAt)
   const dateStr = (() => {
@@ -62,12 +58,6 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
     })
     return s.charAt(0).toUpperCase() + s.slice(1)
   })()
-
-  function handleStatusChange(action: 'confirm' | 'complete') {
-    setStatusOpen(false)
-    if (action === 'confirm')  confirmMut.mutate(appointment.id,  { onSuccess: onClose })
-    if (action === 'complete') completeMut.mutate(appointment.id, { onSuccess: onClose })
-  }
 
   const { status } = appointment
 
@@ -79,40 +69,16 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
     >
       {/* Action bar */}
       <div className="flex items-center justify-end gap-1 px-3 py-2.5 bg-muted border-b border-border rounded-t-xl">
-        {/* Status ⋮ */}
-        <div className="relative">
-          <button
-            title="Alterar status"
-            className="w-8 h-8 rounded-full border-none bg-muted flex flex-col items-center justify-center gap-[3px] cursor-pointer hover:bg-accent transition-colors"
-            onClick={() => setStatusOpen(o => !o)}
-          >
-            <span className="w-[3px] h-[3px] bg-foreground rounded-full" />
-            <span className="w-[3px] h-[3px] bg-foreground rounded-full" />
-            <span className="w-[3px] h-[3px] bg-foreground rounded-full" />
-          </button>
-          {statusOpen && (
-            <div className="absolute right-0 top-9 bg-card border border-border rounded-lg shadow-lg w-44 z-10 overflow-hidden">
-              {status !== 'confirmed' && status !== 'completed' && (
-                <button className="w-full text-left px-3 py-2 text-[12.5px] text-foreground hover:bg-accent flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-border" onClick={() => handleStatusChange('confirm')}>
-                  <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />Confirmar
-                </button>
-              )}
-              {allowPaidStatus && status !== 'completed' && status !== 'cancelled' && (
-                <button className="w-full text-left px-3 py-2 text-[12.5px] text-foreground hover:bg-accent flex items-center gap-2 cursor-pointer border-none bg-transparent border-b border-border" onClick={() => handleStatusChange('complete')}>
-                  <span className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0" />Marcar como Pago
-                </button>
-              )}
-              {status !== 'cancelled' && (
-                <button
-                  className="w-full text-left px-3 py-2 text-[12.5px] text-red-600 hover:bg-red-50 flex items-center gap-2 cursor-pointer border-none bg-transparent"
-                  onClick={() => { setStatusOpen(false); setCancelOpen(true) }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" />Cancelar
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+        {/* View */}
+        <button
+          title="Visualizar agendamento"
+          className="w-8 h-8 rounded-full border border-border bg-background flex items-center justify-center cursor-pointer text-foreground transition-all duration-150 hover:bg-indigo-500 hover:border-indigo-500 hover:text-white hover:shadow-sm active:scale-95"
+          onClick={() => router.push(`/${slug}/appointments/${appointment.id}`)}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
 
         <div className="w-px h-5 bg-border mx-0.5" />
 
@@ -167,7 +133,13 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
             <span>{appointment.professionalName}</span>
           </div>
           <div className="pt-0.5">
-            <StatusBadge label={STATUS_LABELS[status]} variant={STATUS_VARIANTS[status]} />
+            <AppointmentStatusBadge
+              status={status}
+              allowPaidStatus={allowPaidStatus}
+              onConfirm={() => setConfirmAction('confirm')}
+              onComplete={() => setConfirmAction('complete')}
+              onCancel={() => setCancelOpen(true)}
+            />
           </div>
         </div>
       </div>
@@ -181,6 +153,12 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
         appointmentId={cancelOpen ? appointment.id : null}
         startsAt={cancelOpen ? appointment.startsAt : null}
         onClose={() => setCancelOpen(false)}
+        onSuccess={onClose}
+      />
+      <ConfirmStatusModal
+        action={confirmAction}
+        appointmentId={confirmAction ? appointment.id : null}
+        onClose={() => setConfirmAction(null)}
         onSuccess={onClose}
       />
     </>

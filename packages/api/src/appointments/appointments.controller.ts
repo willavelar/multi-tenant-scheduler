@@ -58,6 +58,15 @@ export class AppointmentsController {
     );
   }
 
+  @Get(':id')
+  findOne(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.findOne(id, tenantId, user.id, user.role);
+  }
+
   @Patch(':id/confirm')
   confirm(@Param('id') id: string, @TenantId() tenantId: string) {
     return this.service.updateStatus(id, 'confirmed', tenantId);
