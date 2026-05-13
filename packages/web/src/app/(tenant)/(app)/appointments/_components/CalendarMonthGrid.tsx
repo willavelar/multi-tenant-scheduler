@@ -2,7 +2,6 @@
 
 import type { Appointment } from '@/types'
 import { isSameDay } from '@/lib/calendarUtils'
-import { clientColor } from '@/lib/calendarColors'
 import { CalendarMonthEvent } from './CalendarMonthEvent'
 import { cn } from '@/lib/utils'
 
@@ -66,7 +65,7 @@ export function CalendarMonthGrid({ cells, currentMonth, appointments, today, on
                   <CalendarMonthEvent
                     key={appt.id}
                     appointment={appt}
-                    color={clientColor(appt.clientId)}
+                    color={appt.serviceColor}
                     onClick={rect => onAppointmentClick(appt, rect)}
                   />
                 ))}

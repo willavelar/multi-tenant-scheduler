@@ -6,7 +6,6 @@ import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/useTenantSet
 import { cn } from '@/lib/utils'
 import { FormSkeleton } from '@/components/ui/FormSkeleton'
 import { Button } from '@/components/ui/button'
-import {Spinner} from "@/components/ui/Spinner";
 
 type CancelReasonMode = 'no' | 'optional' | 'required'
 type DeadlineUnit = 'minutes' | 'hours' | 'days'
@@ -68,7 +67,6 @@ export function TenantGeneralForm() {
   const [cancelReasonMode, setCancelReasonMode] = useState<CancelReasonMode>('no')
   const [deadlineValue,    setDeadlineValue]    = useState('')
   const [deadlineUnit,     setDeadlineUnit]     = useState<DeadlineUnit>('hours')
-  const [toggleSaving,     setToggleSaving]     = useState<string | null>(null)
 
   useEffect(() => {
     if (!data) return
@@ -91,68 +89,24 @@ export function TenantGeneralForm() {
     }
     setError('')
     setSuccess(false)
+
+    const deadlineParsed = parseInt(deadlineValue, 10)
+    const deadlineValid = deadlineValue !== '' && !isNaN(deadlineParsed) && deadlineParsed >= 1 && deadlineParsed <= 9999
+
     try {
-      await mutateAsync({ name: name.trim(), logoUrl })
+      await mutateAsync({
+        name: name.trim(),
+        logoUrl,
+        allowPaidStatus,
+        confirmationMode: requiresConfirm ? 'manual' : 'auto',
+        cancellationReasonMode: cancelReasonMode,
+        cancellationDeadlineValue: deadlineValid ? deadlineParsed : null,
+        cancellationDeadlineUnit: deadlineValid ? deadlineUnit : null,
+      })
+      if (!deadlineValid) setDeadlineValue('')
       setSuccess(true)
     } catch {
       setError('Não foi possível salvar as alterações. Tente novamente.')
-    }
-  }
-
-  async function handleTogglePaidStatus(value: boolean) {
-    setAllowPaidStatus(value)
-    setToggleSaving('paid')
-    try {
-      await mutateAsync({ allowPaidStatus: value })
-    } catch {
-      setAllowPaidStatus(!value)
-    } finally {
-      setToggleSaving(null)
-    }
-  }
-
-  async function handleToggleConfirmation(value: boolean) {
-    setRequiresConfirm(value)
-    setToggleSaving('confirm')
-    try {
-      await mutateAsync({ confirmationMode: value ? 'manual' : 'auto' })
-    } catch {
-      setRequiresConfirm(!value)
-    } finally {
-      setToggleSaving(null)
-    }
-  }
-
-  async function handleCancelReasonModeChange(value: CancelReasonMode) {
-    const prev = cancelReasonMode
-    setCancelReasonMode(value)
-    setToggleSaving('cancelReason')
-    try {
-      await mutateAsync({ cancellationReasonMode: value })
-    } catch {
-      setCancelReasonMode(prev)
-    } finally {
-      setToggleSaving(null)
-    }
-  }
-
-  async function handleDeadlineSave(value: string, unit: DeadlineUnit) {
-    const parsed = parseInt(value, 10)
-    const isValid = value !== '' && !isNaN(parsed) && parsed >= 1 && parsed <= 9999
-    setToggleSaving('deadline')
-    try {
-      if (!isValid) {
-        await mutateAsync({ cancellationDeadlineValue: null, cancellationDeadlineUnit: null })
-        setDeadlineValue('')
-      } else {
-        await mutateAsync({ cancellationDeadlineValue: parsed, cancellationDeadlineUnit: unit })
-      }
-    } catch {
-      // revert to last saved values on error
-      setDeadlineValue(data?.cancellationDeadlineValue != null ? String(data.cancellationDeadlineValue) : '')
-      setDeadlineUnit(data?.cancellationDeadlineUnit ?? 'hours')
-    } finally {
-      setToggleSaving(null)
     }
   }
 
@@ -224,10 +178,7 @@ export function TenantGeneralForm() {
                 Permite marcar agendamentos como pagos. Quando desativado, a opção é removida do sistema.
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'paid' && <Spinner size={14} />}
-              <Toggle checked={allowPaidStatus} onChange={handleTogglePaidStatus} disabled={toggleSaving === 'paid'} />
-            </div>
+            <Toggle checked={allowPaidStatus} onChange={setAllowPaidStatus} />
           </div>
 
           <div className="border-t border-border" />
@@ -240,10 +191,7 @@ export function TenantGeneralForm() {
                 Novos agendamentos criados por clientes ficam como "Aguardando confirmação" até serem confirmados.
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'confirm' && <Spinner size={14} />}
-              <Toggle checked={requiresConfirm} onChange={handleToggleConfirmation} disabled={toggleSaving === 'confirm'} />
-            </div>
+            <Toggle checked={requiresConfirm} onChange={setRequiresConfirm} />
           </div>
 
           <div className="border-t border-border" />
@@ -256,28 +204,23 @@ export function TenantGeneralForm() {
                 Define se o usuário precisa informar um motivo ao cancelar um agendamento.
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'cancelReason' && <Spinner size={14} />}
-              <div className="flex border border-border rounded-lg overflow-hidden">
-                {CANCEL_REASON_OPTIONS.map((opt, i) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    disabled={toggleSaving === 'cancelReason'}
-                    onClick={() => handleCancelReasonModeChange(opt.value)}
-                    className={cn(
-                      'px-3 py-1.5 text-[12px] font-medium border-0 cursor-pointer transition-colors',
-                      cancelReasonMode === opt.value
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-background text-muted-foreground hover:bg-accent',
-                      i < CANCEL_REASON_OPTIONS.length - 1 && 'border-r border-border',
-                      toggleSaving === 'cancelReason' && 'opacity-50 cursor-not-allowed',
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+            <div className="flex border border-border rounded-lg overflow-hidden shrink-0">
+              {CANCEL_REASON_OPTIONS.map((opt, i) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setCancelReasonMode(opt.value)}
+                  className={cn(
+                    'px-3 py-1.5 text-[12px] font-medium border-0 cursor-pointer transition-colors',
+                    cancelReasonMode === opt.value
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-background text-muted-foreground hover:bg-accent',
+                    i < CANCEL_REASON_OPTIONS.length - 1 && 'border-r border-border',
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -292,7 +235,6 @@ export function TenantGeneralForm() {
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {toggleSaving === 'deadline' && <Spinner size={14} />}
               <input
                 type="number"
                 min={1}
@@ -300,34 +242,21 @@ export function TenantGeneralForm() {
                 step={1}
                 value={deadlineValue}
                 onChange={e => setDeadlineValue(e.target.value)}
-                onBlur={() => handleDeadlineSave(deadlineValue, deadlineUnit)}
                 placeholder="—"
-                disabled={toggleSaving === 'deadline'}
-                className={cn(
-                  'w-16 h-[34px] px-2 text-sm text-center text-foreground bg-background rounded-lg border border-border outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
-                  toggleSaving === 'deadline'
-                    ? 'opacity-50 cursor-not-allowed bg-muted'
-                    : 'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-                )}
+                className="w-16 h-[34px] px-2 text-sm text-center text-foreground bg-background rounded-lg border border-border outline-none transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10"
               />
               <div className="flex border border-border rounded-lg overflow-hidden">
                 {DEADLINE_UNIT_OPTIONS.map((opt, i) => (
                   <button
                     key={opt.value}
                     type="button"
-                    disabled={toggleSaving === 'deadline'}
-                    onMouseDown={(e: React.MouseEvent) => {
-                      e.preventDefault() // prevents onBlur on the number input
-                      setDeadlineUnit(opt.value)
-                      if (deadlineValue !== '') handleDeadlineSave(deadlineValue, opt.value)
-                    }}
+                    onClick={() => setDeadlineUnit(opt.value)}
                     className={cn(
                       'px-3 py-1.5 text-[12px] font-medium border-0 cursor-pointer transition-colors',
                       deadlineUnit === opt.value
                         ? 'bg-indigo-500 text-white'
                         : 'bg-background text-muted-foreground hover:bg-accent',
                       i < DEADLINE_UNIT_OPTIONS.length - 1 && 'border-r border-border',
-                      toggleSaving === 'deadline' && 'opacity-50 cursor-not-allowed',
                     )}
                   >
                     {opt.label}

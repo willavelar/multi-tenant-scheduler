@@ -11,6 +11,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import type { Client } from '@/types'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 import { Button } from '@/components/ui/button'
+import { ViewButton } from '@/components/ui/ViewButton'
 
 function formatBirthDate(dateStr: string | null) {
   if (!dateStr) return '—'
@@ -148,9 +149,7 @@ export default function ClientsPage() {
                         <ClientStatusBadge active={client.active} />
                       </td>
                       <td className="px-4 py-3">
-                        <Button variant="primary" size="xs" onClick={() => router.push(`/clients/${client.id}`)}>
-                          Visualizar
-                        </Button>
+                        <ViewButton onClick={() => router.push(`/clients/${client.id}`)} />
                       </td>
                     </tr>
                   ))}

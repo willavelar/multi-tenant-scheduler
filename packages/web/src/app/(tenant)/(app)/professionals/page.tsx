@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge'
 import { TableSkeleton } from '@/components/ui/TableSkeleton'
 import type { Professional } from '@/types'
 import { Button } from '@/components/ui/button'
+import { ViewButton } from '@/components/ui/ViewButton'
 
 const COLS = ['Profissional', 'Cargo', 'Função', 'Último login', 'Cadastrado em', 'Status', 'Ações']
 
@@ -140,9 +141,7 @@ export default function ProfessionalsPage() {
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <Button variant="primary" size="xs" onClick={() => router.push(`/professionals/${prof.id}`)}>
-                          Visualizar
-                        </Button>
+                        <ViewButton onClick={() => router.push(`/professionals/${prof.id}`)} />
                       </td>
                     </tr>
                   ))}
