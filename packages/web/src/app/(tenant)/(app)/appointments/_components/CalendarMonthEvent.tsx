@@ -14,7 +14,7 @@ export function CalendarMonthEvent({ appointment, color, onClick }: Props) {
   const { formatISOTime } = useFormatTime()
 
   const isPast = new Date(appointment.endsAt) < new Date()
-  const isCancelled = appointment.status === 'cancelled'
+  const isCancelled = appointment.status === 'cancelled_by_client' || appointment.status === 'cancelled_by_professional'
 
   function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation()
