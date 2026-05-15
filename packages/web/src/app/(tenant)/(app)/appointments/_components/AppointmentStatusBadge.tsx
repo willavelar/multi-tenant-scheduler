@@ -7,17 +7,19 @@ import type { StatusVariant } from '@/components/ui/StatusBadge'
 import type { Appointment } from '@/types'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
-  pending:   'Aguardando confirmação',
-  confirmed: 'Confirmado',
-  cancelled: 'Cancelado',
-  completed: 'Pago',
+  pending:                   'Aguardando confirmação',
+  confirmed:                 'Confirmado',
+  cancelled_by_client:       'Cancelado pelo cliente',
+  cancelled_by_professional: 'Cancelado pelo profissional',
+  completed:                 'Pago',
 }
 
 const STATUS_VARIANTS: Record<Appointment['status'], StatusVariant> = {
-  pending:   'warning',
-  confirmed: 'success',
-  cancelled: 'error',
-  completed: 'purple',
+  pending:                   'warning',
+  confirmed:                 'success',
+  cancelled_by_client:       'error',
+  cancelled_by_professional: 'error',
+  completed:                 'purple',
 }
 
 const itemCls = 'w-full text-left px-3 py-2 text-[12.5px] flex items-center gap-2 cursor-pointer border-none bg-transparent transition-colors'
@@ -35,10 +37,11 @@ export function AppointmentStatusBadge({ status, allowPaidStatus, onConfirm, onC
   const [pos,  setPos]  = useState({ top: 0, left: 0 })
   const ref = useRef<HTMLButtonElement>(null)
 
-  const canConfirm  = status !== 'confirmed' && status !== 'completed'
-  const canComplete = allowPaidStatus && status !== 'completed' && status !== 'cancelled'
-  const canCancel   = status !== 'cancelled'
-  const hasOptions  = canConfirm || canComplete || canCancel
+  const isCancelled  = status === 'cancelled_by_client' || status === 'cancelled_by_professional'
+  const canConfirm   = status !== 'confirmed' && status !== 'completed' && !isCancelled
+  const canComplete  = allowPaidStatus && status !== 'completed' && !isCancelled
+  const canCancel    = !isCancelled
+  const hasOptions   = canConfirm || canComplete || canCancel
 
   function handleToggle() {
     if (!hasOptions || !ref.current) return

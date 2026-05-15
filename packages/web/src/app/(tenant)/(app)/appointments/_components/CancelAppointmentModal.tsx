@@ -19,6 +19,7 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
   const { cancellationReasonMode, cancellationDeadlineValue, cancellationDeadlineUnit } = useTenantSettingsContext()
   const { user } = useAuth()
   const [reason, setReason] = useState('')
+  const [limitError, setLimitError] = useState<string | null>(null)
   const cancelMut = useCancelAppointment()
 
   if (!appointmentId) return null
@@ -70,12 +71,19 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
     (cancellationReasonMode === 'required' && reason.trim().length < 3)
 
   function handleConfirm() {
+    setLimitError(null)
     cancelMut.mutate(
       { id: appointmentId!, reason: reason.trim() || undefined },
       {
         onSuccess: () => {
           onSuccess?.()
           onClose()
+        },
+        onError: (err: any) => {
+          const msg = err?.message ?? ''
+          if (msg.includes('CANCELLATION_LIMIT_EXCEEDED')) {
+            setLimitError('Você atingiu o limite de cancelamentos para este período.')
+          }
         },
       },
     )
@@ -85,7 +93,7 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
     <div
       className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       data-appointment-modal
-      onClick={() => !cancelMut.isPending && onClose()}
+      onClick={() => { if (!cancelMut.isPending) { setLimitError(null); onClose() } }}
     >
       <div
         className="bg-card rounded-xl p-7 w-full max-w-[400px] shadow-2xl"
@@ -130,11 +138,15 @@ export function CancelAppointmentModal({ appointmentId, startsAt, onClose, onSuc
           </div>
         )}
 
+        {limitError && (
+          <p className="text-[13px] text-red-600 dark:text-red-400 mb-4 m-0">{limitError}</p>
+        )}
+
         <div className="flex gap-2.5 justify-end">
           <Button
             variant="secondary"
             size="md"
-            onClick={onClose}
+            onClick={() => { setLimitError(null); onClose() }}
             disabled={cancelMut.isPending}
           >
             Voltar
