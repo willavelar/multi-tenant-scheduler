@@ -78,7 +78,7 @@ export class AppointmentsService {
             eq(appointments.tenantId, tenantId),
             gte(appointments.startsAt, from),
             lte(appointments.startsAt, to),
-            notInArray(appointments.status, ['cancelled', 'completed']),
+            notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
           ));
         if (Number(total) >= limitProfile.serviceLimitCount) {
           throw new BadRequestException('LIMIT_EXCEEDED');
@@ -106,7 +106,7 @@ export class AppointmentsService {
               eq(appointments.serviceId, dto.serviceId),
               gte(appointments.startsAt, from),
               lte(appointments.startsAt, to),
-              notInArray(appointments.status, ['cancelled', 'completed']),
+              notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
             ));
           if (Number(total) >= serviceLimit.limitCount) {
             throw new BadRequestException('LIMIT_EXCEEDED');
@@ -174,7 +174,7 @@ export class AppointmentsService {
             eq(appointments.tenantId, tenantId),
             gte(appointments.startsAt, from),
             lte(appointments.startsAt, to),
-            notInArray(appointments.status, ['cancelled', 'completed']),
+            notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
           ));
         return { exceeded: Number(total) >= profile.serviceLimitCount };
       }
@@ -202,7 +202,7 @@ export class AppointmentsService {
           eq(appointments.serviceId, serviceId),
           gte(appointments.startsAt, from),
           lte(appointments.startsAt, to),
-          notInArray(appointments.status, ['cancelled', 'completed']),
+          notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
         ));
       return { exceeded: Number(total) >= serviceLimit.limitCount };
     });
@@ -338,7 +338,7 @@ export class AppointmentsService {
 
   async updateStatus(
     id: string,
-    status: 'confirmed' | 'cancelled' | 'completed',
+    status: 'confirmed' | 'cancelled_by_client' | 'cancelled_by_professional' | 'completed',
     tenantId: string,
     reason?: string,
   ) {
@@ -353,6 +353,47 @@ export class AppointmentsService {
         }
       }
 
+      if (status === 'cancelled_by_client') {
+        const [appt] = await tx
+          .select({
+            clientId: appointments.clientId,
+            startsAt: appointments.startsAt,
+          })
+          .from(appointments)
+          .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)));
+
+        if (appt) {
+          const [limitProfile] = await tx
+            .select({
+              cancellationLimitCount:  clientProfiles.cancellationLimitCount,
+              cancellationLimitPeriod: clientProfiles.cancellationLimitPeriod,
+            })
+            .from(clientProfiles)
+            .where(and(
+              eq(clientProfiles.userId, appt.clientId),
+              eq(clientProfiles.tenantId, tenantId),
+            ));
+
+          if (limitProfile?.cancellationLimitCount != null && limitProfile?.cancellationLimitPeriod != null) {
+            const dateStr = appt.startsAt.toISOString().slice(0, 10);
+            const { from, to } = getPeriodBounds(dateStr, limitProfile.cancellationLimitPeriod);
+            const [{ total }] = await tx
+              .select({ total: count() })
+              .from(appointments)
+              .where(and(
+                eq(appointments.clientId, appt.clientId),
+                eq(appointments.tenantId, tenantId),
+                eq(appointments.status, 'cancelled_by_client'),
+                gte(appointments.startsAt, from),
+                lte(appointments.startsAt, to),
+              ));
+            if (Number(total) >= limitProfile.cancellationLimitCount) {
+              throw new BadRequestException('CANCELLATION_LIMIT_EXCEEDED');
+            }
+          }
+        }
+      }
+
       const [appt] = await tx
         .select()
         .from(appointments)
@@ -360,7 +401,7 @@ export class AppointmentsService {
       if (!appt) throw new NotFoundException('Appointment not found');
 
       const setPayload: { status: typeof status; cancellationReason?: string } = { status };
-      if (status === 'cancelled' && reason?.trim()) {
+      if ((status === 'cancelled_by_client' || status === 'cancelled_by_professional') && reason?.trim()) {
         setPayload.cancellationReason = reason;
       }
 
