@@ -76,7 +76,7 @@ export class ServicesService {
         .where(and(
           eq(appointments.serviceId, id),
           gt(appointments.startsAt, now),
-          notInArray(appointments.status, ['cancelled', 'completed']),
+          notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
         ));
 
       if (blocking.length > 0) {
@@ -88,11 +88,11 @@ export class ServicesService {
         }
         await tx
           .update(appointments)
-          .set({ status: 'cancelled' })
+          .set({ status: 'cancelled_by_professional' })
           .where(and(
             eq(appointments.serviceId, id),
             gt(appointments.startsAt, now),
-            notInArray(appointments.status, ['cancelled', 'completed']),
+            notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
           ));
       }
 
