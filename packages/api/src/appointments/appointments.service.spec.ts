@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { DB } from '../database/database.module';
 import { AvailabilityService } from '../availability/availability.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 jest.mock('../database/with-tenant', () => ({
   withTenant: (_db: any, _tenantId: string, fn: (tx: any) => any) => fn(_db),
@@ -21,6 +22,7 @@ describe('AppointmentsService.updateStatus', () => {
 
   const mockDb = { select: mockSelect, update: mockUpdate };
   const mockAvailabilityService = { getAvailableSlots: jest.fn() };
+  const mockNotificationsService = { dispatch: jest.fn().mockResolvedValue(undefined) };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -35,6 +37,7 @@ describe('AppointmentsService.updateStatus', () => {
         AppointmentsService,
         { provide: DB, useValue: mockDb },
         { provide: AvailabilityService, useValue: mockAvailabilityService },
+        { provide: NotificationsService, useValue: mockNotificationsService },
       ],
     }).compile();
     service = module.get(AppointmentsService);
@@ -44,7 +47,7 @@ describe('AppointmentsService.updateStatus', () => {
     mockFetchWhere.mockResolvedValue([{ id: 'appt-1', status: 'confirmed', tenantId: 'tenant-1' }]);
     mockReturning.mockResolvedValue([{ id: 'appt-1', status: 'cancelled_by_client', cancellationReason: null }]);
 
-    await service.updateStatus('appt-1', 'cancelled_by_client', 'tenant-1');
+    await service.updateStatus('appt-1', 'cancelled_by_client', 'tenant-1', 'user-1', 'client');
 
     expect(mockSet).toHaveBeenCalledWith({ status: 'cancelled_by_client' });
   });
@@ -53,7 +56,7 @@ describe('AppointmentsService.updateStatus', () => {
     mockFetchWhere.mockResolvedValue([{ id: 'appt-1', status: 'confirmed', tenantId: 'tenant-1' }]);
     mockReturning.mockResolvedValue([{ id: 'appt-1', status: 'cancelled_by_professional', cancellationReason: null }]);
 
-    await service.updateStatus('appt-1', 'cancelled_by_professional', 'tenant-1');
+    await service.updateStatus('appt-1', 'cancelled_by_professional', 'tenant-1', 'user-1', 'professional');
 
     expect(mockSet).toHaveBeenCalledWith({ status: 'cancelled_by_professional' });
   });
@@ -62,7 +65,7 @@ describe('AppointmentsService.updateStatus', () => {
     mockFetchWhere.mockResolvedValue([{ id: 'appt-1', status: 'confirmed', tenantId: 'tenant-1' }]);
     mockReturning.mockResolvedValue([{ id: 'appt-1', status: 'cancelled_by_client', cancellationReason: 'Not available' }]);
 
-    await service.updateStatus('appt-1', 'cancelled_by_client', 'tenant-1', 'Not available');
+    await service.updateStatus('appt-1', 'cancelled_by_client', 'tenant-1', 'user-1', 'client', 'Not available');
 
     expect(mockSet).toHaveBeenCalledWith({ status: 'cancelled_by_client', cancellationReason: 'Not available' });
   });
@@ -71,7 +74,7 @@ describe('AppointmentsService.updateStatus', () => {
     mockFetchWhere.mockResolvedValue([]);
 
     await expect(
-      service.updateStatus('nonexistent', 'cancelled_by_client', 'tenant-1'),
+      service.updateStatus('nonexistent', 'cancelled_by_client', 'tenant-1', 'user-1', 'client'),
     ).rejects.toThrow(NotFoundException);
   });
 });

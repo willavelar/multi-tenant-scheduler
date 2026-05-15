@@ -8,6 +8,7 @@ import {
 import { DB, DrizzleDB } from '../database/database.module';
 import { withTenant } from '../database/with-tenant';
 import { AvailabilityService } from '../availability/availability.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 
 function getPeriodBounds(dateStr: string, period: 'day' | 'week' | 'month'): { from: Date; to: Date } {
@@ -38,6 +39,7 @@ export class AppointmentsService {
   constructor(
     @Inject(DB) private readonly db: DrizzleDB,
     private readonly availabilityService: AvailabilityService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(dto: CreateAppointmentDto, userId: string, userRole: string, tenantId: string) {
@@ -52,7 +54,7 @@ export class AppointmentsService {
       throw new BadRequestException('Selected slot is not available');
     }
 
-    return withTenant(this.db, tenantId, async (tx) => {
+    const appointment = await withTenant(this.db, tenantId, async (tx) => {
       const [svc] = await tx
         .select({ durationMinutes: services.durationMinutes })
         .from(services)
@@ -133,7 +135,7 @@ export class AppointmentsService {
         status = isPrivileged && dto.initialStatus ? dto.initialStatus : 'pending';
       }
 
-      const [appointment] = await tx.insert(appointments).values({
+      const [appt] = await tx.insert(appointments).values({
         tenantId,
         professionalId: dto.professionalId,
         serviceId: dto.serviceId,
@@ -143,8 +145,18 @@ export class AppointmentsService {
         status,
       }).returning();
 
-      return appointment;
+      return appt;
     });
+
+    await this.notificationsService.dispatch({
+      appointmentId: appointment.id,
+      tenantId,
+      actorUserId:   userId,
+      actorRole:     userRole as 'client' | 'professional' | 'tenant_admin',
+      event:         'appointment_created',
+    });
+
+    return appointment;
   }
 
   async checkLimit(
@@ -340,9 +352,11 @@ export class AppointmentsService {
     id: string,
     status: 'confirmed' | 'cancelled_by_client' | 'cancelled_by_professional' | 'completed',
     tenantId: string,
+    actorUserId: string,
+    actorRole: string,
     reason?: string,
   ) {
-    return withTenant(this.db, tenantId, async (tx) => {
+    const updated = await withTenant(this.db, tenantId, async (tx) => {
       if (status === 'completed') {
         const [tenant] = await tx
           .select({ allowPaidStatus: tenants.allowPaidStatus })
@@ -395,13 +409,24 @@ export class AppointmentsService {
         setPayload.cancellationReason = reason;
       }
 
-      const [updated] = await tx
+      const [result] = await tx
         .update(appointments)
         .set(setPayload)
         .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)))
         .returning();
-      return updated;
+      return result;
     });
+
+    await this.notificationsService.dispatch({
+      appointmentId: id,
+      tenantId,
+      actorUserId,
+      actorRole: actorRole as 'client' | 'professional' | 'tenant_admin',
+      event:     'appointment_status_changed',
+      newStatus: status,
+    });
+
+    return updated;
   }
 
   async remove(id: string, tenantId: string) {

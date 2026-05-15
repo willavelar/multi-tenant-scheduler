@@ -68,8 +68,12 @@ export class AppointmentsController {
   }
 
   @Patch(':id/confirm')
-  confirm(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.updateStatus(id, 'confirmed', tenantId);
+  confirm(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.updateStatus(id, 'confirmed', tenantId, user.id, user.role);
   }
 
   @Patch(':id/cancel')
@@ -80,13 +84,17 @@ export class AppointmentsController {
     @CurrentUser() user: { id: string; role: string },
   ) {
     const status = user.role === 'client' ? 'cancelled_by_client' : 'cancelled_by_professional';
-    return this.service.updateStatus(id, status, tenantId, dto.reason);
+    return this.service.updateStatus(id, status, tenantId, user.id, user.role, dto.reason);
   }
 
   @Patch(':id/complete')
   @Roles('tenant_admin', 'professional')
-  complete(@Param('id') id: string, @TenantId() tenantId: string) {
-    return this.service.updateStatus(id, 'completed', tenantId);
+  complete(
+    @Param('id') id: string,
+    @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
+  ) {
+    return this.service.updateStatus(id, 'completed', tenantId, user.id, user.role);
   }
 
   @Delete(':id')
