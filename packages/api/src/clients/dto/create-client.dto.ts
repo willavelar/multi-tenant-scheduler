@@ -4,6 +4,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ServiceLimitItemDto } from './service-limit-item.dto';
+import { MIN_PASSWORD_LENGTH } from '../../common/constants/password';
 
 export class CreateClientDto {
   @IsString() name: string;
@@ -12,7 +13,7 @@ export class CreateClientDto {
   @IsOptional() @IsBoolean() sendInvite?: boolean;
 
   @ValidateIf(o => !o.sendInvite)
-  @IsString() @MinLength(6) password: string;
+  @IsString() @MinLength(MIN_PASSWORD_LENGTH) password: string;
 
   @IsOptional() @IsString() phone?: string;
   @IsOptional() @IsString() @Matches(/^\d{4}-\d{2}-\d{2}$/) birthDate?: string;

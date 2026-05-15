@@ -121,10 +121,6 @@ export class AuthService {
     if (!raw) throw new BadRequestException('Token inválido ou expirado');
     const { userId, tenantId } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
 
-    if (newPassword.length < 6) {
-      throw new BadRequestException('A senha deve ter no mínimo 6 caracteres');
-    }
-
     const passwordHash = await bcrypt.hash(newPassword, 10);
     const updated = await withTenant(this.db, tenantId, (tx) =>
       tx.update(users).set({ passwordHash }).where(eq(users.id, userId)).returning({ id: users.id }),
@@ -143,10 +139,6 @@ export class AuthService {
     const raw = await this.redis.getdel(`password:invite:${token}`);
     if (!raw) throw new BadRequestException('Token inválido ou expirado');
     const { userId, tenantId } = JSON.parse(raw) as { userId: string; email: string; tenantId: string };
-
-    if (newPassword.length < 6) {
-      throw new BadRequestException('A senha deve ter no mínimo 6 caracteres');
-    }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
     const updated = await withTenant(this.db, tenantId, (tx) =>

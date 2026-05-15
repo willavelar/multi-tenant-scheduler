@@ -1,10 +1,11 @@
 import { IsString, MinLength } from 'class-validator';
+import { MIN_PASSWORD_LENGTH } from '../../../common/constants/password';
 
 export class ResetPasswordDto {
   @IsString()
   token: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(MIN_PASSWORD_LENGTH)
   newPassword: string;
 }

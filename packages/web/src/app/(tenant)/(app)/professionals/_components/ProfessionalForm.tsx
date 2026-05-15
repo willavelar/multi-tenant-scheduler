@@ -23,8 +23,8 @@ const createSchema = z.object({
   bio:        z.string().optional(),
   avatarUrl:  z.string().nullable().optional(),
 }).refine(
-  (d) => d.sendInvite || (!!d.password && d.password.length >= 8),
-  { message: 'Mínimo 8 caracteres', path: ['password'] },
+  (d) => d.sendInvite || (!!d.password && d.password.length >= 6),
+  { message: 'Mínimo 6 caracteres', path: ['password'] },
 )
 
 const editSchema = z.object({
