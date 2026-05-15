@@ -107,7 +107,8 @@ export function AppointmentFilters({
               <option value="">Todos</option>
               <option value="pending">Aguardando confirmação</option>
               <option value="confirmed">Confirmado</option>
-              <option value="cancelled">Cancelado</option>
+              <option value="cancelled_by_client">Cancelado pelo cliente</option>
+              <option value="cancelled_by_professional">Cancelado pelo profissional</option>
               {allowPaidStatus && <option value="completed">Pago</option>}
             </select>
             <ChevronDown />
