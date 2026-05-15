@@ -112,6 +112,7 @@ function LoginContent() {
                 type="email"
                 placeholder="seu@email.com"
                 autoComplete="email"
+                tabIndex={1}
                 {...register('email')}
                 className={cn(
                   'w-full h-11.5 px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
@@ -133,6 +134,7 @@ function LoginContent() {
                 </label>
                 <a
                   href="./forgot-password"
+                  tabIndex={4}
                   className="text-xs text-muted-foreground no-underline hover:text-foreground underline-offset-4 hover:underline"
                 >
                   Esqueceu a senha?
@@ -144,6 +146,7 @@ function LoginContent() {
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  tabIndex={2}
                   {...register('password')}
                   className={cn(
                     'w-full h-11.5 pl-3.5 pr-10.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 box-border placeholder:text-muted-foreground',
@@ -152,6 +155,7 @@ function LoginContent() {
                 />
                 <button
                   type="button"
+                  tabIndex={-1}
                   onClick={() => setShowPassword(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center text-muted-foreground hover:text-foreground hover:scale-110 active:scale-90 transition-all bg-transparent border-0 p-0 cursor-pointer"
                   aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
@@ -176,6 +180,7 @@ function LoginContent() {
             {/* Botão */}
             <button
               type="submit"
+              tabIndex={3}
               disabled={isSubmitting}
               className="w-full h-11.5 bg-blue-600 text-white font-semibold rounded-lg border-0 cursor-pointer flex items-center justify-center gap-2 hover:bg-blue-700 hover:shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:-translate-y-px active:translate-y-0 active:shadow-none disabled:opacity-65 disabled:cursor-not-allowed transition-all"
             >
