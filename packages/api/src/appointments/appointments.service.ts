@@ -353,52 +353,42 @@ export class AppointmentsService {
         }
       }
 
-      if (status === 'cancelled_by_client') {
-        const [appt] = await tx
-          .select({
-            clientId: appointments.clientId,
-            startsAt: appointments.startsAt,
-          })
-          .from(appointments)
-          .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)));
-
-        if (appt) {
-          const [limitProfile] = await tx
-            .select({
-              cancellationLimitCount:  clientProfiles.cancellationLimitCount,
-              cancellationLimitPeriod: clientProfiles.cancellationLimitPeriod,
-            })
-            .from(clientProfiles)
-            .where(and(
-              eq(clientProfiles.userId, appt.clientId),
-              eq(clientProfiles.tenantId, tenantId),
-            ));
-
-          if (limitProfile?.cancellationLimitCount != null && limitProfile?.cancellationLimitPeriod != null) {
-            const dateStr = appt.startsAt.toISOString().slice(0, 10);
-            const { from, to } = getPeriodBounds(dateStr, limitProfile.cancellationLimitPeriod);
-            const [{ total }] = await tx
-              .select({ total: count() })
-              .from(appointments)
-              .where(and(
-                eq(appointments.clientId, appt.clientId),
-                eq(appointments.tenantId, tenantId),
-                eq(appointments.status, 'cancelled_by_client'),
-                gte(appointments.startsAt, from),
-                lte(appointments.startsAt, to),
-              ));
-            if (Number(total) >= limitProfile.cancellationLimitCount) {
-              throw new BadRequestException('CANCELLATION_LIMIT_EXCEEDED');
-            }
-          }
-        }
-      }
-
       const [appt] = await tx
         .select()
         .from(appointments)
         .where(and(eq(appointments.id, id), eq(appointments.tenantId, tenantId)));
       if (!appt) throw new NotFoundException('Appointment not found');
+
+      if (status === 'cancelled_by_client') {
+        const [limitProfile] = await tx
+          .select({
+            cancellationLimitCount:  clientProfiles.cancellationLimitCount,
+            cancellationLimitPeriod: clientProfiles.cancellationLimitPeriod,
+          })
+          .from(clientProfiles)
+          .where(and(
+            eq(clientProfiles.userId, appt.clientId),
+            eq(clientProfiles.tenantId, tenantId),
+          ));
+
+        if (limitProfile?.cancellationLimitCount != null && limitProfile?.cancellationLimitPeriod != null) {
+          const dateStr = appt.startsAt.toISOString().slice(0, 10);
+          const { from, to } = getPeriodBounds(dateStr, limitProfile.cancellationLimitPeriod);
+          const [{ total }] = await tx
+            .select({ total: count() })
+            .from(appointments)
+            .where(and(
+              eq(appointments.clientId, appt.clientId),
+              eq(appointments.tenantId, tenantId),
+              eq(appointments.status, 'cancelled_by_client'),
+              gte(appointments.startsAt, from),
+              lte(appointments.startsAt, to),
+            ));
+          if (Number(total) >= limitProfile.cancellationLimitCount) {
+            throw new BadRequestException('CANCELLATION_LIMIT_EXCEEDED');
+          }
+        }
+      }
 
       const setPayload: { status: typeof status; cancellationReason?: string } = { status };
       if ((status === 'cancelled_by_client' || status === 'cancelled_by_professional') && reason?.trim()) {
