@@ -63,6 +63,15 @@ function TagIcon() {
   )
 }
 
+function BellIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+    </svg>
+  )
+}
+
 type NavItem = {
   label: string
   href:  string
@@ -72,6 +81,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Agendamentos',    href: '/appointments',  icon: <CalendarIcon />,  roles: ['tenant_admin', 'professional', 'client'] },
+  { label: 'Notificações',    href: '/notifications', icon: <BellIcon />,      roles: ['tenant_admin', 'professional', 'client'] },
   { label: 'Clientes',        href: '/clients',       icon: <UsersIcon />,     roles: ['tenant_admin', 'professional'] },
   { label: 'Profissionais',   href: '/professionals', icon: <BriefcaseIcon />, roles: ['tenant_admin'] },
   { label: 'Administradores', href: '/admins',        icon: <ShieldIcon />,    roles: ['tenant_admin'] },
