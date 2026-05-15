@@ -16,6 +16,9 @@ export type Professional = {
   position: string | null
   timezone: string
   timeFormat: '12h' | '24h'
+  notifyViaSystem:   boolean
+  notifyViaEmail:    boolean
+  notifyViaWhatsapp: boolean
   active: boolean
   name: string
   email: string
@@ -46,6 +49,9 @@ export type Client = {
   avatarUrl: string | null
   timezone: string
   timeFormat: '12h' | '24h'
+  notifyViaSystem:   boolean
+  notifyViaEmail:    boolean
+  notifyViaWhatsapp: boolean
   allProfessionals: boolean | null
   allServices: boolean | null
   serviceLimitCount: number | null
@@ -111,6 +117,25 @@ export type AppointmentPage = {
   limit: number
 }
 
+export type Notification = {
+  id:          string
+  tenantId:    string
+  userId:      string
+  type:        'appointment_created' | 'appointment_status_changed'
+  referenceId: string
+  title:       string
+  body:        string
+  readAt:      string | null
+  createdAt:   string
+}
+
+export type NotificationPage = {
+  data:  Notification[]
+  total: number
+  page:  number
+  limit: number
+}
+
 export type Admin = {
   id: string
   name: string
@@ -120,6 +145,9 @@ export type Admin = {
   active: boolean
   timezone: string
   timeFormat: '12h' | '24h'
+  notifyViaSystem:   boolean
+  notifyViaEmail:    boolean
+  notifyViaWhatsapp: boolean
   lastLoginAt: string | null
   createdAt: string
 }
