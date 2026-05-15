@@ -1,7 +1,22 @@
 import { Test } from '@nestjs/testing';
 import { ConflictException, ForbiddenException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { ProfessionalsService } from './professionals.service';
 import { DB } from '../database/database.module';
+import { REDIS } from '../redis/redis.module';
+import { EmailQueueProducer } from '../email-queue/email-queue.producer';
+
+const mockRedis = { set: jest.fn(), get: jest.fn(), del: jest.fn(), getdel: jest.fn() };
+const mockConfig = { get: jest.fn().mockReturnValue('localhost:3000') };
+const mockEmailProducer = { addInviteJob: jest.fn(), addPasswordResetJob: jest.fn() };
+
+function extraProviders() {
+  return [
+    { provide: REDIS, useValue: mockRedis },
+    { provide: ConfigService, useValue: mockConfig },
+    { provide: EmailQueueProducer, useValue: mockEmailProducer },
+  ];
+}
 
 function makeChainSequence(responses: unknown[]) {
   let call = 0;
@@ -34,7 +49,7 @@ describe('ProfessionalsService', () => {
   it('remove throws ForbiddenException when deleting own account', async () => {
     const db = makeMockDbSequence([[{ id: 'prof-1', userId: 'user-1' }]]);
     const module = await Test.createTestingModule({
-      providers: [ProfessionalsService, { provide: DB, useValue: db }],
+      providers: [ProfessionalsService, { provide: DB, useValue: db }, ...extraProviders()],
     }).compile();
     await expect(
       module.get(ProfessionalsService).remove('prof-1', 'tenant-1', 'user-1'),
@@ -48,7 +63,7 @@ describe('ProfessionalsService', () => {
       [{ id: 'apt-1', startsAt: future, endsAt: future, status: 'confirmed', serviceName: 'Corte', clientName: 'João' }],
     ]);
     const module = await Test.createTestingModule({
-      providers: [ProfessionalsService, { provide: DB, useValue: db }],
+      providers: [ProfessionalsService, { provide: DB, useValue: db }, ...extraProviders()],
     }).compile();
     const err = await module.get(ProfessionalsService)
       .remove('prof-1', 'tenant-1', 'user-1')
@@ -67,7 +82,7 @@ describe('ProfessionalsService', () => {
       undefined,
     ]);
     const module = await Test.createTestingModule({
-      providers: [ProfessionalsService, { provide: DB, useValue: db }],
+      providers: [ProfessionalsService, { provide: DB, useValue: db }, ...extraProviders()],
     }).compile();
     await expect(
       module.get(ProfessionalsService).remove('prof-1', 'tenant-1', 'user-1', true),
@@ -81,7 +96,7 @@ describe('ProfessionalsService', () => {
       undefined,
     ]);
     const module = await Test.createTestingModule({
-      providers: [ProfessionalsService, { provide: DB, useValue: db }],
+      providers: [ProfessionalsService, { provide: DB, useValue: db }, ...extraProviders()],
     }).compile();
     await expect(
       module.get(ProfessionalsService).remove('prof-1', 'tenant-1', 'user-1'),
@@ -91,7 +106,7 @@ describe('ProfessionalsService', () => {
   it('update throws ForbiddenException when professional tries to change another user', async () => {
     const db = makeMockDbSequence([[{ id: 'prof-1', userId: 'user-2' }]]);
     const module = await Test.createTestingModule({
-      providers: [ProfessionalsService, { provide: DB, useValue: db }],
+      providers: [ProfessionalsService, { provide: DB, useValue: db }, ...extraProviders()],
     }).compile();
     await expect(
       module.get(ProfessionalsService).update('prof-1', { name: 'X' }, 'tenant-1', 'user-1', 'professional'),

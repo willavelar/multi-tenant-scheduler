@@ -19,8 +19,11 @@ const ADMIN_FIELDS = {
   phone:       users.phone,
   avatarUrl:   users.avatarUrl,
   active:      users.active,
-  timezone:    users.timezone,
-  timeFormat:  users.timeFormat,
+  timezone:         users.timezone,
+  timeFormat:       users.timeFormat,
+  notifyViaSystem:   users.notifyViaSystem,
+  notifyViaEmail:    users.notifyViaEmail,
+  notifyViaWhatsapp: users.notifyViaWhatsapp,
   lastLoginAt: users.lastLoginAt,
   createdAt:   users.createdAt,
 };
@@ -136,8 +139,11 @@ export class AdminsService {
       if (dto.name       !== undefined) patch.name       = dto.name;
       if (dto.avatarUrl  !== undefined) patch.avatarUrl  = dto.avatarUrl;
       if (dto.active     !== undefined) patch.active     = dto.active;
-      if (dto.timezone   !== undefined) patch.timezone   = dto.timezone;
-      if (dto.timeFormat !== undefined) patch.timeFormat = dto.timeFormat;
+      if (dto.timezone          !== undefined) patch.timezone          = dto.timezone;
+      if (dto.timeFormat        !== undefined) patch.timeFormat        = dto.timeFormat;
+      if (dto.notifyViaSystem   !== undefined) patch.notifyViaSystem   = dto.notifyViaSystem;
+      if (dto.notifyViaEmail    !== undefined) patch.notifyViaEmail    = dto.notifyViaEmail;
+      if (dto.notifyViaWhatsapp !== undefined) patch.notifyViaWhatsapp = dto.notifyViaWhatsapp;
 
       if (Object.keys(patch).length) {
         await tx.update(users).set(patch).where(eq(users.id, id));
