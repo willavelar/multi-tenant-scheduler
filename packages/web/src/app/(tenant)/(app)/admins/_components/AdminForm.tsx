@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { PreferencesCard } from '@/components/ui/PreferencesCard'
+import { NotificationPreferencesCard } from '@/components/ui/NotificationPreferencesCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
@@ -23,24 +24,30 @@ const createSchema = z.object({
 )
 
 const editSchema = z.object({
-  name:       z.string().min(2, 'Nome obrigatório'),
-  avatarUrl:  z.string().nullable().optional(),
-  active:     z.boolean().optional(),
-  timezone:   z.string().optional(),
-  timeFormat: z.enum(['12h', '24h']).optional(),
+  name:              z.string().min(2, 'Nome obrigatório'),
+  avatarUrl:         z.string().nullable().optional(),
+  active:            z.boolean().optional(),
+  timezone:          z.string().optional(),
+  timeFormat:        z.enum(['12h', '24h']).optional(),
+  notifyViaSystem:   z.boolean().optional(),
+  notifyViaEmail:    z.boolean().optional(),
+  notifyViaWhatsapp: z.boolean().optional(),
 })
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type FormValues = {
-  name:        string
-  email?:      string
-  password?:   string
-  sendInvite?: boolean
-  avatarUrl?:  string | null
-  active?:     boolean
-  timezone?:   string
-  timeFormat?: '12h' | '24h'
+  name:               string
+  email?:             string
+  password?:          string
+  sendInvite?:        boolean
+  avatarUrl?:         string | null
+  active?:            boolean
+  timezone?:          string
+  timeFormat?:        '12h' | '24h'
+  notifyViaSystem?:   boolean
+  notifyViaEmail?:    boolean
+  notifyViaWhatsapp?: boolean
 }
 
 export type AdminFormData = FormValues
@@ -82,9 +89,12 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
       avatarUrl: defaultValues?.avatarUrl ?? null,
       ...(mode === 'create' ? { email: '', password: '', sendInvite: true } : {}),
       ...(mode === 'edit' ? {
-        active:     defaultValues?.active     ?? true,
-        timezone:   defaultValues?.timezone   ?? 'America/Sao_Paulo',
-        timeFormat: defaultValues?.timeFormat ?? '24h',
+        active:            defaultValues?.active            ?? true,
+        timezone:          defaultValues?.timezone          ?? 'America/Sao_Paulo',
+        timeFormat:        defaultValues?.timeFormat        ?? '24h',
+        notifyViaSystem:   defaultValues?.notifyViaSystem   ?? true,
+        notifyViaEmail:    defaultValues?.notifyViaEmail    ?? false,
+        notifyViaWhatsapp: defaultValues?.notifyViaWhatsapp ?? false,
       } : {}),
     },
   })
@@ -92,12 +102,15 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
   const [createTimezone,   setCreateTimezone]   = useState('America/Sao_Paulo')
   const [createTimeFormat, setCreateTimeFormat] = useState<'12h' | '24h'>('24h')
 
-  const nameValue       = watch('name') ?? ''
-  const avatarValue     = watch('avatarUrl') ?? null
-  const activeValue     = watch('active') ?? true
-  const timezoneValue   = watch('timezone') ?? 'America/Sao_Paulo'
-  const timeFormatValue = watch('timeFormat') ?? '24h'
-  const sendInviteValue = watch('sendInvite') ?? true
+  const nameValue            = watch('name') ?? ''
+  const avatarValue          = watch('avatarUrl') ?? null
+  const activeValue          = watch('active') ?? true
+  const timezoneValue        = watch('timezone') ?? 'America/Sao_Paulo'
+  const timeFormatValue      = watch('timeFormat') ?? '24h'
+  const sendInviteValue      = watch('sendInvite') ?? true
+  const notifyViaSystemValue   = watch('notifyViaSystem')   ?? true
+  const notifyViaEmailValue    = watch('notifyViaEmail')    ?? false
+  const notifyViaWhatsappValue = watch('notifyViaWhatsapp') ?? false
 
   async function submit(data: FormValues) {
     try {
@@ -203,6 +216,22 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
         onTimezoneChange={mode === 'create' ? setCreateTimezone : (v) => setValue('timezone', v)}
         onTimeFormatChange={mode === 'create' ? setCreateTimeFormat : (v) => setValue('timeFormat', v)}
       />
+
+      {/* ── Card: Notificações ── */}
+      {mode === 'edit' && (
+        <NotificationPreferencesCard
+          notifyViaSystem={notifyViaSystemValue}
+          notifyViaEmail={notifyViaEmailValue}
+          notifyViaWhatsapp={notifyViaWhatsappValue}
+          email={defaultValues?.email ?? ''}
+          phone={null}
+          onChange={(prefs) => {
+            setValue('notifyViaSystem',   prefs.notifyViaSystem)
+            setValue('notifyViaEmail',    prefs.notifyViaEmail)
+            setValue('notifyViaWhatsapp', prefs.notifyViaWhatsapp)
+          }}
+        />
+      )}
 
       {/* ── Footer ── */}
       {errors.root && (

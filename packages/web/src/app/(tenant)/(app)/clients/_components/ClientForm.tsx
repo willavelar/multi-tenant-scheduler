@@ -7,6 +7,7 @@ import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DatePickerField } from '@/components/ui/DatePickerField'
 import { PreferencesCard } from '@/components/ui/PreferencesCard'
+import { NotificationPreferencesCard } from '@/components/ui/NotificationPreferencesCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { FormSkeleton } from '@/components/ui/FormSkeleton'
@@ -26,6 +27,9 @@ export type ClientFormData = {
   avatarUrl?: string
   timezone: string
   timeFormat: '12h' | '24h'
+  notifyViaSystem: boolean
+  notifyViaEmail: boolean
+  notifyViaWhatsapp: boolean
   allProfessionals: boolean
   allServices: boolean
   professionalIds: string[]
@@ -89,6 +93,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [timezone,   setTimezone]   = useState(defaultValues?.timezone   ?? 'America/Sao_Paulo')
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>(defaultValues?.timeFormat ?? '24h')
+  const [notifyViaSystem,   setNotifyViaSystem]   = useState(defaultValues?.notifyViaSystem   ?? true)
+  const [notifyViaEmail,    setNotifyViaEmail]    = useState(defaultValues?.notifyViaEmail    ?? false)
+  const [notifyViaWhatsapp, setNotifyViaWhatsapp] = useState(defaultValues?.notifyViaWhatsapp ?? false)
 
   const [form, setForm] = useState<FormState>({
     name: '', email: '', password: '', phone: '',
@@ -133,6 +140,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     setAvatarUrl(defaultValues.avatarUrl ?? null)
     setTimezone(defaultValues.timezone ?? 'America/Sao_Paulo')
     setTimeFormat(defaultValues.timeFormat ?? '24h')
+    setNotifyViaSystem(defaultValues.notifyViaSystem   ?? true)
+    setNotifyViaEmail(defaultValues.notifyViaEmail    ?? false)
+    setNotifyViaWhatsapp(defaultValues.notifyViaWhatsapp ?? false)
     setAllProfs(defaultValues.allProfessionals === true)
     setAllSvcs(defaultValues.allServices === true)
     setSelectedProfs(
@@ -248,6 +258,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         avatarUrl:        avatarUrl ?? undefined,
         timezone,
         timeFormat,
+        notifyViaSystem,
+        notifyViaEmail,
+        notifyViaWhatsapp,
         allProfessionals: allProfs,
         allServices:      allSvcs,
         professionalIds:  allProfs ? [] : selectedProfs.map(p => p.id),
@@ -420,7 +433,23 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         onTimeFormatChange={setTimeFormat}
       />
 
-      {/* ── Card 4: Profissionais vinculados ── */}
+      {/* ── Card 4: Notificações ── */}
+      {mode === 'edit' && (
+        <NotificationPreferencesCard
+          notifyViaSystem={notifyViaSystem}
+          notifyViaEmail={notifyViaEmail}
+          notifyViaWhatsapp={notifyViaWhatsapp}
+          email={form.email}
+          phone={form.phone.trim() || null}
+          onChange={(prefs) => {
+            setNotifyViaSystem(prefs.notifyViaSystem)
+            setNotifyViaEmail(prefs.notifyViaEmail)
+            setNotifyViaWhatsapp(prefs.notifyViaWhatsapp)
+          }}
+        />
+      )}
+
+      {/* ── Card 5: Profissionais vinculados ── */}
       <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm relative">
         <p className="text-sm font-bold text-foreground m-0 mb-5">Profissionais vinculados</p>
         <p className="text-[13px] text-muted-foreground m-0 mb-4">
@@ -493,7 +522,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         )}
       </div>
 
-      {/* ── Card 5: Serviços permitidos ── */}
+      {/* ── Card 6: Serviços permitidos ── */}
       {services.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
           <p className="text-sm font-bold text-foreground m-0 mb-5">Serviços permitidos</p>
@@ -541,7 +570,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         </div>
       )}
 
-      {/* ── Card 6: Limite de serviços ── */}
+      {/* ── Card 7: Limite de serviços ── */}
       <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
         <p className="text-sm font-bold text-foreground m-0 mb-2">Limite de serviços</p>
         <p className="text-[13px] text-muted-foreground m-0 mb-5">
@@ -685,7 +714,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         )}
       </div>
 
-      {/* ── Card 7: Limite de cancelamentos ── */}
+      {/* ── Card 8: Limite de cancelamentos ── */}
       <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
         <p className="text-sm font-bold text-foreground m-0 mb-2">Limite de cancelamentos</p>
         <p className="text-[13px] text-muted-foreground m-0 mb-5">
