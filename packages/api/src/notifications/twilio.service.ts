@@ -4,8 +4,8 @@ import Twilio from 'twilio';
 
 @Injectable()
 export class TwilioService {
-  private readonly client: Twilio.Twilio;
-  private readonly from: string;
+  private readonly client: Twilio.Twilio | null = null;
+  private readonly from: string | null = null;
   private readonly logger = new Logger(TwilioService.name);
 
   constructor(private readonly config: ConfigService) {
@@ -13,13 +13,18 @@ export class TwilioService {
     const token = config.get<string>('TWILIO_AUTH_TOKEN');
     const from  = config.get<string>('TWILIO_WHATSAPP_FROM');
     if (!sid || !token || !from) {
-      throw new Error('Missing required Twilio env vars: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM');
+      this.logger.warn('Twilio env vars not set — WhatsApp notifications disabled');
+      return;
     }
     this.client = Twilio(sid, token);
     this.from   = from;
   }
 
   async sendWhatsApp(to: string, body: string): Promise<void> {
+    if (!this.client || !this.from) {
+      this.logger.warn(`WhatsApp notification skipped (Twilio not configured): ${to}`);
+      return;
+    }
     const toFormatted = to.startsWith('whatsapp:') ? to : `whatsapp:${to}`;
     try {
       await this.client.messages.create({ from: this.from, to: toFormatted, body });
