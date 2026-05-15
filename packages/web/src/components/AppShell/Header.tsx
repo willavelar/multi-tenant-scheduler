@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/providers/AuthProvider'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { NotificationBell } from './NotificationBell'
 import { cn } from '@/lib/utils'
 
 type Crumb = { label: string; href?: string }
@@ -25,6 +26,7 @@ function getBreadcrumbs(pathname: string): Crumb[] {
     '/settings/general':    [{ label: 'Configurações' }, { label: 'Gerais' }],
     '/settings/services':     [{ label: 'Configurações' }, { label: 'Serviços' }],
     '/settings/services/new': [{ label: 'Configurações' }, { label: 'Serviços', href: '/settings/services' }, { label: 'Novo serviço' }],
+    '/notifications':         [{ label: 'Notificações' }],
   }
 
   if (STATIC[path]) return STATIC[path]
@@ -110,6 +112,7 @@ export function Header() {
       {/* Right: theme toggle + user menu */}
       <div className="flex items-center gap-2">
         <ThemeToggle />
+        <NotificationBell />
 
         <div className="relative" ref={menuRef}>
           <button
