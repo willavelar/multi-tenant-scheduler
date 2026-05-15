@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { PreferencesCard } from '@/components/ui/PreferencesCard'
+import { NotificationPreferencesCard } from '@/components/ui/NotificationPreferencesCard'
 import { ScheduleCard, type LocalSlot } from './ScheduleCard'
 import { ExceptionsCard, type LocalException } from './ExceptionsCard'
 import { cn } from '@/lib/utils'
@@ -27,28 +28,34 @@ const createSchema = z.object({
 )
 
 const editSchema = z.object({
-  name:      z.string().min(2, 'Nome obrigatório'),
-  position:  z.string().optional(),
-  bio:       z.string().optional(),
-  avatarUrl: z.string().nullable().optional(),
-  timezone:  z.string().optional(),
-  timeFormat: z.enum(['12h', '24h']).optional(),
-  active:    z.boolean().optional(),
+  name:              z.string().min(2, 'Nome obrigatório'),
+  position:          z.string().optional(),
+  bio:               z.string().optional(),
+  avatarUrl:         z.string().nullable().optional(),
+  timezone:          z.string().optional(),
+  timeFormat:        z.enum(['12h', '24h']).optional(),
+  active:            z.boolean().optional(),
+  notifyViaSystem:   z.boolean().optional(),
+  notifyViaEmail:    z.boolean().optional(),
+  notifyViaWhatsapp: z.boolean().optional(),
 })
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type FormValues = {
-  name:        string
-  email?:      string
-  password?:   string
-  sendInvite?: boolean
-  position?:   string
-  bio?:        string
-  avatarUrl?:  string | null
-  timezone?:   string
-  timeFormat?: '12h' | '24h'
-  active?:     boolean
+  name:               string
+  email?:             string
+  password?:          string
+  sendInvite?:        boolean
+  position?:          string
+  bio?:               string
+  avatarUrl?:         string | null
+  timezone?:          string
+  timeFormat?:        '12h' | '24h'
+  active?:            boolean
+  notifyViaSystem?:   boolean
+  notifyViaEmail?:    boolean
+  notifyViaWhatsapp?: boolean
 }
 
 export type ProfessionalFormData = FormValues & {
@@ -106,9 +113,12 @@ export function ProfessionalForm({
       avatarUrl: defaultValues?.avatarUrl ?? null,
       ...(mode === 'create' ? { email: '', password: '', sendInvite: true } : {}),
       ...(mode === 'edit' ? {
-        active:     defaultValues?.active     ?? true,
-        timezone:   defaultValues?.timezone   ?? 'America/Sao_Paulo',
-        timeFormat: defaultValues?.timeFormat ?? '24h',
+        active:            defaultValues?.active            ?? true,
+        timezone:          defaultValues?.timezone          ?? 'America/Sao_Paulo',
+        timeFormat:        defaultValues?.timeFormat        ?? '24h',
+        notifyViaSystem:   defaultValues?.notifyViaSystem   ?? true,
+        notifyViaEmail:    defaultValues?.notifyViaEmail    ?? false,
+        notifyViaWhatsapp: defaultValues?.notifyViaWhatsapp ?? false,
       } : {}),
     },
   })
@@ -121,12 +131,15 @@ export function ProfessionalForm({
   const [createTimezone,   setCreateTimezone]   = useState('America/Sao_Paulo')
   const [createTimeFormat, setCreateTimeFormat] = useState<'12h' | '24h'>('24h')
 
-  const nameValue     = watch('name') ?? ''
-  const avatarValue   = watch('avatarUrl') ?? null
-  const activeValue   = watch('active') ?? true
-  const timezoneValue = watch('timezone') ?? 'America/Sao_Paulo'
-  const timeFormatValue = watch('timeFormat') ?? '24h'
-  const sendInviteValue = watch('sendInvite') ?? true
+  const nameValue            = watch('name') ?? ''
+  const avatarValue          = watch('avatarUrl') ?? null
+  const activeValue          = watch('active') ?? true
+  const timezoneValue        = watch('timezone') ?? 'America/Sao_Paulo'
+  const timeFormatValue      = watch('timeFormat') ?? '24h'
+  const sendInviteValue      = watch('sendInvite') ?? true
+  const notifyViaSystemValue   = watch('notifyViaSystem')   ?? true
+  const notifyViaEmailValue    = watch('notifyViaEmail')    ?? false
+  const notifyViaWhatsappValue = watch('notifyViaWhatsapp') ?? false
   const showStatus    = mode === 'edit' && isAdmin && !isOwnProfile
   const showSchedule  = mode === 'edit' ? !!professionalId && (!!isOwnProfile || !!isAdmin) : true
 
@@ -257,7 +270,23 @@ export function ProfessionalForm({
         onTimeFormatChange={mode === 'create' ? setCreateTimeFormat : (v) => setValue('timeFormat', v)}
       />
 
-      {/* ── Card 4: Horários ── */}
+      {/* ── Card 4: Notificações ── */}
+      {mode === 'edit' && (
+        <NotificationPreferencesCard
+          notifyViaSystem={notifyViaSystemValue}
+          notifyViaEmail={notifyViaEmailValue}
+          notifyViaWhatsapp={notifyViaWhatsappValue}
+          email={defaultValues?.email ?? ''}
+          phone={null}
+          onChange={(prefs) => {
+            setValue('notifyViaSystem',   prefs.notifyViaSystem)
+            setValue('notifyViaEmail',    prefs.notifyViaEmail)
+            setValue('notifyViaWhatsapp', prefs.notifyViaWhatsapp)
+          }}
+        />
+      )}
+
+      {/* ── Card 5: Horários ── */}
       {showSchedule && (
         mode === 'create' ? (
           <ScheduleCard
@@ -273,7 +302,7 @@ export function ProfessionalForm({
         )
       )}
 
-      {/* ── Card 5: Dias e Horários Não Disponíveis ── */}
+      {/* ── Card 6: Dias e Horários Não Disponíveis ── */}
       {showSchedule && (
         mode === 'create' ? (
           <ExceptionsCard
