@@ -90,7 +90,7 @@ export type Appointment = {
   clientId: string
   startsAt: string
   endsAt: string
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  status: 'pending' | 'confirmed' | 'cancelled_by_client' | 'cancelled_by_professional' | 'completed'
   createdAt: string
   clientName: string
   clientAvatarUrl: string | null
