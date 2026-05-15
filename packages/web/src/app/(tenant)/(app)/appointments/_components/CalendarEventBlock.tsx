@@ -5,7 +5,11 @@ import { useFormatTime } from '@/hooks/useFormatTime'
 import { cn } from '@/lib/utils'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {
-  pending: 'Pendente', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Pago',
+  pending:                   'Pendente',
+  confirmed:                 'Confirmado',
+  cancelled_by_client:       'Cancelado pelo cliente',
+  cancelled_by_professional: 'Cancelado pelo profissional',
+  completed:                 'Pago',
 }
 
 type Props = {
@@ -24,7 +28,7 @@ export function CalendarEventBlock({ appointment, color, top, height, columnInde
   const leftPct = (columnIndex * 100) / columnCount
 
   const isPast = new Date(appointment.endsAt) < new Date()
-  const isCancelled = appointment.status === 'cancelled'
+  const isCancelled = appointment.status === 'cancelled_by_client' || appointment.status === 'cancelled_by_professional'
 
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     e.stopPropagation()

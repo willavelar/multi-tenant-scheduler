@@ -11,17 +11,19 @@ import type { AppointmentDetail } from '@/types'
 import { useFormatTime } from '@/hooks/useFormatTime'
 
 const STATUS_LABELS: Record<AppointmentDetail['status'], string> = {
-  pending:   'Aguardando confirmação',
-  confirmed: 'Confirmado',
-  cancelled: 'Cancelado',
-  completed: 'Pago',
+  pending:                   'Aguardando confirmação',
+  confirmed:                 'Confirmado',
+  cancelled_by_client:       'Cancelado pelo cliente',
+  cancelled_by_professional: 'Cancelado pelo profissional',
+  completed:                 'Pago',
 }
 
 const STATUS_VARIANTS: Record<AppointmentDetail['status'], StatusVariant> = {
-  pending:   'warning',
-  confirmed: 'success',
-  cancelled: 'error',
-  completed: 'purple',
+  pending:                   'warning',
+  confirmed:                 'success',
+  cancelled_by_client:       'error',
+  cancelled_by_professional: 'error',
+  completed:                 'purple',
 }
 
 function formatDate(iso: string) {
@@ -63,7 +65,7 @@ export function AppointmentDetailView({ appointment: appt }: Props) {
       </DetailCard>
 
       {/* Cancellation reason */}
-      {appt.status === 'cancelled' && appt.cancellationReason && (
+      {(appt.status === 'cancelled_by_client' || appt.status === 'cancelled_by_professional') && appt.cancellationReason && (
         <DetailCard>
           <p className="text-sm font-bold text-foreground pt-5 pb-1">Cancelamento</p>
           <FieldRow label="Motivo" value={appt.cancellationReason} />
