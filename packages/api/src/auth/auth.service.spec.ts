@@ -128,6 +128,7 @@ describe('AuthService.generateTokens (via login)', () => {
       id: 'user-1', email: 'a@b.com', passwordHash: 'hash', role: 'client' as const,
       tenantId: 'tenant-1', name: 'A', phone: null, active: true,
       avatarUrl: null, timezone: 'America/Sao_Paulo', timeFormat: '24h',
+      notifyViaSystem: true, notifyViaEmail: true, notifyViaWhatsapp: false,
       lastLoginAt: null, createdAt: new Date(),
     };
     // login() UPDATE goes through db.transaction → loginChain
@@ -383,11 +384,6 @@ describe('AuthService.resetPassword', () => {
     await expect(service.resetPassword('bad-token', 'newPassword123')).rejects.toThrow(BadRequestException);
   });
 
-  it('lança BadRequestException para senha menor que 6 caracteres', async () => {
-    redis.getdel.mockResolvedValue(JSON.stringify({ userId: 'u1', email: 'test@test.com', tenantId: 't1' }));
-
-    await expect(service.resetPassword('token', 'abc')).rejects.toThrow(BadRequestException);
-  });
 });
 
 describe('AuthService.validateInviteToken', () => {
@@ -450,12 +446,6 @@ describe('AuthService.activateAccount', () => {
     await expect(service.activateAccount('bad-token', 'senha123')).rejects.toThrow(BadRequestException);
   });
 
-  it('lança BadRequestException quando senha tem menos de 6 caracteres', async () => {
-    const payload = JSON.stringify({ userId: 'u1', email: 'a@b.com', tenantId: 't1' });
-    const redis = { getdel: jest.fn().mockResolvedValue(payload) };
-    const service = await buildService(makeSimpleDb([{ id: 'u1' }]), redis);
-    await expect(service.activateAccount('valid-token', '123')).rejects.toThrow(BadRequestException);
-  });
 });
 
 describe('AuthService.forgotPassword', () => {

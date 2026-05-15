@@ -1,4 +1,5 @@
 import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateIf, ValidateNested } from 'class-validator';
+import { MIN_PASSWORD_LENGTH } from '../../common/constants/password';
 import { Type } from 'class-transformer';
 
 export class ScheduleSlotDto {
@@ -32,7 +33,7 @@ export class CreateProfessionalDto {
 
   @ValidateIf(o => !o.sendInvite)
   @IsString()
-  @MinLength(8)
+  @MinLength(MIN_PASSWORD_LENGTH)
   password: string;
 
   @IsString()
