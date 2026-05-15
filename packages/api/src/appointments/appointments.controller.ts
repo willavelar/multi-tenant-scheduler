@@ -77,8 +77,10 @@ export class AppointmentsController {
     @Param('id') id: string,
     @TenantId() tenantId: string,
     @Body() dto: CancelAppointmentDto,
+    @CurrentUser() user: { id: string; role: string },
   ) {
-    return this.service.updateStatus(id, 'cancelled', tenantId, dto.reason);
+    const status = user.role === 'client' ? 'cancelled_by_client' : 'cancelled_by_professional';
+    return this.service.updateStatus(id, status, tenantId, dto.reason);
   }
 
   @Patch(':id/complete')
