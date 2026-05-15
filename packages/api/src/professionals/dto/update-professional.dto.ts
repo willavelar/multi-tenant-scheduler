@@ -36,4 +36,16 @@ export class UpdateProfessionalDto {
   @IsIn(['12h', '24h'])
   @IsOptional()
   timeFormat?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  notifyViaSystem?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  notifyViaEmail?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  notifyViaWhatsapp?: boolean;
 }

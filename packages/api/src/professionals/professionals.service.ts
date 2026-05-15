@@ -19,8 +19,11 @@ const PROF_FIELDS = {
   bio:         professionals.bio,
   avatarUrl:   users.avatarUrl,
   position:    professionals.position,
-  timezone:    users.timezone,
-  timeFormat:  users.timeFormat,
+  timezone:         users.timezone,
+  timeFormat:       users.timeFormat,
+  notifyViaSystem:   users.notifyViaSystem,
+  notifyViaEmail:    users.notifyViaEmail,
+  notifyViaWhatsapp: users.notifyViaWhatsapp,
   active:      users.active,
   name:        users.name,
   email:       users.email,
@@ -195,8 +198,11 @@ export class ProfessionalsService {
       if (dto.role       !== undefined && isAdmin) userPatch.role = dto.role;
       if (dto.avatarUrl  !== undefined) userPatch.avatarUrl  = dto.avatarUrl;
       if (dto.active     !== undefined && isAdmin) userPatch.active = dto.active;
-      if (dto.timezone   !== undefined) userPatch.timezone   = dto.timezone;
-      if (dto.timeFormat !== undefined) userPatch.timeFormat = dto.timeFormat;
+      if (dto.timezone          !== undefined) userPatch.timezone          = dto.timezone;
+      if (dto.timeFormat        !== undefined) userPatch.timeFormat        = dto.timeFormat;
+      if (dto.notifyViaSystem   !== undefined) userPatch.notifyViaSystem   = dto.notifyViaSystem;
+      if (dto.notifyViaEmail    !== undefined) userPatch.notifyViaEmail    = dto.notifyViaEmail;
+      if (dto.notifyViaWhatsapp !== undefined) userPatch.notifyViaWhatsapp = dto.notifyViaWhatsapp;
       if (Object.keys(userPatch).length) {
         await tx.update(users).set(userPatch).where(eq(users.id, prof.userId));
       }

@@ -108,6 +108,9 @@ export class ClientsService {
           avatarUrl: users.avatarUrl,
           timezone: users.timezone,
           timeFormat: users.timeFormat,
+          notifyViaSystem:   users.notifyViaSystem,
+          notifyViaEmail:    users.notifyViaEmail,
+          notifyViaWhatsapp: users.notifyViaWhatsapp,
           allProfessionals: clientProfiles.allProfessionals,
           allServices: clientProfiles.allServices,
           serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -256,8 +259,11 @@ export class ClientsService {
       if (dto.phone      !== undefined) userPatch.phone      = dto.phone;
       if (dto.active     !== undefined) userPatch.active     = dto.active;
       if (dto.avatarUrl  !== undefined) userPatch.avatarUrl  = dto.avatarUrl;
-      if (dto.timezone   !== undefined) userPatch.timezone   = dto.timezone;
-      if (dto.timeFormat !== undefined) userPatch.timeFormat = dto.timeFormat;
+      if (dto.timezone          !== undefined) userPatch.timezone          = dto.timezone;
+      if (dto.timeFormat        !== undefined) userPatch.timeFormat        = dto.timeFormat;
+      if (dto.notifyViaSystem   !== undefined) userPatch.notifyViaSystem   = dto.notifyViaSystem;
+      if (dto.notifyViaEmail    !== undefined) userPatch.notifyViaEmail    = dto.notifyViaEmail;
+      if (dto.notifyViaWhatsapp !== undefined) userPatch.notifyViaWhatsapp = dto.notifyViaWhatsapp;
       if (Object.keys(userPatch).length) {
         await tx.update(users).set(userPatch).where(eq(users.id, userId));
       }
