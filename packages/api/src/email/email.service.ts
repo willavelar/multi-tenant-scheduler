@@ -26,6 +26,16 @@ export class EmailService {
     if (error) throw new Error(`Email delivery failed: ${error.message}`);
   }
 
+  async sendAppointmentNotification(to: string, title: string, body: string): Promise<void> {
+    const { error } = await this.resend.emails.send({
+      from: this.from,
+      to,
+      subject: title,
+      html: `<p>${body}</p>`,
+    });
+    if (error) throw new Error(`Email delivery failed: ${error.message}`);
+  }
+
   async sendInvite(to: string, inviteUrl: string): Promise<void> {
     const { error } = await this.resend.emails.send({
       from: this.from,

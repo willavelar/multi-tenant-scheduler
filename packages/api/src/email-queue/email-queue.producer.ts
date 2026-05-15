@@ -15,6 +15,12 @@ export interface PasswordResetJobData {
   resetUrl: string;
 }
 
+export interface AppointmentNotificationJobData {
+  to:    string;
+  title: string;
+  body:  string;
+}
+
 @Injectable()
 export class EmailQueueProducer {
   constructor(@InjectQueue(EMAIL_QUEUE) private readonly queue: Queue) {}
@@ -28,6 +34,13 @@ export class EmailQueueProducer {
 
   async addPasswordResetJob(data: PasswordResetJobData): Promise<void> {
     await this.queue.add('send-password-reset', data, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5000 },
+    });
+  }
+
+  async addAppointmentNotificationJob(data: AppointmentNotificationJobData): Promise<void> {
+    await this.queue.add('send-appointment-notification', data, {
       attempts: 3,
       backoff: { type: 'exponential', delay: 5000 },
     });
