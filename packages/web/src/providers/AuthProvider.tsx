@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { jwtDecode } from 'jwt-decode'
-import { apiFetch, attemptRefresh, setOnSessionExpired } from '@/lib/api'
+import { apiFetch, attemptRefresh, setOnSessionExpired, ApiError } from '@/lib/api'
 import type { User } from '@/types'
 
 type JwtPayload = {
@@ -21,7 +21,7 @@ type AuthContextValue = {
   accessToken: string | null
   login: (email: string, password: string, slug: string) => Promise<string>
   register: (
-    data: { email: string; password: string; name: string; phone?: string },
+    data: { email: string; password: string; name: string; phone?: string; ssoCode?: string },
     slug: string
   ) => Promise<string>
   logout: () => void
@@ -91,7 +91,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const rt = localStorage.getItem('refreshToken')
         if (rt) {
           const slug = window.location.pathname.split('/')[1] ?? ''
-          attemptRefresh(slug).catch(() => signalExpired())
+          attemptRefresh(slug).catch((err) => {
+            // Only sign out on actual auth rejection — network errors are transient
+            if (!(err instanceof ApiError) && err instanceof Error &&
+                err.message !== 'refresh failed' && err.message !== 'no refresh token') return
+            signalExpired()
+          })
           // on success, 'token-refreshed' event fires → handler below updates state
         } else {
           signalExpired()
@@ -140,8 +145,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const slug = window.location.pathname.split('/')[1] ?? ''
       try {
         await attemptRefresh(slug) // fires 'token-refreshed' → updates state via handler above
-      } catch {
-        signalExpired()
+      } catch (err) {
+        // Only sign out on actual auth rejection — network errors are transient.
+        // The reactive interceptor in apiFetch handles expiry if this proactive attempt fails.
+        if (err instanceof Error &&
+            (err.message === 'refresh failed' || err.message === 'no refresh token')) {
+          signalExpired()
+        }
       }
     }, delay)
     return () => clearTimeout(id)
@@ -165,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = useCallback(
     async (
-      data: { email: string; password: string; name: string; phone?: string },
+      data: { email: string; password: string; name: string; phone?: string; ssoCode?: string },
       slug: string
     ): Promise<string> => {
       const res = await apiFetch('/auth/register', {
