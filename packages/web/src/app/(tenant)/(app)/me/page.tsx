@@ -1,13 +1,31 @@
 'use client'
 
+import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useAdmin } from '@/hooks/useAdmins'
 import { useMyProfessionalProfile } from '@/hooks/useProfessionals'
 import { useClient } from '@/hooks/useClients'
 import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
+import { Alert } from '@/components/ui/Alert'
 import { AdminDetailView } from '../admins/_components/AdminDetailView'
 import { ProfessionalDetailView } from '../professionals/_components/ProfessionalDetailView'
 import { ClientDetailView } from '../clients/_components/ClientDetailView'
+
+const PROVIDER_LABEL: Record<string, string> = {
+  google: 'Google', microsoft: 'Microsoft', facebook: 'Facebook',
+}
+
+function LinkedSuccessAlert() {
+  const searchParams = useSearchParams()
+  const linked       = searchParams.get('linked')
+  if (!linked) return null
+  return (
+    <Alert variant="success" className="mb-4">
+      {PROVIDER_LABEL[linked] ?? linked} vinculado com sucesso!
+    </Alert>
+  )
+}
 
 function AdminMe({ userId }: { userId: string }) {
   const { data: admin, isLoading } = useAdmin(userId)
@@ -35,9 +53,14 @@ export default function MePage() {
 
   if (!user) return null
 
-  if (user.role === 'tenant_admin') return <AdminMe userId={user.id} />
-  if (user.role === 'professional') return <ProfessionalMe />
-  if (user.role === 'client')       return <ClientMe userId={user.id} />
-
-  return null
+  return (
+    <>
+      <Suspense>
+        <LinkedSuccessAlert />
+      </Suspense>
+      {user.role === 'tenant_admin' && <AdminMe userId={user.id} />}
+      {user.role === 'professional' && <ProfessionalMe />}
+      {user.role === 'client'       && <ClientMe userId={user.id} />}
+    </>
+  )
 }

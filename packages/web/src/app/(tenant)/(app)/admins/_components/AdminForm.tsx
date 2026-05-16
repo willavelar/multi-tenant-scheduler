@@ -5,10 +5,11 @@ import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
-import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { NotificationPreferencesCard } from '@/components/ui/NotificationPreferencesCard'
+import { LinkedAccountsCard } from '@/components/ui/LinkedAccountsCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useResendInvite } from '@/hooks/useResendInvite'
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
@@ -27,8 +28,6 @@ const editSchema = z.object({
   name:              z.string().min(2, 'Nome obrigatório'),
   avatarUrl:         z.string().nullable().optional(),
   active:            z.boolean().optional(),
-  timezone:          z.string().optional(),
-  timeFormat:        z.enum(['12h', '24h']).optional(),
   notifyViaSystem:   z.boolean().optional(),
   notifyViaEmail:    z.boolean().optional(),
   notifyViaWhatsapp: z.boolean().optional(),
@@ -43,8 +42,6 @@ type FormValues = {
   sendInvite?:        boolean
   avatarUrl?:         string | null
   active?:            boolean
-  timezone?:          string
-  timeFormat?:        '12h' | '24h'
   notifyViaSystem?:   boolean
   notifyViaEmail?:    boolean
   notifyViaWhatsapp?: boolean
@@ -55,6 +52,7 @@ export type AdminFormData = FormValues
 export type AdminFormProps = {
   mode:           'create' | 'edit'
   defaultValues?: Partial<FormValues>
+  userId?:        string
   onSubmit:       (data: AdminFormData) => Promise<void>
   onCancel?:      () => void
   isOwnProfile?:  boolean
@@ -70,7 +68,7 @@ const inputCls = (hasError = false) => cn(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfile }: AdminFormProps) {
+export function AdminForm({ mode, defaultValues, userId, onSubmit, onCancel, isOwnProfile }: AdminFormProps) {
   const resolver = (mode === 'create'
     ? zodResolver(createSchema)
     : zodResolver(editSchema)) as Resolver<FormValues>
@@ -90,8 +88,6 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
       ...(mode === 'create' ? { email: '', password: '', sendInvite: true } : {}),
       ...(mode === 'edit' ? {
         active:            defaultValues?.active            ?? true,
-        timezone:          defaultValues?.timezone          ?? 'America/Sao_Paulo',
-        timeFormat:        defaultValues?.timeFormat        ?? '24h',
         notifyViaSystem:   defaultValues?.notifyViaSystem   ?? true,
         notifyViaEmail:    defaultValues?.notifyViaEmail    ?? false,
         notifyViaWhatsapp: defaultValues?.notifyViaWhatsapp ?? false,
@@ -99,14 +95,12 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
     },
   })
 
-  const [createTimezone,   setCreateTimezone]   = useState('America/Sao_Paulo')
-  const [createTimeFormat, setCreateTimeFormat] = useState<'12h' | '24h'>('24h')
+  const resendInvite = useResendInvite()
+  const [inviteSent, setInviteSent] = useState(false)
 
   const nameValue            = watch('name') ?? ''
   const avatarValue          = watch('avatarUrl') ?? null
   const activeValue          = watch('active') ?? true
-  const timezoneValue        = watch('timezone') ?? 'America/Sao_Paulo'
-  const timeFormatValue      = watch('timeFormat') ?? '24h'
   const sendInviteValue      = watch('sendInvite') ?? true
   const notifyViaSystemValue   = watch('notifyViaSystem')   ?? true
   const notifyViaEmailValue    = watch('notifyViaEmail')    ?? false
@@ -114,10 +108,7 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
 
   async function submit(data: FormValues) {
     try {
-      await onSubmit({
-        ...data,
-        ...(mode === 'create' ? { timezone: createTimezone, timeFormat: createTimeFormat } : {}),
-      })
+      await onSubmit(data)
     } catch {
       setError('root', {
         message: mode === 'create'
@@ -207,15 +198,31 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
             </div>
           </div>
         )}
-      </div>
 
-      {/* ── Card: Preferências ── */}
-      <PreferencesCard
-        timezone={mode === 'create' ? createTimezone : timezoneValue}
-        timeFormat={mode === 'create' ? createTimeFormat : timeFormatValue}
-        onTimezoneChange={mode === 'create' ? setCreateTimezone : (v) => setValue('timezone', v)}
-        onTimeFormatChange={mode === 'create' ? setCreateTimeFormat : (v) => setValue('timeFormat', v)}
-      />
+        {mode === 'edit' && !isOwnProfile && !activeValue && userId && (
+          <div className="mt-4">
+            {inviteSent ? (
+              <p className="text-[13px] text-emerald-600 font-medium flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                E-mail enviado
+              </p>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={resendInvite.isPending}
+                onClick={async () => {
+                  await resendInvite.mutateAsync(userId)
+                  setInviteSent(true)
+                }}
+              >
+                Reenviar convite de senha
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ── Card: Notificações ── */}
       {mode === 'edit' && (
@@ -232,6 +239,9 @@ export function AdminForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfil
           }}
         />
       )}
+
+      {/* ── Card: Contas vinculadas ── */}
+      {mode === 'edit' && isOwnProfile && <LinkedAccountsCard />}
 
       {/* ── Footer ── */}
       {errors.root && (
