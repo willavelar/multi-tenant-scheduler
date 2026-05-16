@@ -23,9 +23,10 @@ type FormData = z.infer<typeof schema>
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 function resolveReturnTo(searchParams: ReturnType<typeof useSearchParams>): string {
+  const urlFrom = searchParams.get('from')
+  if (typeof window === 'undefined') return urlFrom ?? '/appointments'
   const stored = sessionStorage.getItem('session.returnTo')
   if (stored) sessionStorage.removeItem('session.returnTo')
-  const urlFrom = searchParams.get('from')
   const candidate = stored ?? urlFrom ?? '/appointments'
   return candidate.startsWith('/') && !candidate.startsWith('//') ? candidate : '/appointments'
 }
