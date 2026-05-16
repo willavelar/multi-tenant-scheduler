@@ -5,12 +5,13 @@ import { useForm, type Resolver } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
-import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { NotificationPreferencesCard } from '@/components/ui/NotificationPreferencesCard'
+import { LinkedAccountsCard } from '@/components/ui/LinkedAccountsCard'
 import { ScheduleCard, type LocalSlot } from './ScheduleCard'
 import { ExceptionsCard, type LocalException } from './ExceptionsCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useResendInvite } from '@/hooks/useResendInvite'
 
 // ── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -32,8 +33,6 @@ const editSchema = z.object({
   position:          z.string().optional(),
   bio:               z.string().optional(),
   avatarUrl:         z.string().nullable().optional(),
-  timezone:          z.string().optional(),
-  timeFormat:        z.enum(['12h', '24h']).optional(),
   active:            z.boolean().optional(),
   notifyViaSystem:   z.boolean().optional(),
   notifyViaEmail:    z.boolean().optional(),
@@ -50,8 +49,6 @@ type FormValues = {
   position?:          string
   bio?:               string
   avatarUrl?:         string | null
-  timezone?:          string
-  timeFormat?:        '12h' | '24h'
   active?:            boolean
   notifyViaSystem?:   boolean
   notifyViaEmail?:    boolean
@@ -59,7 +56,6 @@ type FormValues = {
 }
 
 export type ProfessionalFormData = FormValues & {
-  sendInvite?: boolean
   schedule?:   LocalSlot[]
   exceptions?: LocalException[]
 }
@@ -68,6 +64,7 @@ export type ProfessionalFormProps = {
   mode:             'create' | 'edit'
   defaultValues?:   Partial<FormValues>
   professionalId?:  string
+  userId?:          string
   onSubmit:         (data: ProfessionalFormData) => Promise<void>
   onCancel?:        () => void
   isAdmin?:         boolean
@@ -88,6 +85,7 @@ export function ProfessionalForm({
   mode,
   defaultValues,
   professionalId,
+  userId,
   onSubmit,
   onCancel,
   isAdmin,
@@ -114,8 +112,6 @@ export function ProfessionalForm({
       ...(mode === 'create' ? { email: '', password: '', sendInvite: true } : {}),
       ...(mode === 'edit' ? {
         active:            defaultValues?.active            ?? true,
-        timezone:          defaultValues?.timezone          ?? 'America/Sao_Paulo',
-        timeFormat:        defaultValues?.timeFormat        ?? '24h',
         notifyViaSystem:   defaultValues?.notifyViaSystem   ?? true,
         notifyViaEmail:    defaultValues?.notifyViaEmail    ?? false,
         notifyViaWhatsapp: defaultValues?.notifyViaWhatsapp ?? false,
@@ -123,19 +119,16 @@ export function ProfessionalForm({
     },
   })
 
+  const resendInvite = useResendInvite()
+  const [inviteSent, setInviteSent] = useState(false)
+
   // Schedule/exceptions local state — only used in create mode
   const [schedule, setSchedule]     = useState<LocalSlot[]>([])
   const [exceptions, setExceptions] = useState<LocalException[]>([])
 
-  // Preferences state for create mode (not in react-hook-form since schema varies)
-  const [createTimezone,   setCreateTimezone]   = useState('America/Sao_Paulo')
-  const [createTimeFormat, setCreateTimeFormat] = useState<'12h' | '24h'>('24h')
-
   const nameValue            = watch('name') ?? ''
   const avatarValue          = watch('avatarUrl') ?? null
   const activeValue          = watch('active') ?? true
-  const timezoneValue        = watch('timezone') ?? 'America/Sao_Paulo'
-  const timeFormatValue      = watch('timeFormat') ?? '24h'
   const sendInviteValue      = watch('sendInvite') ?? true
   const notifyViaSystemValue   = watch('notifyViaSystem')   ?? true
   const notifyViaEmailValue    = watch('notifyViaEmail')    ?? false
@@ -147,12 +140,7 @@ export function ProfessionalForm({
     try {
       await onSubmit({
         ...data,
-        ...(mode === 'create' ? {
-          schedule,
-          exceptions,
-          timezone:   createTimezone,
-          timeFormat: createTimeFormat,
-        } : {}),
+        ...(mode === 'create' ? { schedule, exceptions } : {}),
       })
     } catch {
       setError('root', { message: mode === 'create'
@@ -260,17 +248,33 @@ export function ProfessionalForm({
             </div>
           </div>
         )}
+
+        {showStatus && !activeValue && userId && (
+          <div className="mt-4">
+            {inviteSent ? (
+              <p className="text-[13px] text-emerald-600 font-medium flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                E-mail enviado
+              </p>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={resendInvite.isPending}
+                onClick={async () => {
+                  await resendInvite.mutateAsync(userId)
+                  setInviteSent(true)
+                }}
+              >
+                Reenviar convite de senha
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── Card 3: Preferências ── */}
-      <PreferencesCard
-        timezone={mode === 'create' ? createTimezone : timezoneValue}
-        timeFormat={mode === 'create' ? createTimeFormat : timeFormatValue}
-        onTimezoneChange={mode === 'create' ? setCreateTimezone : (v) => setValue('timezone', v)}
-        onTimeFormatChange={mode === 'create' ? setCreateTimeFormat : (v) => setValue('timeFormat', v)}
-      />
-
-      {/* ── Card 4: Notificações ── */}
+      {/* ── Card 3: Notificações ── */}
       {mode === 'edit' && (
         <NotificationPreferencesCard
           notifyViaSystem={notifyViaSystemValue}
@@ -317,6 +321,9 @@ export function ProfessionalForm({
           />
         )
       )}
+
+      {/* ── Card: Contas vinculadas ── */}
+      {mode === 'edit' && isOwnProfile && <LinkedAccountsCard />}
 
       {/* ── Footer ── */}
       {errors.root && (

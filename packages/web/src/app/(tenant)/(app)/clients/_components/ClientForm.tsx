@@ -6,11 +6,12 @@ import { useServices } from '@/hooks/useServices'
 import { AvatarCropField } from '@/components/ui/AvatarCropField'
 import { AvatarName } from '@/components/ui/AvatarName'
 import { DatePickerField } from '@/components/ui/DatePickerField'
-import { PreferencesCard } from '@/components/ui/PreferencesCard'
 import { NotificationPreferencesCard } from '@/components/ui/NotificationPreferencesCard'
+import { LinkedAccountsCard } from '@/components/ui/LinkedAccountsCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { useResendInvite } from '@/hooks/useResendInvite'
 import type { Professional, Service, ClientDetail } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -25,8 +26,6 @@ export type ClientFormData = {
   notes?: string
   active: boolean
   avatarUrl?: string
-  timezone: string
-  timeFormat: '12h' | '24h'
   notifyViaSystem: boolean
   notifyViaEmail: boolean
   notifyViaWhatsapp: boolean
@@ -87,12 +86,12 @@ const inputCls = (hasError = false) => cn(
 export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfile }: ClientFormProps) {
   const { data: allProfessionals = [], isSuccess: profsReady } = useProfessionals()
   const { data: services = [] } = useServices()
+  const resendInvite = useResendInvite()
+  const [inviteSent, setInviteSent] = useState(false)
 
   const [initialized, setInitialized] = useState(mode === 'create')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [timezone,   setTimezone]   = useState(defaultValues?.timezone   ?? 'America/Sao_Paulo')
-  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>(defaultValues?.timeFormat ?? '24h')
   const [notifyViaSystem,   setNotifyViaSystem]   = useState(defaultValues?.notifyViaSystem   ?? true)
   const [notifyViaEmail,    setNotifyViaEmail]    = useState(defaultValues?.notifyViaEmail    ?? false)
   const [notifyViaWhatsapp, setNotifyViaWhatsapp] = useState(defaultValues?.notifyViaWhatsapp ?? false)
@@ -138,8 +137,6 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       cancellationLimitPeriod: defaultValues.cancellationLimitPeriod ?? '',
     })
     setAvatarUrl(defaultValues.avatarUrl ?? null)
-    setTimezone(defaultValues.timezone ?? 'America/Sao_Paulo')
-    setTimeFormat(defaultValues.timeFormat ?? '24h')
     setNotifyViaSystem(defaultValues.notifyViaSystem   ?? true)
     setNotifyViaEmail(defaultValues.notifyViaEmail    ?? false)
     setNotifyViaWhatsapp(defaultValues.notifyViaWhatsapp ?? false)
@@ -215,6 +212,11 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       if (!form.password) e.password = 'Senha obrigatória'
       else if (form.password.length < 6) e.password = 'Mínimo 6 caracteres'
     }
+    if (form.birthDate) {
+      const today = new Date()
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      if (form.birthDate > todayStr) e.birthDate = 'Data de nascimento não pode ser no futuro'
+    }
     if (limitMode === 'normal') {
       if (form.serviceLimitCount && isNaN(Number(form.serviceLimitCount))) {
         e.serviceLimitCount = 'Valor inválido'
@@ -256,8 +258,6 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
         notes:            form.notes.trim() || undefined,
         active:           form.active,
         avatarUrl:        avatarUrl ?? undefined,
-        timezone,
-        timeFormat,
         notifyViaSystem,
         notifyViaEmail,
         notifyViaWhatsapp,
@@ -386,6 +386,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             onChange={iso => set('birthDate', iso)}
             className="max-w-[220px]"
           />
+          {errors.birthDate && <p className="text-xs text-red-500 mt-1 m-0">{errors.birthDate}</p>}
         </div>
       </div>
 
@@ -423,17 +424,33 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             </div>
           </div>
         )}
+
+        {showStatus && !form.active && defaultValues?.id && (
+          <div className="mt-4">
+            {inviteSent ? (
+              <p className="text-[13px] text-emerald-600 font-medium flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                E-mail enviado
+              </p>
+            ) : (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                loading={resendInvite.isPending}
+                onClick={async () => {
+                  await resendInvite.mutateAsync(defaultValues.id)
+                  setInviteSent(true)
+                }}
+              >
+                Reenviar convite de senha
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ── Card 3: Preferências ── */}
-      <PreferencesCard
-        timezone={timezone}
-        timeFormat={timeFormat}
-        onTimezoneChange={setTimezone}
-        onTimeFormatChange={setTimeFormat}
-      />
-
-      {/* ── Card 4: Notificações ── */}
+      {/* ── Card 3: Notificações ── */}
       {mode === 'edit' && (
         <NotificationPreferencesCard
           notifyViaSystem={notifyViaSystem}
@@ -767,6 +784,9 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
           </div>
         </div>
       </div>
+
+      {/* ── Card: Contas vinculadas ── */}
+      {mode === 'edit' && isOwnProfile && <LinkedAccountsCard />}
 
       {/* ── Footer ── */}
       {errors.root && (
