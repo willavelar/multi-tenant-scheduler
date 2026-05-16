@@ -1,8 +1,9 @@
-import { BadRequestException, ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
+import { sendInviteEmail } from './invite.helper';
 import { eq, and, or, ilike, isNull } from 'drizzle-orm';
 import { users, clientProfiles, refreshTokens } from '@scheduler/shared';
 import Redis from 'ioredis';
@@ -51,7 +52,8 @@ export class AuthService {
 
       await tx.insert(clientProfiles).values({ tenantId, userId: user.id });
 
-      return this.generateTokens(user, tx);
+      const tokens = await this.generateTokens(user, tx);
+      return { ...tokens, userId: user.id };
     });
   }
 
@@ -145,6 +147,18 @@ export class AuthService {
       tx.update(users).set({ passwordHash, active: true }).where(eq(users.id, userId)).returning({ id: users.id }),
     );
     if (!updated.length) throw new BadRequestException('Token inválido ou expirado');
+  }
+
+  async loginById(userId: string, tenantId: string) {
+    const user = await withTenant(this.db, tenantId, (tx) =>
+      tx
+        .select()
+        .from(users)
+        .where(and(eq(users.id, userId), eq(users.tenantId, tenantId)))
+        .then((rows) => rows[0]),
+    );
+    if (!user || !user.active) throw new UnauthorizedException();
+    return this.login(user);
   }
 
   async login(user: typeof users.$inferSelect) {
@@ -284,5 +298,17 @@ export class AuthService {
     const { accessToken, refreshToken } = this.signTokens(user);
     await this.persistRefreshToken(refreshToken, user.id, user.tenantId, db);
     return { accessToken, refreshToken };
+  }
+
+  async resendInvite(userId: string, tenantId: string, slug: string): Promise<void> {
+    const [user] = await withTenant(this.db, tenantId, (tx) =>
+      tx.select({ id: users.id, email: users.email, active: users.active })
+        .from(users)
+        .where(and(eq(users.id, userId), eq(users.tenantId, tenantId))),
+    );
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+    if (user.active) throw new BadRequestException('Usuário já está ativo');
+
+    await sendInviteEmail(user, tenantId, slug, this.redis, this.config, this.emailQueueProducer);
   }
 }
