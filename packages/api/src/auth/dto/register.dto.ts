@@ -1,5 +1,5 @@
 import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
-import { MIN_PASSWORD_LENGTH } from '../../../common/constants/password';
+import { MIN_PASSWORD_LENGTH } from '../../common/constants/password';
 
 export class RegisterDto {
   @IsEmail()
@@ -15,4 +15,8 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   phone?: string;
+
+  @IsString()
+  @IsOptional()
+  ssoCode?: string;
 }

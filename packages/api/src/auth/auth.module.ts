@@ -4,6 +4,8 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { OAuthService } from './oauth.service';
+import { OAuthController } from './oauth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { EmailQueueModule } from '../email-queue/email-queue.module';
@@ -20,8 +22,8 @@ import { EmailQueueModule } from '../email-queue/email-queue.module';
     }),
     EmailQueueModule,
   ],
-  providers: [AuthService, JwtStrategy, LocalStrategy],
-  controllers: [AuthController],
+  providers: [AuthService, OAuthService, JwtStrategy, LocalStrategy],
+  controllers: [AuthController, OAuthController],
   exports: [AuthService],
 })
 export class AuthModule {}
