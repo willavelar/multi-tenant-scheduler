@@ -29,9 +29,12 @@ export type LocalSlot = { _key: string; dayOfWeek: number; startTime: string; en
 
 // ── Shared small components ───────────────────────────────────────────────────
 
+const isCompleteTime = (v: string) => /^\d{2}:\d{2}$/.test(v)
+
 function AddForm({ onConfirm, onCancel }: { onConfirm: (s: string, e: string) => void; onCancel: () => void }) {
   const [start, setStart] = useState('08:00')
   const [end, setEnd]     = useState('18:00')
+  const canConfirm        = isCompleteTime(start) && isCompleteTime(end)
   return (
     <div className="flex items-center gap-2">
       <TimeInputField
@@ -45,8 +48,8 @@ function AddForm({ onConfirm, onCancel }: { onConfirm: (s: string, e: string) =>
         onChange={setEnd}
         className="h-8 w-[110px] px-2 text-[13px] text-foreground bg-background border border-border rounded-md outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-colors"
       />
-      <button type="button" onClick={() => onConfirm(start, end)}
-        className="h-7 px-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-md cursor-pointer hover:bg-emerald-600 transition-colors">
+      <button type="button" onClick={() => canConfirm && onConfirm(start, end)} disabled={!canConfirm}
+        className="h-7 px-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-md cursor-pointer hover:bg-emerald-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
         Confirmar
       </button>
       <Button variant="secondary" size="xs" type="button" onClick={onCancel}>Cancelar</Button>
@@ -131,7 +134,7 @@ function CreateDayRows({ dayValue, slots, adding, onAdd, onRemove, onOpenAdd, on
             <span className="text-muted-foreground text-sm">–</span>
             <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
             <div className="flex items-center gap-1 ml-1">
-              <Button variant="destructive-outline" size="xs" onClick={() => onRemove(slot._key)}>Remover</Button>
+              <Button variant="destructive" size="xs" onClick={() => onRemove(slot._key)}>Remover</Button>
               {idx === 0 && <Button variant="secondary" size="xs" onClick={onOpenAdd}>Adicionar</Button>}
             </div>
           </div>
@@ -236,7 +239,7 @@ function EditDayRows({ dayValue, slots, adding, busy, onAdd, onRemove, onOpenAdd
             <span className="text-muted-foreground text-sm">–</span>
             <span className="text-[13px] text-foreground"><TimeDisplay time={slot.endTime} /></span>
             <div className="flex items-center gap-1 ml-1">
-              <Button variant="destructive-outline" size="xs" disabled={busy} onClick={() => onRemove(slot.id)}>Remover</Button>
+              <Button variant="destructive" size="xs" disabled={busy} onClick={() => onRemove(slot.id)}>Remover</Button>
               {idx === 0 && <Button variant="secondary" size="xs" disabled={busy} onClick={onOpenAdd}>Adicionar</Button>}
             </div>
           </div>

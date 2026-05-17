@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
+import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useClients } from '@/hooks/useClients'
 import { AvatarName } from '@/components/ui/AvatarName'
@@ -24,15 +25,30 @@ function ClientStatusBadge({ active }: { active: boolean | null }) {
   return <StatusBadge label={on ? 'Ativo' : 'Inativo'} variant={on ? 'success' : 'error'} />
 }
 
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  const id = useId()
+  return (
+    <label htmlFor={id} className="flex items-center gap-2 cursor-pointer select-none">
+      <input id={id} type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="sr-only" />
+      <div className={cn('relative w-9 h-5 rounded-full transition-colors', checked ? 'bg-indigo-500' : 'bg-border')}>
+        <div className={cn('absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform', checked ? 'translate-x-4' : 'translate-x-0')} />
+      </div>
+      <span className="text-[13px] text-foreground">{label}</span>
+    </label>
+  )
+}
+
 export default function ClientsPage() {
   const router = useRouter()
   const { user } = useAuth()
   const isAdmin = user?.role === 'tenant_admin'
+  const isProfessional = user?.role === 'professional'
 
-  const [page, setPage]     = useState(1)
-  const [q, setQ]           = useState('')
-  const [active, setActive] = useState('')
-  const filters = { q: q || undefined, active: active || undefined }
+  const [page, setPage]         = useState(1)
+  const [q, setQ]               = useState('')
+  const [active, setActive]     = useState('')
+  const [myClients, setMyClients] = useState(() => isProfessional)
+  const filters = { q: q || undefined, active: active || undefined, myClients: myClients || undefined }
   const { data, isLoading } = useClients(page, filters)
 
   const clients    = data?.data ?? []
@@ -42,7 +58,7 @@ export default function ClientsPage() {
 
   const hasFilters = !!(q || active)
 
-  useEffect(() => { setPage(1) }, [q, active])
+  useEffect(() => { setPage(1) }, [q, active, myClients])
 
   const COLS = ['Cliente', 'Telefone', 'Nascimento', 'Último login', 'Cadastrado em', 'Status', 'Ações']
 
@@ -101,6 +117,13 @@ export default function ClientsPage() {
               <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
           </div>
+
+          {/* Apenas meus clientes — only visible to professionals */}
+          {isProfessional && (
+            <div className="flex items-end pb-[5px]">
+              <Toggle checked={myClients} onChange={setMyClients} label="Apenas meus clientes" />
+            </div>
+          )}
 
           {/* Clear */}
           {hasFilters && (

@@ -20,8 +20,6 @@ export default function NewProfessionalPage() {
       position:   data.position,
       bio:        data.bio,
       avatarUrl:  data.avatarUrl ?? undefined,
-      timezone:   data.timezone,
-      timeFormat: data.timeFormat,
       schedule:   data.schedule?.map(s => ({
         dayOfWeek: s.dayOfWeek,
         startTime: s.startTime,

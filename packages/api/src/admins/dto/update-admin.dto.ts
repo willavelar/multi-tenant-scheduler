@@ -14,15 +14,6 @@ export class UpdateAdminDto {
   @IsOptional()
   active?: boolean;
 
-  @IsString()
-  @IsOptional()
-  timezone?: string;
-
-  @IsString()
-  @IsIn(['12h', '24h'])
-  @IsOptional()
-  timeFormat?: string;
-
   @IsBoolean()
   @IsOptional()
   notifyViaSystem?: boolean;

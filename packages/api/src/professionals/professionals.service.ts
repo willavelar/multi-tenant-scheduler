@@ -11,6 +11,7 @@ import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { REDIS } from '../redis/redis.module';
 import { EmailQueueProducer } from '../email-queue/email-queue.producer';
+import { sendInviteEmail } from '../auth/invite.helper';
 
 const PROF_FIELDS = {
   id:          professionals.id,
@@ -19,8 +20,6 @@ const PROF_FIELDS = {
   bio:         professionals.bio,
   avatarUrl:   users.avatarUrl,
   position:    professionals.position,
-  timezone:         users.timezone,
-  timeFormat:       users.timeFormat,
   notifyViaSystem:   users.notifyViaSystem,
   notifyViaEmail:    users.notifyViaEmail,
   notifyViaWhatsapp: users.notifyViaWhatsapp,
@@ -116,8 +115,6 @@ export class ProfessionalsService {
         role:       'professional',
         name:       dto.name,
         avatarUrl:  dto.avatarUrl,
-        timezone:   dto.timezone ?? 'America/Sao_Paulo',
-        timeFormat: dto.timeFormat ?? '24h',
         active:     !dto.sendInvite,
       }).returning();
 
@@ -141,17 +138,7 @@ export class ProfessionalsService {
       }
 
       if (dto.sendInvite) {
-        const token = randomBytes(32).toString('hex');
-        await this.redis.set(
-          `password:invite:${token}`,
-          JSON.stringify({ userId: user.id, email: user.email, tenantId }),
-          'EX',
-          86400,
-        );
-        const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
-        const protocol = domain.startsWith('localhost') ? 'http' : 'https';
-        const inviteUrl = `${protocol}://${slug}.${domain}/activate-account?token=${token}`;
-        await this.emailQueueProducer.addInviteJob({ to: user.email, inviteUrl });
+        await sendInviteEmail(user, tenantId, slug, this.redis, this.config, this.emailQueueProducer);
       }
 
       return {
@@ -198,8 +185,6 @@ export class ProfessionalsService {
       if (dto.role       !== undefined && isAdmin) userPatch.role = dto.role;
       if (dto.avatarUrl  !== undefined) userPatch.avatarUrl  = dto.avatarUrl;
       if (dto.active     !== undefined && isAdmin) userPatch.active = dto.active;
-      if (dto.timezone          !== undefined) userPatch.timezone          = dto.timezone;
-      if (dto.timeFormat        !== undefined) userPatch.timeFormat        = dto.timeFormat;
       if (dto.notifyViaSystem   !== undefined) userPatch.notifyViaSystem   = dto.notifyViaSystem;
       if (dto.notifyViaEmail    !== undefined) userPatch.notifyViaEmail    = dto.notifyViaEmail;
       if (dto.notifyViaWhatsapp !== undefined) userPatch.notifyViaWhatsapp = dto.notifyViaWhatsapp;

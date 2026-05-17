@@ -18,15 +18,13 @@ export function useUnreadCount() {
   })
 }
 
-export function useNotifications(unreadOnly = false) {
+export function useNotifications(page = 1) {
   const api = useApi()
   const { slug } = useTenant()
   return useQuery({
-    queryKey: ['notifications', slug, unreadOnly],
+    queryKey: ['notifications', slug, page],
     queryFn:  async () => {
-      const res = await api(
-        `/notifications?limit=50${unreadOnly ? '&unreadOnly=true' : ''}`,
-      )
+      const res = await api(`/notifications?page=${page}&limit=20`)
       return res.json() as Promise<NotificationPage>
     },
   })

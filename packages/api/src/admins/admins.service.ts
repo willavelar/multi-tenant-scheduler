@@ -3,6 +3,7 @@ import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { users } from '@scheduler/shared';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+import { sendInviteEmail } from '../auth/invite.helper';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { DB, DrizzleDB } from '../database/database.module';
@@ -19,8 +20,6 @@ const ADMIN_FIELDS = {
   phone:       users.phone,
   avatarUrl:   users.avatarUrl,
   active:      users.active,
-  timezone:         users.timezone,
-  timeFormat:       users.timeFormat,
   notifyViaSystem:   users.notifyViaSystem,
   notifyViaEmail:    users.notifyViaEmail,
   notifyViaWhatsapp: users.notifyViaWhatsapp,
@@ -101,17 +100,7 @@ export class AdminsService {
       }).returning();
 
       if (dto.sendInvite) {
-        const token = randomBytes(32).toString('hex');
-        await this.redis.set(
-          `password:invite:${token}`,
-          JSON.stringify({ userId: user.id, email: user.email, tenantId }),
-          'EX',
-          86400,
-        );
-        const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
-        const protocol = domain.startsWith('localhost') ? 'http' : 'https';
-        const inviteUrl = `${protocol}://${slug}.${domain}/activate-account?token=${token}`;
-        await this.emailQueueProducer.addInviteJob({ to: user.email, inviteUrl });
+        await sendInviteEmail(user, tenantId, slug, this.redis, this.config, this.emailQueueProducer);
       }
 
       return {
@@ -139,8 +128,6 @@ export class AdminsService {
       if (dto.name       !== undefined) patch.name       = dto.name;
       if (dto.avatarUrl  !== undefined) patch.avatarUrl  = dto.avatarUrl;
       if (dto.active     !== undefined) patch.active     = dto.active;
-      if (dto.timezone          !== undefined) patch.timezone          = dto.timezone;
-      if (dto.timeFormat        !== undefined) patch.timeFormat        = dto.timeFormat;
       if (dto.notifyViaSystem   !== undefined) patch.notifyViaSystem   = dto.notifyViaSystem;
       if (dto.notifyViaEmail    !== undefined) patch.notifyViaEmail    = dto.notifyViaEmail;
       if (dto.notifyViaWhatsapp !== undefined) patch.notifyViaWhatsapp = dto.notifyViaWhatsapp;

@@ -24,8 +24,6 @@ export default function EditAdminPage() {
       name:       data.name,
       avatarUrl:  data.avatarUrl ?? undefined,
       active:     data.active,
-      timezone:   data.timezone,
-      timeFormat: data.timeFormat,
     })
     router.push(`/admins/${id}`)
   }
@@ -38,12 +36,11 @@ export default function EditAdminPage() {
       <AdminForm
         mode="edit"
         isOwnProfile={isOwnProfile}
+        userId={id}
         defaultValues={{
           name:       admin.name,
           avatarUrl:  admin.avatarUrl ?? undefined,
           active:     admin.active,
-          timezone:   admin.timezone,
-          timeFormat: admin.timeFormat,
         }}
         onSubmit={handleSubmit}
         onCancel={() => router.push(`/admins/${id}`)}

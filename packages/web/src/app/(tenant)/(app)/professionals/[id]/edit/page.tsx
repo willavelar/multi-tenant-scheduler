@@ -26,8 +26,6 @@ export default function EditProfessionalPage() {
       position:   data.position,
       bio:        data.bio,
       avatarUrl:  data.avatarUrl ?? undefined,
-      timezone:   data.timezone,
-      timeFormat: data.timeFormat,
       role:       'professional',
       ...(isAdmin ? { active: data.active } : {}),
     })
@@ -45,13 +43,12 @@ export default function EditProfessionalPage() {
       <ProfessionalForm
         mode="edit"
         professionalId={prof.id}
+        userId={prof.userId}
         defaultValues={{
           name:      prof.name,
           position:  prof.position  ?? undefined,
           bio:       prof.bio       ?? undefined,
           avatarUrl: prof.avatarUrl ?? undefined,
-          timezone:   prof.timezone,
-          timeFormat: prof.timeFormat,
           active:     prof.active,
         }}
         isAdmin={isAdmin}

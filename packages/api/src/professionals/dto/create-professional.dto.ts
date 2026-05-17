@@ -49,15 +49,6 @@ export class CreateProfessionalDto {
   @MaxLength(200_000)
   avatarUrl?: string;
 
-  @IsString()
-  @IsOptional()
-  timezone?: string;
-
-  @IsString()
-  @IsIn(['12h', '24h'])
-  @IsOptional()
-  timeFormat?: string;
-
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })

@@ -9,6 +9,7 @@ export const tenants = pgTable('tenants', {
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
   logoUrl: text('logo_url'),
+  logoDarkUrl: text('logo_dark_url'),
   confirmationMode: confirmationModeEnum('confirmation_mode').notNull().default('auto'),
   allowPaidStatus: boolean('allow_paid_status').notNull().default(true),
   cancellationReasonMode: cancellationReasonModeEnum('cancellation_reason_mode').notNull().default('no'),

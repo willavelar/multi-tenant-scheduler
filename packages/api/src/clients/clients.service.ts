@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, count, desc, eq, gt, ilike, notInArray, or } from 'drizzle-orm';
+import { and, count, desc, eq, gt, ilike, inArray, notInArray, or } from 'drizzle-orm';
 import * as bcrypt from 'bcryptjs';
 import { alias } from 'drizzle-orm/pg-core';
 import {
@@ -21,6 +21,7 @@ import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
 import { REDIS } from '../redis/redis.module';
 import { EmailQueueProducer } from '../email-queue/email-queue.producer';
+import { sendInviteEmail } from '../auth/invite.helper';
 
 const profUsers = alias(users, 'prof_users');
 
@@ -37,17 +38,29 @@ export class ClientsService {
     tenantId: string,
     page: number,
     limit: number,
-    filters: { q?: string; active?: string } = {},
+    filters: { q?: string; active?: string; professionalUserId?: string } = {},
   ) {
     const offset = (page - 1) * limit;
 
     return withTenant(this.db, tenantId, async (tx) => {
+      const professionalFilter = filters.professionalUserId
+        ? inArray(
+            clientProfiles.id,
+            tx
+              .select({ id: clientProfessionals.clientProfileId })
+              .from(clientProfessionals)
+              .innerJoin(professionals, eq(professionals.id, clientProfessionals.professionalId))
+              .where(eq(professionals.userId, filters.professionalUserId)),
+          )
+        : undefined;
+
       const where = and(
         eq(users.tenantId, tenantId),
         eq(users.role, 'client'),
         filters.q ? or(ilike(users.name, `%${filters.q}%`), ilike(users.email, `%${filters.q}%`)) : undefined,
         filters.active === 'true'  ? eq(users.active, true)  : undefined,
         filters.active === 'false' ? eq(users.active, false) : undefined,
+        professionalFilter,
       );
 
       const FIELDS = {
@@ -62,8 +75,6 @@ export class ClientsService {
         notes: clientProfiles.notes,
         active: users.active,
         avatarUrl: users.avatarUrl,
-        timezone: users.timezone,
-        timeFormat: users.timeFormat,
         allProfessionals: clientProfiles.allProfessionals,
         allServices: clientProfiles.allServices,
         serviceLimitCount: clientProfiles.serviceLimitCount,
@@ -106,8 +117,6 @@ export class ClientsService {
           notes: clientProfiles.notes,
           active: users.active,
           avatarUrl: users.avatarUrl,
-          timezone: users.timezone,
-          timeFormat: users.timeFormat,
           notifyViaSystem:   users.notifyViaSystem,
           notifyViaEmail:    users.notifyViaEmail,
           notifyViaWhatsapp: users.notifyViaWhatsapp,
@@ -182,8 +191,6 @@ export class ClientsService {
           phone: dto.phone,
           active: dto.sendInvite ? false : (dto.active ?? true),
           avatarUrl: dto.avatarUrl,
-          timezone: dto.timezone,
-          timeFormat: dto.timeFormat,
         })
         .returning();
 
@@ -228,17 +235,7 @@ export class ClientsService {
       }
 
       if (dto.sendInvite) {
-        const token = randomBytes(32).toString('hex');
-        await this.redis.set(
-          `password:invite:${token}`,
-          JSON.stringify({ userId: user.id, email: user.email, tenantId }),
-          'EX',
-          86400,
-        );
-        const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000';
-        const protocol = domain.startsWith('localhost') ? 'http' : 'https';
-        const inviteUrl = `${protocol}://${slug}.${domain}/activate-account?token=${token}`;
-        await this.emailQueueProducer.addInviteJob({ to: user.email, inviteUrl });
+        await sendInviteEmail(user, tenantId, slug, this.redis, this.config, this.emailQueueProducer);
       }
 
       return { id: user.id };
@@ -259,8 +256,6 @@ export class ClientsService {
       if (dto.phone      !== undefined) userPatch.phone      = dto.phone;
       if (dto.active     !== undefined) userPatch.active     = dto.active;
       if (dto.avatarUrl  !== undefined) userPatch.avatarUrl  = dto.avatarUrl;
-      if (dto.timezone          !== undefined) userPatch.timezone          = dto.timezone;
-      if (dto.timeFormat        !== undefined) userPatch.timeFormat        = dto.timeFormat;
       if (dto.notifyViaSystem   !== undefined) userPatch.notifyViaSystem   = dto.notifyViaSystem;
       if (dto.notifyViaEmail    !== undefined) userPatch.notifyViaEmail    = dto.notifyViaEmail;
       if (dto.notifyViaWhatsapp !== undefined) userPatch.notifyViaWhatsapp = dto.notifyViaWhatsapp;

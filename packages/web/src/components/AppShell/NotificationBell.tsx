@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTenant } from '@/providers/TenantProvider'
 import { useMarkAllRead, useNotifications, useUnreadCount } from '@/hooks/useNotifications'
 import { cn } from '@/lib/utils'
 
@@ -19,14 +18,15 @@ function timeAgo(dateStr: string): string {
 }
 
 export function NotificationBell() {
-  const [open, setOpen]             = useState(false)
-  const ref                         = useRef<HTMLDivElement>(null)
-  const router                      = useRouter()
-  const { slug }                    = useTenant()
-  const { data: count = 0 }        = useUnreadCount()
-  const { data: notifPage }        = useNotifications()
-  const { mutate: markAllRead }    = useMarkAllRead()
-  const preview                     = notifPage?.data.slice(0, 5) ?? []
+  const [open, setOpen]               = useState(false)
+  const [snapshot, setSnapshot]       = useState<typeof notifPage | null>(null)
+  const ref                           = useRef<HTMLDivElement>(null)
+  const router                        = useRouter()
+  const { data: count = 0 }          = useUnreadCount()
+  const { data: notifPage }          = useNotifications()
+  const { mutate: markAllRead }      = useMarkAllRead()
+
+  const preview = (snapshot ?? notifPage)?.data.slice(0, 5) ?? []
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -37,8 +37,16 @@ export function NotificationBell() {
   }, [])
 
   function handleOpen() {
+    const isOpening = !open
     setOpen(v => !v)
-    if (!open && count > 0) markAllRead()
+    if (isOpening) {
+      if (count > 0) {
+        setSnapshot(notifPage)
+        markAllRead()
+      } else {
+        setSnapshot(null)
+      }
+    }
   }
 
   return (
@@ -64,7 +72,7 @@ export function NotificationBell() {
           <div className="px-3.5 py-2.5 border-b border-border flex items-center justify-between">
             <span className="text-[12px] font-semibold text-popover-foreground">Notificações</span>
             <button
-              onClick={() => markAllRead()}
+              onClick={() => { setSnapshot(null); markAllRead() }}
               className="text-[11px] text-indigo-500 hover:text-indigo-400 bg-transparent border-0 cursor-pointer p-0"
             >
               Marcar tudo como lido
@@ -104,7 +112,7 @@ export function NotificationBell() {
 
           <div className="px-3.5 py-2 border-t border-border text-center">
             <button
-              onClick={() => { setOpen(false); router.push(`/${slug}/notifications`) }}
+              onClick={() => { setOpen(false); router.push('/notifications') }}
               className="text-[11.5px] text-indigo-500 hover:text-indigo-400 bg-transparent border-0 cursor-pointer p-0"
             >
               Ver todas as notificações →
