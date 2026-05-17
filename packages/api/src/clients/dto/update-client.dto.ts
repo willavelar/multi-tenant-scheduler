@@ -28,9 +28,6 @@ export class UpdateClientDto {
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => ServiceLimitItemDto)
   serviceLimits?: ServiceLimitItemDto[];
 
-  @IsOptional() @IsString() timezone?: string;
-  @IsOptional() @IsString() @IsIn(['12h', '24h']) timeFormat?: string;
-
   @IsOptional() @IsBoolean() notifyViaSystem?: boolean;
   @IsOptional() @IsBoolean() notifyViaEmail?: boolean;
   @IsOptional() @IsBoolean() notifyViaWhatsapp?: boolean;

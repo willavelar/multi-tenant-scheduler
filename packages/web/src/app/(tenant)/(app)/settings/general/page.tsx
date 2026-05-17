@@ -1,19 +1,17 @@
 'use client'
 
 import { useAuth } from '@/providers/AuthProvider'
-import { useTenant } from '@/providers/TenantProvider'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { TenantGeneralForm } from '../_components/TenantGeneralForm'
 
 export default function SettingsGeneralPage() {
   const { user } = useAuth()
-  const { slug } = useTenant()
   const router = useRouter()
 
   useEffect(() => {
-    if (user && user.role !== 'tenant_admin') router.replace(`/${slug}/appointments`)
-  }, [user, router, slug])
+    if (user && user.role !== 'tenant_admin') router.replace('/appointments')
+  }, [user, router])
 
   if (!user || user.role !== 'tenant_admin') return null
 

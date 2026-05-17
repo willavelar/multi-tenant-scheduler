@@ -8,6 +8,7 @@ export type TenantSettings = {
   name:                      string
   slug:                      string
   logoUrl:                   string | null
+  logoDarkUrl:               string | null
   confirmationMode:          'auto' | 'manual'
   allowPaidStatus:           boolean
   cancellationReasonMode:    'no' | 'optional' | 'required'
@@ -34,6 +35,7 @@ export function useUpdateTenantSettings() {
     mutationFn: (body: {
       name?:                      string
       logoUrl?:                   string | null
+      logoDarkUrl?:               string | null
       confirmationMode?:          'auto' | 'manual'
       allowPaidStatus?:           boolean
       cancellationReasonMode?:    'no' | 'optional' | 'required'

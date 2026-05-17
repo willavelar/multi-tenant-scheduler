@@ -55,7 +55,7 @@ export function useCreateProfessional() {
   return useMutation({
     mutationFn: async (body: {
       name: string; email: string; password?: string; sendInvite?: boolean;
-      position?: string; bio?: string; avatarUrl?: string; timezone?: string; timeFormat?: '12h' | '24h';
+      position?: string; bio?: string; avatarUrl?: string;
       schedule?: { dayOfWeek: number; startTime: string; endTime: string }[];
     }) => {
       const res = await api('/professionals', { method: 'POST', body: JSON.stringify(body) })
@@ -72,7 +72,7 @@ export function useUpdateProfessional(id: string) {
   return useMutation({
     mutationFn: (body: {
       name?: string; bio?: string; avatarUrl?: string;
-      position?: string; timezone?: string; timeFormat?: '12h' | '24h'; active?: boolean; role?: string;
+      position?: string; active?: boolean; role?: string;
     }) => api(`/professionals/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['professional', slug, id] })

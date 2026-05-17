@@ -13,6 +13,12 @@ export class UpdateTenantDto {
   logoUrl?: string | null;
 
   @IsOptional()
+  @ValidateIf((o) => o.logoDarkUrl !== null)
+  @IsString()
+  @MaxLength(200_000)
+  logoDarkUrl?: string | null;
+
+  @IsOptional()
   @IsIn(['auto', 'manual'])
   confirmationMode?: 'auto' | 'manual';
 

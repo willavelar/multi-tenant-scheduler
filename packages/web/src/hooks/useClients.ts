@@ -3,14 +3,15 @@ import { useApi } from './useApi'
 import { useTenant } from '@/providers/TenantProvider'
 import type { Client, ClientDetail, ClientPage } from '@/types'
 
-type ClientFilters = { q?: string; active?: string }
+type ClientFilters = { q?: string; active?: string; myClients?: boolean }
 
 export function useClients(page = 1, filters: ClientFilters = {}) {
   const api = useApi()
   const { slug } = useTenant()
   const params = new URLSearchParams({ page: String(page), limit: '10' })
-  if (filters.q)      params.set('q', filters.q)
-  if (filters.active) params.set('active', filters.active)
+  if (filters.q)          params.set('q', filters.q)
+  if (filters.active)     params.set('active', filters.active)
+  if (filters.myClients)  params.set('myClients', 'true')
   return useQuery<ClientPage>({
     queryKey: ['clients', slug, page, filters],
     queryFn: async () => (await api(`/clients?${params}`)).json(),
@@ -51,7 +52,6 @@ export function useCreateClient() {
       cancellationLimitPeriod?: string;
       serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[];
       professionalIds?: string[]; serviceIds?: string[];
-      timezone?: string; timeFormat?: '12h' | '24h';
     }) => api('/clients', { method: 'POST', body: JSON.stringify(body) }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['clients', slug] }),
   })
@@ -70,7 +70,6 @@ export function useUpdateClient(id: string) {
       cancellationLimitPeriod?: string | null;
       serviceLimits?: { serviceId: string; limitCount: number; limitPeriod: 'day' | 'week' | 'month' }[];
       professionalIds?: string[]; serviceIds?: string[];
-      timezone?: string; timeFormat?: '12h' | '24h';
     }) => api(`/clients/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client', slug, id] })

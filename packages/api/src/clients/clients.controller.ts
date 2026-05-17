@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { TenantGuard } from '../common/guards/tenant.guard';
 import { RolesGuard, Roles } from '../common/guards/roles.guard';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
@@ -17,16 +18,22 @@ export class ClientsController {
   @Roles('tenant_admin', 'professional')
   findAll(
     @TenantId() tenantId: string,
+    @CurrentUser() user: { id: string; role: string },
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('q') q?: string,
     @Query('active') active?: string,
+    @Query('myClients') myClients?: string,
   ) {
     return this.service.findAll(
       tenantId,
       Math.max(1, parseInt(page ?? '1', 10) || 1),
       Math.min(100, parseInt(limit ?? '10', 10) || 10),
-      { q, active },
+      {
+        q,
+        active,
+        professionalUserId: myClients === 'true' && user.role === 'professional' ? user.id : undefined,
+      },
     );
   }
 

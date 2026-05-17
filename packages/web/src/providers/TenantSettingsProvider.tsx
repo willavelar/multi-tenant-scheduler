@@ -6,6 +6,7 @@ import { useTenantSettings } from '@/hooks/useTenantSettings'
 type TenantSettingsContextValue = {
   tenantName:                string
   tenantLogoUrl:             string | null
+  tenantLogoDarkUrl:         string | null
   confirmationMode:          'auto' | 'manual'
   allowPaidStatus:           boolean
   cancellationReasonMode:    'no' | 'optional' | 'required'
@@ -16,6 +17,7 @@ type TenantSettingsContextValue = {
 const TenantSettingsContext = createContext<TenantSettingsContextValue>({
   tenantName:                '',
   tenantLogoUrl:             null,
+  tenantLogoDarkUrl:         null,
   confirmationMode:          'auto',
   allowPaidStatus:           true,
   cancellationReasonMode:    'no',
@@ -28,6 +30,7 @@ export function TenantSettingsProvider({ children }: { children: React.ReactNode
 
   const tenantName                = data?.name                      ?? ''
   const tenantLogoUrl             = data?.logoUrl                   ?? null
+  const tenantLogoDarkUrl         = data?.logoDarkUrl               ?? null
   const confirmationMode          = data?.confirmationMode          ?? 'auto'
   const allowPaidStatus           = data?.allowPaidStatus           ?? true
   const cancellationReasonMode    = data?.cancellationReasonMode    ?? 'no'
@@ -42,6 +45,7 @@ export function TenantSettingsProvider({ children }: { children: React.ReactNode
     <TenantSettingsContext.Provider value={{
       tenantName,
       tenantLogoUrl,
+      tenantLogoDarkUrl,
       confirmationMode,
       allowPaidStatus,
       cancellationReasonMode,

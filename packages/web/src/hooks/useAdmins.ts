@@ -43,7 +43,7 @@ export function useUpdateAdmin(id: string) {
   const queryClient = useQueryClient()
   const { slug } = useTenant()
   return useMutation({
-    mutationFn: (body: { name?: string; avatarUrl?: string; active?: boolean; timezone?: string; timeFormat?: '12h' | '24h' }) =>
+    mutationFn: (body: { name?: string; avatarUrl?: string; active?: boolean }) =>
       api(`/admins/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admins', slug, id] })

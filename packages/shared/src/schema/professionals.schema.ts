@@ -8,7 +8,6 @@ export const professionals = pgTable('professionals', {
   userId:   uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   bio:      text('bio'),
   position: text('position'),
-  timezone: text('timezone').notNull().default('America/Sao_Paulo'),
 });
 
 export type Professional = typeof professionals.$inferSelect;

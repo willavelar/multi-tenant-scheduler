@@ -35,6 +35,4 @@ export class CreateClientDto {
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => ServiceLimitItemDto)
   serviceLimits?: ServiceLimitItemDto[];
 
-  @IsOptional() @IsString() timezone?: string;
-  @IsOptional() @IsString() @IsIn(['12h', '24h']) timeFormat?: string;
 }

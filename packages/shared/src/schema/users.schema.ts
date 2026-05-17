@@ -13,8 +13,6 @@ export const users = pgTable('users', {
   phone:        text('phone'),
   active:       boolean('active').notNull().default(true),
   avatarUrl:    text('avatar_url'),
-  timezone:          text('timezone').notNull().default('America/Sao_Paulo'),
-  timeFormat:        text('time_format').notNull().default('24h'),
   notifyViaSystem:   boolean('notify_via_system').notNull().default(true),
   notifyViaEmail:    boolean('notify_via_email').notNull().default(false),
   notifyViaWhatsapp: boolean('notify_via_whatsapp').notNull().default(false),

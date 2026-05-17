@@ -14,8 +14,6 @@ export type Professional = {
   bio: string | null
   avatarUrl: string | null
   position: string | null
-  timezone: string
-  timeFormat: '12h' | '24h'
   notifyViaSystem:   boolean
   notifyViaEmail:    boolean
   notifyViaWhatsapp: boolean
@@ -47,8 +45,6 @@ export type Client = {
   notes: string | null
   active: boolean
   avatarUrl: string | null
-  timezone: string
-  timeFormat: '12h' | '24h'
   notifyViaSystem:   boolean
   notifyViaEmail:    boolean
   notifyViaWhatsapp: boolean
@@ -143,8 +139,6 @@ export type Admin = {
   phone: string | null
   avatarUrl: string | null
   active: boolean
-  timezone: string
-  timeFormat: '12h' | '24h'
   notifyViaSystem:   boolean
   notifyViaEmail:    boolean
   notifyViaWhatsapp: boolean

@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import type { Appointment } from '@/types'
 import { useFormatTime } from '@/hooks/useFormatTime'
-import { useTenant } from '@/providers/TenantProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { CancelAppointmentModal } from './CancelAppointmentModal'
 import { ConfirmStatusModal } from './ConfirmStatusModal'
@@ -27,7 +26,6 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
 
   const { allowPaidStatus } = useTenantSettingsContext()
   const router = useRouter()
-  const { slug } = useTenant()
   const { formatISOTime } = useFormatTime()
 
   const { top, left } = useMemo(() => {
@@ -73,7 +71,7 @@ export function AppointmentPopover({ appointment, blockRect, onClose }: Props) {
         <button
           title="Visualizar agendamento"
           className="w-8 h-8 rounded-full border border-border bg-background flex items-center justify-center cursor-pointer text-foreground transition-all duration-150 hover:bg-indigo-500 hover:border-indigo-500 hover:text-white hover:shadow-sm active:scale-95"
-          onClick={() => router.push(`/${slug}/appointments/${appointment.id}`)}
+          onClick={() => router.push(`/appointments/${appointment.id}`)}
         >
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>

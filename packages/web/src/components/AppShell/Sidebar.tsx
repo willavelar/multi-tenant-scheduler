@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useTenant } from '@/providers/TenantProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
+import { useTheme } from '@/providers/ThemeProvider'
 import { cn } from '@/lib/utils'
 
 function CalendarIcon() {
@@ -87,7 +88,9 @@ export function Sidebar() {
   const pathname = usePathname()
   const { slug } = useTenant()
   const { user } = useAuth()
-  const { tenantName, tenantLogoUrl } = useTenantSettingsContext()
+  const { tenantName, tenantLogoUrl, tenantLogoDarkUrl } = useTenantSettingsContext()
+  const { theme } = useTheme()
+  const logoUrl = theme === 'dark' && tenantLogoDarkUrl ? tenantLogoDarkUrl : tenantLogoUrl
 
   const role = user?.role
   const items = NAV_ITEMS.filter(item => role && item.roles.includes(role))
@@ -99,9 +102,9 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-5 pt-5 pb-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
-          {tenantLogoUrl ? (
+          {logoUrl ? (
             <img
-              src={tenantLogoUrl}
+              src={logoUrl}
               alt={tenantName}
               className="h-9 w-auto max-w-full object-contain"
             />

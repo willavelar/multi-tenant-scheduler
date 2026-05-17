@@ -38,6 +38,7 @@ export class TenantsService {
         name:                      tenants.name,
         slug:                      tenants.slug,
         logoUrl:                   tenants.logoUrl,
+        logoDarkUrl:               tenants.logoDarkUrl,
         confirmationMode:          tenants.confirmationMode,
         allowPaidStatus:           tenants.allowPaidStatus,
         cancellationReasonMode:    tenants.cancellationReasonMode,
@@ -55,6 +56,7 @@ export class TenantsService {
     const patch: Partial<typeof tenants.$inferInsert> = {};
     if (dto.name                      !== undefined) patch.name                      = dto.name;
     if (dto.logoUrl                   !== undefined) patch.logoUrl                   = dto.logoUrl;
+    if (dto.logoDarkUrl               !== undefined) patch.logoDarkUrl               = dto.logoDarkUrl;
     if (dto.confirmationMode          !== undefined) patch.confirmationMode          = dto.confirmationMode;
     if (dto.allowPaidStatus           !== undefined) patch.allowPaidStatus           = dto.allowPaidStatus;
     if (dto.cancellationReasonMode    !== undefined) patch.cancellationReasonMode    = dto.cancellationReasonMode;
@@ -84,6 +86,7 @@ export class TenantsService {
         name:                      tenants.name,
         slug:                      tenants.slug,
         logoUrl:                   tenants.logoUrl,
+        logoDarkUrl:               tenants.logoDarkUrl,
         confirmationMode:          tenants.confirmationMode,
         allowPaidStatus:           tenants.allowPaidStatus,
         cancellationReasonMode:    tenants.cancellationReasonMode,

@@ -113,8 +113,8 @@ function ExceptionForm({ onConfirm, onCancel }: {
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={() => date && onConfirm(date, allDay, start, end)}
-          disabled={!date}
+          onClick={() => date && (allDay || (/^\d{2}:\d{2}$/.test(start) && /^\d{2}:\d{2}$/.test(end))) && onConfirm(date, allDay, start, end)}
+          disabled={!date || (!allDay && (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end)))}
           className="h-7 px-2.5 bg-emerald-500 text-white text-xs font-semibold rounded-md cursor-pointer hover:bg-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Confirmar
