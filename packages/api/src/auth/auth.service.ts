@@ -182,7 +182,9 @@ export class AuthService {
 
     const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
 
-    // Atomic claim: only succeeds once even under concurrent requests
+    // Atomic claim: intentionally uses this.db (global, without withTenant) — tenantId from
+    // the JWT payload is only trusted AFTER this claim succeeds, so wrapping in withTenant
+    // here would create a circular dependency. Documented exception to the withTenant pattern.
     const [record] = await this.db
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
@@ -195,7 +197,7 @@ export class AuthService {
         .select({ id: refreshTokens.id, revokedAt: refreshTokens.revokedAt })
         .from(refreshTokens)
         .where(eq(refreshTokens.tokenHash, tokenHash));
-      if (existing) await this.revokeChain(existing.id);
+      if (existing) await this.revokeChain(existing.id, 0, payload.tenantId ?? undefined);
       throw new UnauthorizedException();
     }
 
@@ -210,12 +212,12 @@ export class AuthService {
     if (!user || !user.active) throw new UnauthorizedException();
 
     const { accessToken, refreshToken } = this.signTokens(user);
-    const newTokenId = await this.persistRefreshToken(refreshToken, user.id, user.tenantId);
-
-    await this.db
-      .update(refreshTokens)
-      .set({ replacedById: newTokenId })
-      .where(eq(refreshTokens.id, record.id));
+    await withTenant(this.db, payload.tenantId as string, async (tx) => {
+      const tokenId = await this.persistRefreshToken(refreshToken, user.id, user.tenantId, tx);
+      await tx.update(refreshTokens)
+        .set({ replacedById: tokenId })
+        .where(eq(refreshTokens.id, record.id));
+    });
 
     return { accessToken, refreshToken };
   }
@@ -230,32 +232,42 @@ export class AuthService {
       return;
     }
 
+    if (!payload.tenantId) return;
     const tokenHash = createHash('sha256').update(rawRefreshToken).digest('hex');
-    await this.db
-      .update(refreshTokens)
-      .set({ revokedAt: new Date() })
-      .where(and(eq(refreshTokens.tokenHash, tokenHash), eq(refreshTokens.userId, payload.sub)));
+    await withTenant(this.db, payload.tenantId, (tx) =>
+      tx.update(refreshTokens)
+        .set({ revokedAt: new Date() })
+        .where(and(eq(refreshTokens.tokenHash, tokenHash), eq(refreshTokens.userId, payload.sub)))
+    );
   }
 
-  private async revokeChain(tokenId: string, depth = 0): Promise<void> {
+  // revokeChain intentionally operates globally (without withTenant) when tenantId is absent
+  // — for compatibility with bootstrap and admin contexts where no tenant context exists.
+  // When tenantId is provided (e.g., from replay detection in refresh()), it uses withTenant
+  // for defensive RLS readiness. Documented exception to the project's withTenant pattern.
+  private async revokeChain(tokenId: string, depth = 0, tenantId?: string): Promise<void> {
     if (depth > 20) return;
-    const [record] = await this.db
-      .select({
-        id: refreshTokens.id,
-        revokedAt: refreshTokens.revokedAt,
-        replacedById: refreshTokens.replacedById,
-      })
-      .from(refreshTokens)
-      .where(eq(refreshTokens.id, tokenId));
+    const run = <T>(fn: (db: DrizzleDB) => Promise<T>): Promise<T> =>
+      tenantId ? withTenant(this.db, tenantId, fn) : fn(this.db);
+    const [record] = await run((db) =>
+      db.select({
+          id: refreshTokens.id,
+          revokedAt: refreshTokens.revokedAt,
+          replacedById: refreshTokens.replacedById,
+        })
+        .from(refreshTokens)
+        .where(eq(refreshTokens.id, tokenId))
+    );
     if (!record) return;
     if (!record.revokedAt) {
-      await this.db
-        .update(refreshTokens)
-        .set({ revokedAt: new Date() })
-        .where(eq(refreshTokens.id, tokenId));
+      await run((db) =>
+        db.update(refreshTokens)
+          .set({ revokedAt: new Date() })
+          .where(eq(refreshTokens.id, tokenId))
+      );
     }
     if (record.replacedById) {
-      await this.revokeChain(record.replacedById, depth + 1);
+      await this.revokeChain(record.replacedById, depth + 1, tenantId);
     }
   }
 
