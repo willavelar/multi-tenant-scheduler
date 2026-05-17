@@ -5,6 +5,7 @@ import { DB, DrizzleDB } from '../database/database.module';
 import { REDIS } from '../redis/redis.module';
 import type Redis from 'ioredis';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { withTenant } from '../database/with-tenant';
 
 const TENANT_CACHE_TTL = 3600;
 
@@ -32,21 +33,23 @@ export class TenantsService {
   }
 
   async findCurrent(tenantId: string) {
-    const [tenant] = await this.db
-      .select({
-        id:                        tenants.id,
-        name:                      tenants.name,
-        slug:                      tenants.slug,
-        logoUrl:                   tenants.logoUrl,
-        logoDarkUrl:               tenants.logoDarkUrl,
-        confirmationMode:          tenants.confirmationMode,
-        allowPaidStatus:           tenants.allowPaidStatus,
-        cancellationReasonMode:    tenants.cancellationReasonMode,
-        cancellationDeadlineValue: tenants.cancellationDeadlineValue,
-        cancellationDeadlineUnit:  tenants.cancellationDeadlineUnit,
-      })
-      .from(tenants)
-      .where(eq(tenants.id, tenantId));
+    const [tenant] = await withTenant(this.db, tenantId, (tx) =>
+      tx
+        .select({
+          id:                        tenants.id,
+          name:                      tenants.name,
+          slug:                      tenants.slug,
+          logoUrl:                   tenants.logoUrl,
+          logoDarkUrl:               tenants.logoDarkUrl,
+          confirmationMode:          tenants.confirmationMode,
+          allowPaidStatus:           tenants.allowPaidStatus,
+          cancellationReasonMode:    tenants.cancellationReasonMode,
+          cancellationDeadlineValue: tenants.cancellationDeadlineValue,
+          cancellationDeadlineUnit:  tenants.cancellationDeadlineUnit,
+        })
+        .from(tenants)
+        .where(eq(tenants.id, tenantId)),
+    );
 
     if (!tenant) throw new NotFoundException('Tenant not found');
     return tenant;
@@ -77,22 +80,24 @@ export class TenantsService {
       throw new BadRequestException('No updatable fields provided');
     }
 
-    const [updated] = await this.db
-      .update(tenants)
-      .set(patch)
-      .where(eq(tenants.id, tenantId))
-      .returning({
-        id:                        tenants.id,
-        name:                      tenants.name,
-        slug:                      tenants.slug,
-        logoUrl:                   tenants.logoUrl,
-        logoDarkUrl:               tenants.logoDarkUrl,
-        confirmationMode:          tenants.confirmationMode,
-        allowPaidStatus:           tenants.allowPaidStatus,
-        cancellationReasonMode:    tenants.cancellationReasonMode,
-        cancellationDeadlineValue: tenants.cancellationDeadlineValue,
-        cancellationDeadlineUnit:  tenants.cancellationDeadlineUnit,
-      });
+    const [updated] = await withTenant(this.db, tenantId, (tx) =>
+      tx
+        .update(tenants)
+        .set(patch)
+        .where(eq(tenants.id, tenantId))
+        .returning({
+          id:                        tenants.id,
+          name:                      tenants.name,
+          slug:                      tenants.slug,
+          logoUrl:                   tenants.logoUrl,
+          logoDarkUrl:               tenants.logoDarkUrl,
+          confirmationMode:          tenants.confirmationMode,
+          allowPaidStatus:           tenants.allowPaidStatus,
+          cancellationReasonMode:    tenants.cancellationReasonMode,
+          cancellationDeadlineValue: tenants.cancellationDeadlineValue,
+          cancellationDeadlineUnit:  tenants.cancellationDeadlineUnit,
+        }),
+    );
 
     if (!updated) throw new NotFoundException('Tenant not found');
     return updated;
