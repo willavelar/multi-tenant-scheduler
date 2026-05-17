@@ -277,7 +277,7 @@ describe('AuthService.logout', () => {
   it('marks refresh token as revoked', async () => {
     const chain = makeChain((resolve) => resolve([{ id: 'rt-1', tokenHash }]));
     const db = makeMockDb(chain);
-    const updateSpy = db['update'] as jest.Mock;
+    const updateSpy = chain['update'] as jest.Mock; // withTenant passes chain as tx
 
     const service = await buildService(db);
     await service.logout(rawRt);
