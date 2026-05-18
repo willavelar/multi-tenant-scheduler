@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config'
 import { OAuthService } from './oauth.service'
 import { DB } from '../database/database.module'
 import { REDIS } from '../redis/redis.module'
+import { TenantsService } from '../tenants/tenants.service'
 
 const QUERY_METHODS = [
   'select', 'from', 'where', 'innerJoin', 'leftJoin',
@@ -36,13 +37,18 @@ function makeRedis(overrides: Record<string, jest.Mock> = {}) {
   }
 }
 
-async function buildService(db: unknown, redis: unknown) {
+async function buildService(
+  db: unknown,
+  redis: unknown,
+  tenantsService: Partial<TenantsService> = { resolveTenantId: jest.fn().mockResolvedValue(null) },
+) {
   const module = await Test.createTestingModule({
     providers: [
       OAuthService,
-      { provide: DB,            useValue: db },
-      { provide: REDIS,         useValue: redis },
-      { provide: ConfigService, useValue: { get: jest.fn().mockReturnValue('mock-value') } },
+      { provide: DB,             useValue: db },
+      { provide: REDIS,          useValue: redis },
+      { provide: ConfigService,  useValue: { get: jest.fn().mockReturnValue('mock-value') } },
+      { provide: TenantsService, useValue: tenantsService },
     ],
   }).compile()
   return module.get(OAuthService)
@@ -111,17 +117,18 @@ describe('OAuthService exchange code', () => {
 // ── resolveTenantId ────────────────────────────────────────────────────────
 
 describe('OAuthService.resolveTenantId', () => {
-  it('lança NotFoundException quando slug não existe', async () => {
-    const chain = makeChain((r) => r([]))
-    const svc = await buildService(makeMockDb(chain), makeRedis())
+  it('lança NotFoundException quando TenantsService retorna null', async () => {
+    const tenantsSvc = { resolveTenantId: jest.fn().mockResolvedValue(null) }
+    const svc = await buildService(makeMockDb(makeChain((r) => r([]))), makeRedis(), tenantsSvc)
     await expect(svc.resolveTenantId('unknown')).rejects.toBeInstanceOf(NotFoundException)
   })
 
-  it('retorna tenantId quando slug existe', async () => {
-    const chain = makeChain((r) => r([{ id: 'tenant-uuid' }]))
-    const svc = await buildService(makeMockDb(chain), makeRedis())
+  it('retorna tenantId quando TenantsService resolve o slug', async () => {
+    const tenantsSvc = { resolveTenantId: jest.fn().mockResolvedValue('tenant-uuid') }
+    const svc = await buildService(makeMockDb(makeChain((r) => r([]))), makeRedis(), tenantsSvc)
     const id = await svc.resolveTenantId('clinic')
     expect(id).toBe('tenant-uuid')
+    expect(tenantsSvc.resolveTenantId).toHaveBeenCalledWith('clinic')
   })
 })
 
@@ -132,8 +139,9 @@ describe('OAuthService.getAuthorizationUrl', () => {
     const module = await Test.createTestingModule({
       providers: [
         OAuthService,
-        { provide: DB,    useValue: {} },
-        { provide: REDIS, useValue: {} },
+        { provide: DB,             useValue: {} },
+        { provide: REDIS,          useValue: {} },
+        { provide: TenantsService, useValue: { resolveTenantId: jest.fn() } },
         {
           provide: ConfigService,
           useValue: {
