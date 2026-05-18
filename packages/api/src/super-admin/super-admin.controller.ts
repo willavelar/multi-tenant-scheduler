@@ -4,6 +4,7 @@ import { SuperAdminLoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../common/guards/super-admin.guard';
 import { ListTenantsQueryDto } from './dto/list-tenants-query.dto';
+import { CreateTenantDto } from './dto/create-tenant.dto';
 
 @Controller('super-admin')
 export class SuperAdminController {
@@ -13,6 +14,12 @@ export class SuperAdminController {
   @HttpCode(200)
   login(@Body() dto: SuperAdminLoginDto) {
     return this.superAdminService.login(dto.email, dto.password);
+  }
+
+  @Post('tenants')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  createTenant(@Body() dto: CreateTenantDto) {
+    return this.superAdminService.createTenant(dto);
   }
 
   @Get('tenants')

@@ -131,4 +131,58 @@ describe('SuperAdmin Auth (e2e)', () => {
         });
     });
   });
+
+  describe('POST /super-admin/tenants', () => {
+    const uniqueSlug = `test-tenant-${Date.now()}`;
+
+    it('with valid data → 201 + created tenant', () => {
+      return request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Test Tenant', slug: uniqueSlug })
+        .expect(201)
+        .expect(({ body }) => {
+          expect(body.id).toBeDefined();
+          expect(body.slug).toBe(uniqueSlug);
+          expect(body.name).toBe('Test Tenant');
+        });
+    });
+
+    it('with slug "app" → 400', () => {
+      return request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'App Tenant', slug: 'app' })
+        .expect(400);
+    });
+
+    it('with duplicate slug → 409', async () => {
+      const slug = `unique-for-dup-${Date.now()}`;
+      await request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'First', slug });
+
+      return request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Second', slug })
+        .expect(409);
+    });
+
+    it('with invalid slug (uppercase) → 400', () => {
+      return request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Bad Slug', slug: 'INVALID' })
+        .expect(400);
+    });
+
+    it('without token → 401', () => {
+      return request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .send({ name: 'No Auth', slug: 'no-auth' })
+        .expect(401);
+    });
+  });
 });
