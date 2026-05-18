@@ -16,6 +16,8 @@ export class TenantsService {
     @Inject(REDIS) private readonly redis: Redis,
   ) {}
 
+  // Bootstrap exception: resolves tenantId from slug before any tenantId is known,
+  // so withTenant cannot be used here (circular dependency). Direct DB access is intentional.
   async resolveTenantId(slug: string): Promise<string | null> {
     const cacheKey = `tenant:slug:${slug}`;
     const cached = await this.redis.get(cacheKey);
