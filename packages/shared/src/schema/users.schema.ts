@@ -1,4 +1,5 @@
-import { boolean, pgEnum, pgTable, text, timestamp, uuid, unique } from 'drizzle-orm/pg-core';
+import { boolean, pgEnum, pgTable, text, timestamp, uuid, unique, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { tenants } from './tenants.schema';
 
 export const roleEnum = pgEnum('user_role', ['super_admin', 'tenant_admin', 'professional', 'client']);
@@ -20,6 +21,7 @@ export const users = pgTable('users', {
   createdAt:    timestamp('created_at').notNull().defaultNow(),
 }, (table) => ({
   uniqueEmailPerTenant: unique('users_tenant_email_unique').on(table.tenantId, table.email),
+  superadminEmailUnique: uniqueIndex('users_superadmin_email_unique').on(table.email).where(sql`tenant_id IS NULL`),
 }));
 
 export type User = typeof users.$inferSelect;
