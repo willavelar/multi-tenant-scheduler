@@ -74,6 +74,7 @@ export class ServicesService {
         .innerJoin(professionals, eq(appointments.professionalId, professionals.id))
         .innerJoin(profUsers, eq(professionals.userId, profUsers.id))
         .where(and(
+          eq(appointments.tenantId, tenantId),
           eq(appointments.serviceId, id),
           gt(appointments.startsAt, now),
           notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
@@ -90,6 +91,7 @@ export class ServicesService {
           .update(appointments)
           .set({ status: 'cancelled_by_professional' })
           .where(and(
+            eq(appointments.tenantId, tenantId),
             eq(appointments.serviceId, id),
             gt(appointments.startsAt, now),
             notInArray(appointments.status, ['cancelled_by_client', 'cancelled_by_professional', 'completed']),
