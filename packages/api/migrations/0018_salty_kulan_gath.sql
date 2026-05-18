@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS "appointments_professional_starts_at_active_uniq" ON "appointments" ("professional_id","starts_at") WHERE status IN ('pending', 'confirmed');
