@@ -2,11 +2,12 @@ import { BadRequestException, Inject, Injectable, NotFoundException, Unauthorize
 import { ConfigService } from '@nestjs/config'
 import { randomBytes } from 'crypto'
 import { and, eq } from 'drizzle-orm'
-import { oauthAccounts, tenants, users } from '@scheduler/shared'
+import { oauthAccounts, users } from '@scheduler/shared'
 import type Redis from 'ioredis'
 import { DB, DrizzleDB } from '../database/database.module'
 import { REDIS } from '../redis/redis.module'
 import { withTenant } from '../database/with-tenant'
+import { TenantsService } from '../tenants/tenants.service'
 
 export type OAuthProvider = 'google' | 'microsoft' | 'facebook'
 
@@ -50,6 +51,7 @@ export class OAuthService {
     @Inject(DB)    private readonly db: DrizzleDB,
     @Inject(REDIS) private readonly redis: Redis,
     private readonly config: ConfigService,
+    private readonly tenantsService: TenantsService,
   ) {}
 
   // ── Redis: state ─────────────────────────────────────────────────────────
@@ -251,12 +253,11 @@ export class OAuthService {
   // ── DB operations ─────────────────────────────────────────────────────────
 
   async resolveTenantId(slug: string): Promise<string> {
-    const [tenant] = await this.db
-      .select({ id: tenants.id })
-      .from(tenants)
-      .where(eq(tenants.slug, slug))
-    if (!tenant) throw new NotFoundException(`Tenant '${slug}' not found`)
-    return tenant.id
+    // Delegates to TenantsService which caches in Redis (TTL 3600s), avoiding
+    // repeated DB queries on every OAuth callback for the same tenant.
+    const tenantId = await this.tenantsService.resolveTenantId(slug)
+    if (!tenantId) throw new NotFoundException(`Tenant '${slug}' not found`)
+    return tenantId
   }
 
   /** Returns the user if found/linked, null if new user must register. */

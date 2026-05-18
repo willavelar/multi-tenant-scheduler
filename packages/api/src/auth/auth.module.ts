@@ -9,6 +9,7 @@ import { OAuthController } from './oauth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { EmailQueueModule } from '../email-queue/email-queue.module';
+import { TenantsModule } from '../tenants/tenants.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { EmailQueueModule } from '../email-queue/email-queue.module';
       }),
     }),
     EmailQueueModule,
+    TenantsModule,
   ],
   providers: [AuthService, OAuthService, JwtStrategy, LocalStrategy],
   controllers: [AuthController, OAuthController],
