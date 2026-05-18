@@ -185,4 +185,105 @@ describe('SuperAdmin Auth (e2e)', () => {
         .expect(401);
     });
   });
+
+  describe('GET /super-admin/tenants/:id', () => {
+    let tenantId: string;
+
+    beforeAll(async () => {
+      // Create a tenant to fetch
+      const res = await request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Detail Tenant', slug: `detail-${Date.now()}` });
+      tenantId = res.body.id;
+    });
+
+    it('with valid id → 200 + tenant data', () => {
+      return request(app.getHttpServer())
+        .get(`/super-admin/tenants/${tenantId}`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body.id).toBe(tenantId);
+          expect(body.slug).toBeDefined();
+          expect(body.name).toBe('Detail Tenant');
+        });
+    });
+
+    it('with non-existent id → 404', () => {
+      return request(app.getHttpServer())
+        .get('/super-admin/tenants/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .expect(404);
+    });
+
+    it('without token → 401', () => {
+      return request(app.getHttpServer())
+        .get(`/super-admin/tenants/${tenantId}`)
+        .expect(401);
+    });
+  });
+
+  describe('PATCH /super-admin/tenants/:id', () => {
+    let tenantId: string;
+    const originalSlug = `patch-test-${Date.now()}`;
+
+    beforeAll(async () => {
+      const res = await request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Patch Tenant', slug: originalSlug });
+      tenantId = res.body.id;
+    });
+
+    it('with valid fields → 200 + updated data', () => {
+      return request(app.getHttpServer())
+        .patch(`/super-admin/tenants/${tenantId}`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Updated Name' })
+        .expect(200)
+        .expect(({ body }) => {
+          expect(body.name).toBe('Updated Name');
+          expect(body.id).toBe(tenantId);
+        });
+    });
+
+    it('with slug "app" → 400', () => {
+      return request(app.getHttpServer())
+        .patch(`/super-admin/tenants/${tenantId}`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ slug: 'app' })
+        .expect(400);
+    });
+
+    it('with duplicate slug → 409', async () => {
+      // Create another tenant
+      const otherSlug = `other-${Date.now()}`;
+      await request(app.getHttpServer())
+        .post('/super-admin/tenants')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Other', slug: otherSlug });
+
+      return request(app.getHttpServer())
+        .patch(`/super-admin/tenants/${tenantId}`)
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ slug: otherSlug })
+        .expect(409);
+    });
+
+    it('with non-existent id → 404', () => {
+      return request(app.getHttpServer())
+        .patch('/super-admin/tenants/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${superAdminToken}`)
+        .send({ name: 'Ghost' })
+        .expect(404);
+    });
+
+    it('without token → 401', () => {
+      return request(app.getHttpServer())
+        .patch(`/super-admin/tenants/${tenantId}`)
+        .send({ name: 'No Auth' })
+        .expect(401);
+    });
+  });
 });

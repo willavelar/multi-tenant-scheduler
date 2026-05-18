@@ -1,10 +1,11 @@
-import { Body, Controller, Get, HttpCode, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { SuperAdminService } from './super-admin.service';
 import { SuperAdminLoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../common/guards/super-admin.guard';
 import { ListTenantsQueryDto } from './dto/list-tenants-query.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';
+import { UpdateTenantDto } from './dto/update-tenant.dto';
 
 @Controller('super-admin')
 export class SuperAdminController {
@@ -26,5 +27,17 @@ export class SuperAdminController {
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
   listTenants(@Query() query: ListTenantsQueryDto) {
     return this.superAdminService.listTenants(query.page, query.limit);
+  }
+
+  @Get('tenants/:id')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  getTenant(@Param('id') id: string) {
+    return this.superAdminService.getTenant(id);
+  }
+
+  @Patch('tenants/:id')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  updateTenant(@Param('id') id: string, @Body() dto: UpdateTenantDto) {
+    return this.superAdminService.updateTenant(id, dto);
   }
 }
