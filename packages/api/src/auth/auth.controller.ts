@@ -55,13 +55,6 @@ export class AuthController {
     return this.authService.logout(refreshToken);
   }
 
-  @Get('clients')
-  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
-  @Roles('tenant_admin', 'professional')
-  listClients(@TenantId() tenantId: string, @Query('q') q?: string) {
-    return this.authService.listClients(tenantId, q);
-  }
-
   @Post('forgot-password')
   @HttpCode(200)
   async forgotPassword(

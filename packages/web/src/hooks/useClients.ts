@@ -33,7 +33,7 @@ export function useSearchClients(q: string) {
   const { slug } = useTenant()
   return useQuery<Client[]>({
     queryKey: ['clients', slug, 'search', q],
-    queryFn: async () => (await api(`/auth/clients?q=${encodeURIComponent(q)}`)).json(),
+    queryFn: async () => (await api(`/clients/search?q=${encodeURIComponent(q)}`)).json(),
     enabled: q.length >= 3,
   })
 }

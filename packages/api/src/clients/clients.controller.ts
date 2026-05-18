@@ -37,6 +37,16 @@ export class ClientsController {
     );
   }
 
+  @Get('search')
+  @Roles('tenant_admin', 'professional')
+  search(
+    @TenantId() tenantId: string,
+    @Query('q') q?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.service.search(tenantId, q, parseInt(limit ?? '20', 10) || 20);
+  }
+
   @Get(':id')
   @Roles('tenant_admin', 'professional')
   findOne(@Param('id') id: string, @TenantId() tenantId: string) {

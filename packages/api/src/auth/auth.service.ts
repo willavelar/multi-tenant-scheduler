@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { createHash, randomBytes } from 'crypto';
 import { sendInviteEmail } from './invite.helper';
-import { eq, and, or, ilike, isNull } from 'drizzle-orm';
+import { eq, and, isNull } from 'drizzle-orm';
 import { users, clientProfiles, refreshTokens } from '@scheduler/shared';
 import Redis from 'ioredis';
 import { DB, DrizzleDB } from '../database/database.module';
@@ -69,20 +69,6 @@ export class AuthService {
       if (!user.active) throw new UnauthorizedException();
 
       return user;
-    });
-  }
-
-  async listClients(tenantId: string, q?: string) {
-    return withTenant(this.db, tenantId, (tx) => {
-      const base = and(eq(users.tenantId, tenantId), eq(users.role, 'client'));
-      const where = q
-        ? and(base, or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`)))
-        : base;
-      return tx
-        .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, createdAt: users.createdAt, avatarUrl: users.avatarUrl })
-        .from(users)
-        .where(where)
-        .limit(20);
     });
   }
 

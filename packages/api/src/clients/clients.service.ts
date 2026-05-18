@@ -102,6 +102,20 @@ export class ClientsService {
     });
   }
 
+  async search(tenantId: string, q?: string, limit = 20) {
+    return withTenant(this.db, tenantId, (tx) => {
+      const base = and(eq(users.tenantId, tenantId), eq(users.role, 'client'));
+      const where = q
+        ? and(base, or(ilike(users.name, `%${q}%`), ilike(users.email, `%${q}%`)))
+        : base;
+      return tx
+        .select({ id: users.id, name: users.name, email: users.email, phone: users.phone, createdAt: users.createdAt, avatarUrl: users.avatarUrl })
+        .from(users)
+        .where(where)
+        .limit(Math.min(limit, 50));
+    });
+  }
+
   async findOne(userId: string, tenantId: string) {
     return withTenant(this.db, tenantId, async (tx) => {
       const [row] = await tx
