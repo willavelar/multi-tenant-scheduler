@@ -43,6 +43,8 @@ async function seed() {
   console.log('Resetting data...');
   // TRUNCATE bypasses RLS and cascades FK-dependent tables in one shot
   await client.query('TRUNCATE tenants CASCADE');
+  // Super admin users have tenantId = null so they survive the cascade — delete explicitly
+  await client.query("DELETE FROM users WHERE tenant_id IS NULL AND role = 'super_admin'");
   // Flush tenant slug cache so stale IDs don't survive across seeds
   const cachedKeys = await redis.keys('tenant:slug:*');
   if (cachedKeys.length) await redis.del(...cachedKeys);
@@ -59,6 +61,17 @@ async function seed() {
   await client.query('SELECT set_config($1, $2, false)', ['app.current_tenant_id', tenant.id]);
 
   const passwordHash = await bcrypt.hash('password123', 10);
+
+  // ── Super Admin (tenantId = null — not scoped to any tenant) ─────────────
+  await db.insert(schema.users).values({
+    tenantId: null,
+    email: 'superadmin@platform.com',
+    passwordHash: await bcrypt.hash('superadmin123', 10),
+    role: 'super_admin',
+    name: 'Super Admin',
+    active: true,
+  });
+  console.log('Super Admin: superadmin@platform.com / superadmin123');
 
   // ── Admin ─────────────────────────────────────────────────────────────────
   const [admin] = await db.insert(schema.users).values({
