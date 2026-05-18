@@ -77,6 +77,26 @@ describe('AppointmentsService.updateStatus', () => {
       service.updateStatus('nonexistent', 'cancelled_by_client', 'tenant-1', 'user-1', 'client'),
     ).rejects.toThrow(NotFoundException);
   });
+
+  it('sets status to completed regardless of allowPaidStatus', async () => {
+    mockFetchWhere.mockResolvedValue([{ id: 'appt-1', status: 'confirmed', tenantId: 'tenant-1' }]);
+    mockReturning.mockResolvedValue([{ id: 'appt-1', status: 'completed' }]);
+
+    await expect(
+      service.updateStatus('appt-1', 'completed', 'tenant-1', 'user-1', 'professional'),
+    ).resolves.not.toThrow();
+
+    expect(mockSet).toHaveBeenCalledWith({ status: 'completed' });
+  });
+
+  it('does not throw BadRequestException for completed when allowPaidStatus would be false', async () => {
+    mockFetchWhere.mockResolvedValue([{ id: 'appt-1', status: 'confirmed', tenantId: 'tenant-1' }]);
+    mockReturning.mockResolvedValue([{ id: 'appt-1', status: 'completed' }]);
+
+    await expect(
+      service.updateStatus('appt-1', 'completed', 'tenant-1', 'user-1', 'professional'),
+    ).resolves.not.toThrow();
+  });
 });
 
 describe('AppointmentsService.create', () => {

@@ -362,16 +362,6 @@ export class AppointmentsService {
     reason?: string,
   ) {
     const updated = await withTenant(this.db, tenantId, async (tx) => {
-      if (status === 'completed') {
-        const [tenant] = await tx
-          .select({ allowPaidStatus: tenants.allowPaidStatus })
-          .from(tenants)
-          .where(eq(tenants.id, tenantId));
-        if (!tenant?.allowPaidStatus) {
-          throw new BadRequestException('Paid status is not enabled for this tenant');
-        }
-      }
-
       const [appt] = await tx
         .select()
         .from(appointments)
