@@ -8,6 +8,16 @@ export function middleware(request: NextRequest) {
   const parts = host.split('.')
   const slug = parts.length >= 2 ? parts[0] : null
 
+  // Super admin: app.lvh.me/* → rewrite to /_admin/*
+  if (slug === 'app') {
+    const url = request.nextUrl.clone()
+    const targetPath = url.pathname === '/' ? '/tenants' : url.pathname
+    url.pathname = `/_admin${targetPath}`
+    const reqHeaders = new Headers(request.headers)
+    reqHeaders.set('x-is-superadmin', 'true')
+    return NextResponse.rewrite(url, { request: { headers: reqHeaders } })
+  }
+
   const { pathname } = request.nextUrl
   const isProtected = PROTECTED.some((p) => pathname === p || pathname.startsWith(p + '/'))
 
