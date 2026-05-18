@@ -3,7 +3,7 @@
 import { use } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { superAdminFetch } from '@/lib/super-admin-api'
+import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
 
 type Tenant = {
   id: string
@@ -43,7 +43,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="max-w-2xl">
         <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-          {error.message.includes('404') ? 'Tenant não encontrado.' : 'Erro ao carregar tenant.'}
+          {error instanceof SuperAdminApiError && error.status === 404 ? 'Tenant não encontrado.' : 'Erro ao carregar tenant.'}
         </div>
       </div>
     )

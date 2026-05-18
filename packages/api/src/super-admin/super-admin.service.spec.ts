@@ -165,4 +165,83 @@ describe('SuperAdminService', () => {
       expect(result).toEqual(fakeTenant);
     });
   });
+
+  // ────────────────────────────────────────────────────────
+  // listTenants
+  // ────────────────────────────────────────────────────────
+
+  describe('listTenants', () => {
+    it('returns paginated tenants with total count', async () => {
+      const fakeTenants = [
+        { id: 't1', name: 'Clinic A', slug: 'clinic-a', createdAt: new Date() },
+        { id: 't2', name: 'Clinic B', slug: 'clinic-b', createdAt: new Date() },
+      ];
+
+      mockDb.select
+        .mockReturnValueOnce({
+          from: jest.fn().mockReturnValue({
+            orderBy: jest.fn().mockReturnValue({
+              limit: jest.fn().mockReturnValue({
+                offset: jest.fn().mockResolvedValue(fakeTenants),
+              }),
+            }),
+          }),
+        })
+        .mockReturnValueOnce({
+          from: jest.fn().mockResolvedValue([{ value: 2 }]),
+        });
+
+      const result = await service.listTenants(1, 20);
+
+      expect(result.data).toEqual(fakeTenants);
+      expect(result.total).toBe(2);
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(20);
+    });
+  });
+
+  // ────────────────────────────────────────────────────────
+  // updateTenant
+  // ────────────────────────────────────────────────────────
+
+  describe('updateTenant', () => {
+    it('throws BadRequestException when slug is reserved (app)', async () => {
+      await expect(
+        service.updateTenant('tenant-1', { slug: 'app' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws ConflictException when DB returns error code 23505', async () => {
+      const mockReturning = jest.fn().mockRejectedValue({ code: '23505' });
+      const mockWhere = jest.fn().mockReturnValue({ returning: mockReturning });
+      const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+      mockDb.update.mockReturnValue({ set: mockSet });
+
+      await expect(
+        service.updateTenant('tenant-1', { slug: 'new-slug' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('throws NotFoundException when tenant does not exist', async () => {
+      const mockReturning = jest.fn().mockResolvedValue([]);
+      const mockWhere = jest.fn().mockReturnValue({ returning: mockReturning });
+      const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+      mockDb.update.mockReturnValue({ set: mockSet });
+
+      await expect(
+        service.updateTenant('nonexistent', { name: 'New Name' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('returns updated tenant on success', async () => {
+      const updated = { id: 'tenant-1', name: 'Updated', slug: 'my-clinic' };
+      const mockReturning = jest.fn().mockResolvedValue([updated]);
+      const mockWhere = jest.fn().mockReturnValue({ returning: mockReturning });
+      const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
+      mockDb.update.mockReturnValue({ set: mockSet });
+
+      const result = await service.updateTenant('tenant-1', { name: 'Updated' });
+      expect(result).toEqual(updated);
+    });
+  });
 });
