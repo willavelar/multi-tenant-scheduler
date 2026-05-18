@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SuperAdminService } from './super-admin.service';
+import { SuperAdminController } from './super-admin.controller';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { SuperAdminService } from './super-admin.service';
       }),
     }),
   ],
+  controllers: [SuperAdminController],
   providers: [SuperAdminService],
   exports: [SuperAdminService],
 })
