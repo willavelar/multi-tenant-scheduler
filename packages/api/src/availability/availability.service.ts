@@ -105,11 +105,16 @@ export class AvailabilityService {
     );
   }
 
-  async getAvailableSlots(professionalId: string, date: string, tenantId: string): Promise<string[]> {
+  async getAvailableSlots(
+    professionalId: string,
+    date: string,
+    tenantId: string,
+    tx?: DrizzleDB,
+  ): Promise<string[]> {
     const dayOfWeek = new Date(date).getUTCDay();
 
-    return withTenant(this.db, tenantId, async (tx) => {
-      const [baseAvail] = await tx
+    const run = async (db: DrizzleDB) => {
+      const [baseAvail] = await db
         .select()
         .from(weeklyAvailability)
         .where(
@@ -127,7 +132,7 @@ export class AvailabilityService {
         baseAvail.slotDurationMinutes,
       );
 
-      const exceptions = await tx
+      const exceptions = await db
         .select()
         .from(scheduleExceptions)
         .where(
@@ -152,7 +157,7 @@ export class AvailabilityService {
       const dayStart = new Date(`${date}T00:00:00Z`);
       const dayEnd = new Date(`${date}T23:59:59Z`);
 
-      const booked = await tx
+      const booked = await db
         .select({ startsAt: appointments.startsAt })
         .from(appointments)
         .where(
@@ -168,6 +173,8 @@ export class AvailabilityService {
         .map(a => `${a.startsAt.getUTCHours().toString().padStart(2, '0')}:${a.startsAt.getUTCMinutes().toString().padStart(2, '0')}`);
 
       return this.slotsService.subtractBooked(allSlots, bookedTimes, baseAvail.slotDurationMinutes);
-    });
+    };
+
+    return tx ? run(tx) : withTenant(this.db, tenantId, run);
   }
 }
