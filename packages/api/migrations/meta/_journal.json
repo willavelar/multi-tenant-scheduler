@@ -113,6 +113,13 @@
       "when": 1778932968102,
       "tag": "0017_abandoned_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1779065028781,
+      "tag": "0018_salty_kulan_gath",
+      "breakpoints": true
     }
   ]
 }

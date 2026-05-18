@@ -1,4 +1,5 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, text, timestamp, uuid, uniqueIndex } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { tenants } from './tenants.schema';
 import { professionals } from './professionals.schema';
 import { services } from './services.schema';
@@ -20,7 +21,12 @@ export const appointments = pgTable('appointments', {
   notes: text('notes'),
   cancellationReason: text('cancellation_reason'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+}, (t) => ({
+  // drizzle-kit <0.22 drops the .where() predicate in generated SQL — migration 0018 was patched manually
+  noDoubleBooking: uniqueIndex('appointments_professional_starts_at_active_uniq')
+    .on(t.professionalId, t.startsAt)
+    .where(sql`status IN ('pending', 'confirmed')`),
+}));
 
 export type Appointment = typeof appointments.$inferSelect;
 export type NewAppointment = typeof appointments.$inferInsert;
