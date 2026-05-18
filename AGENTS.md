@@ -164,3 +164,4 @@ For frontend-specific architecture (routing, styling, API integration, environme
 - **Drizzle ORM** for all DB access. Schema changes require `pnpm db:generate` → `pnpm db:migrate`. Never hand-edit migration files.
 - **Frontend**: see [`packages/web/AGENTS.md`](packages/web/AGENTS.md) for styling, routing, and Next.js-specific conventions.
 - Tests: Jest for unit tests; separate `jest-e2e.json` config for e2e tests that hit a real database.
+- **Git authorship**: never add `Co-Authored-By: Claude` (or any AI model) to commit messages. Commits must have only the developer as author.
