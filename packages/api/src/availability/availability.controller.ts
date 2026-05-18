@@ -51,6 +51,7 @@ export class AvailabilityController {
   }
 
   @Get('exceptions/:professionalId')
+  @Roles('tenant_admin', 'professional')
   getExceptions(
     @Param('professionalId') professionalId: string,
     @TenantId() tenantId: string,
