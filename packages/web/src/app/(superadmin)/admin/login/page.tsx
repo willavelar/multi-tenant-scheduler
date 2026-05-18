@@ -22,7 +22,7 @@ export default function SuperAdminLoginPage() {
 
   // If already authenticated, redirect to tenants list
   useEffect(() => {
-    if (user) router.replace('/_admin/tenants')
+    if (user) router.replace('/tenants')
   }, [user, router])
 
   const {
@@ -35,7 +35,7 @@ export default function SuperAdminLoginPage() {
   async function onSubmit(data: FormData) {
     try {
       await login(data.email, data.password)
-      router.replace('/_admin/tenants')
+      router.replace('/tenants')
     } catch (err) {
       if (err instanceof SuperAdminApiError && err.status === 401) {
         setError('root', { message: 'Email ou senha inválidos' })

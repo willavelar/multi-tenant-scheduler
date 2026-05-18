@@ -1,23 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { use, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
+import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
 import { cn } from '@/lib/utils'
-
-function nameToSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-}
 
 const schema = z.object({
   name: z.string().min(1, 'Informe o nome'),
@@ -30,42 +20,56 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-export default function NewTenantPage() {
+type Tenant = {
+  id: string
+  slug: string
+  name: string
+}
+
+export default function EditTenantPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const router = useRouter()
+
+  const { data: tenant, isLoading } = useQuery({
+    queryKey: ['sa-tenant', id],
+    queryFn: async () => {
+      const res = await superAdminFetch(`/super-admin/tenants/${id}`)
+      return res.json() as Promise<Tenant>
+    },
+  })
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     setError,
-    watch,
-    setValue,
+    reset,
   } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  const nameValue = watch('name')
-
-  // Auto-generate slug from name
+  // Pre-populate form when tenant data loads
   useEffect(() => {
-    if (nameValue) {
-      setValue('slug', nameToSlug(nameValue), { shouldValidate: false })
+    if (tenant) {
+      reset({ name: tenant.name, slug: tenant.slug })
     }
-  }, [nameValue, setValue])
+  }, [tenant, reset])
 
   async function onSubmit(data: FormData) {
     try {
-      const res = await superAdminFetch('/super-admin/tenants', {
-        method: 'POST',
-        body: JSON.stringify({ name: data.name, slug: data.slug }),
+      await superAdminFetch(`/super-admin/tenants/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
       })
-      const tenant = await res.json()
-      router.push(`/_admin/tenants/${tenant.id}`)
+      router.push(`/tenants/${id}`)
     } catch (err) {
       if (err instanceof SuperAdminApiError) {
         if (err.status === 409) {
           setError('slug', { message: 'Slug já em uso' })
         } else if (err.status === 400) {
           setError('root', { message: err.message || 'Dados inválidos' })
+        } else if (err.status === 404) {
+          setError('root', { message: 'Tenant não encontrado.' })
         } else {
-          setError('root', { message: 'Erro ao criar tenant. Tente novamente.' })
+          setError('root', { message: 'Erro ao salvar. Tente novamente.' })
         }
       } else {
         setError('root', { message: 'Erro inesperado. Tente novamente.' })
@@ -73,16 +77,24 @@ export default function NewTenantPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-40 text-muted-foreground text-sm">
+        Carregando...
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-lg">
       <div className="flex items-center gap-4 mb-6">
         <button
-          onClick={() => router.push('/_admin/tenants')}
+          onClick={() => router.push(`/tenants/${id}`)}
           className="text-muted-foreground hover:text-foreground text-sm transition-colors"
         >
-          ← Tenants
+          ← Detalhe
         </button>
-        <h1 className="text-xl font-semibold text-foreground">Novo Tenant</h1>
+        <h1 className="text-xl font-semibold text-foreground">Editar Tenant</h1>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-6">
@@ -94,7 +106,6 @@ export default function NewTenantPage() {
             <input
               id="name"
               type="text"
-              placeholder="Clínica Saúde"
               {...register('name')}
               className={cn(
                 'w-full h-11 px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-muted-foreground',
@@ -114,7 +125,6 @@ export default function NewTenantPage() {
             <input
               id="slug"
               type="text"
-              placeholder="clinica-saude"
               {...register('slug')}
               className={cn(
                 'w-full h-11 px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-muted-foreground font-mono',
@@ -135,7 +145,7 @@ export default function NewTenantPage() {
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={() => router.push('/_admin/tenants')}
+              onClick={() => router.push(`/tenants/${id}`)}
               className="flex-1 h-11 border border-border text-foreground text-sm font-medium rounded-lg hover:bg-accent transition-colors"
             >
               Cancelar
@@ -145,7 +155,7 @@ export default function NewTenantPage() {
               disabled={isSubmitting}
               className="flex-1 h-11 bg-blue-600 text-white text-sm font-semibold rounded-lg border-0 cursor-pointer hover:bg-blue-700 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Criando...' : 'Criar Tenant'}
+              {isSubmitting ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </form>

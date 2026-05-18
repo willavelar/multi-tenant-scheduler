@@ -17,7 +17,7 @@ export function SuperAdminShell({ children }: { children: React.ReactNode }) {
     if (!hydrated || isLoading) return
     // Don't redirect when on the login page
     if (!user && !pathname.includes('/login')) {
-      router.replace('/_admin/login')
+      router.replace('/login')
     }
   }, [hydrated, isLoading, user, pathname, router])
 
@@ -39,7 +39,7 @@ export function SuperAdminShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 p-4">
           <Link
-            href="/_admin/tenants"
+            href="/tenants"
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-foreground hover:bg-accent transition-colors"
           >
             Tenants

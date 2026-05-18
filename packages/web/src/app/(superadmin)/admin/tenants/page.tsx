@@ -37,7 +37,7 @@ export default function TenantsPage() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-foreground">Tenants</h1>
         <button
-          onClick={() => router.push('/_admin/tenants/new')}
+          onClick={() => router.push('/tenants/new')}
           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
           Novo Tenant
@@ -78,7 +78,7 @@ export default function TenantsPage() {
                 {data.data.map((tenant) => (
                   <tr
                     key={tenant.id}
-                    onClick={() => router.push(`/_admin/tenants/${tenant.id}`)}
+                    onClick={() => router.push(`/tenants/${tenant.id}`)}
                     className="border-b border-border last:border-0 hover:bg-accent cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-foreground">{tenant.name}</td>

@@ -65,7 +65,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/_admin/tenants')}
+            onClick={() => router.push('/tenants')}
             className="text-muted-foreground hover:text-foreground text-sm transition-colors"
           >
             ← Tenants
@@ -73,7 +73,7 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
           <h1 className="text-xl font-semibold text-foreground">{tenant.name}</h1>
         </div>
         <button
-          onClick={() => router.push(`/_admin/tenants/${id}/edit`)}
+          onClick={() => router.push(`/tenants/${id}/edit`)}
           className="px-4 py-2 border border-border text-foreground text-sm font-medium rounded-lg hover:bg-accent transition-colors"
         >
           Editar

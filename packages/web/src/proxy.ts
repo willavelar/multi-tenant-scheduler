@@ -2,20 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const PROTECTED = ['/dashboard', '/appointments']
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? ''
   // Extract subdomain: "clinica-demo.lvh.me:3000" → "clinica-demo"
   const parts = host.split('.')
   const slug = parts.length >= 2 ? parts[0] : null
 
-  // Super admin: app.lvh.me/* → rewrite to /_admin/*
+  // Super admin: app.lvh.me/* → rewrite to /admin/*
   if (slug === 'app') {
-    const url = request.nextUrl.clone()
-    const targetPath = url.pathname === '/' ? '/tenants' : url.pathname
-    url.pathname = `/_admin${targetPath}`
+    const { pathname, search, port } = request.nextUrl
+    const targetPath = pathname === '/' ? '/tenants' : pathname
+    // Use localhost so Docker can resolve the rewrite target internally
+    const rewriteUrl = new URL(`/admin${targetPath}${search}`, `http://localhost:${port || 3000}`)
     const reqHeaders = new Headers(request.headers)
     reqHeaders.set('x-is-superadmin', 'true')
-    return NextResponse.rewrite(url, { request: { headers: reqHeaders } })
+    return NextResponse.rewrite(rewriteUrl, { request: { headers: reqHeaders } })
   }
 
   const { pathname } = request.nextUrl

@@ -40,7 +40,6 @@ services:
       - ./packages/web/src:/app/packages/web/src
       - ./packages/web/public:/app/packages/web/public
       - ./packages/web/next.config.ts:/app/packages/web/next.config.ts
-      - ./packages/web/middleware.ts:/app/packages/web/middleware.ts
     depends_on:
       api:
         condition: service_started
