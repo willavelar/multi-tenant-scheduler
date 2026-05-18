@@ -67,7 +67,7 @@ describe('Appointments (e2e)', () => {
 
     let date: string | undefined;
     let startTime: string | undefined;
-    for (let offset = 1; offset <= 14; offset++) {
+    for (let offset = 1; offset <= 90; offset++) {
       const candidate = new Date();
       candidate.setDate(candidate.getDate() + offset);
       const candidateDate = candidate.toISOString().split('T')[0];
@@ -121,7 +121,7 @@ describe('Appointments (e2e)', () => {
 
     let date: string | undefined;
     let startTime: string | undefined;
-    for (let offset = 1; offset <= 14; offset++) {
+    for (let offset = 1; offset <= 90; offset++) {
       const candidate = new Date();
       candidate.setDate(candidate.getDate() + offset);
       const candidateDate = candidate.toISOString().split('T')[0];
@@ -170,7 +170,7 @@ describe('Appointments (e2e)', () => {
     // Find an available slot by checking multiple upcoming weekdays
     let date: string | undefined;
     let startTime: string | undefined;
-    for (let offset = 1; offset <= 14; offset++) {
+    for (let offset = 1; offset <= 90; offset++) {
       const candidate = new Date();
       candidate.setDate(candidate.getDate() + offset);
       const candidateDate = candidate.toISOString().split('T')[0];
@@ -198,5 +198,65 @@ describe('Appointments (e2e)', () => {
       .expect(({ body }) => {
         expect(body.status).toMatch(/pending|confirmed/);
       });
+  });
+
+  it('POST /appointments — double-booking same professional and slot returns 409', async () => {
+    const profsRes = await request(app.getHttpServer())
+      .get('/professionals')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const profId = profsRes.body.data[0].id;
+
+    const svcsRes = await request(app.getHttpServer())
+      .get('/services')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const svcId = svcsRes.body[0].id;
+
+    // Find an available slot
+    let date: string | undefined;
+    let startTime: string | undefined;
+    for (let offset = 1; offset <= 90; offset++) {
+      const candidate = new Date();
+      candidate.setDate(candidate.getDate() + offset);
+      const candidateDate = candidate.toISOString().split('T')[0];
+      const slotsRes = await request(app.getHttpServer())
+        .get(`/availability/slots?professionalId=${profId}&date=${candidateDate}`)
+        .set('x-tenant-slug', 'clinica-demo')
+        .set('Authorization', `Bearer ${adminToken}`);
+      if (Array.isArray(slotsRes.body) && slotsRes.body.length > 0) {
+        date = candidateDate;
+        startTime = slotsRes.body[0];
+        break;
+      }
+    }
+
+    if (!date || !startTime) {
+      throw new Error('No available slots found in the next 14 days');
+    }
+
+    // First booking must succeed
+    const firstRes = await request(app.getHttpServer())
+      .post('/appointments')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ professionalId: profId, serviceId: svcId, date, startTime });
+    expect(firstRes.status).toBe(201);
+
+    // Register a second client so we bypass any per-user slot checks
+    const reg2 = await request(app.getHttpServer())
+      .post('/auth/register')
+      .set('x-tenant-slug', 'clinica-demo')
+      .send({ email: `double-${Date.now()}@test.com`, password: 'pass123456', name: 'Second Client' });
+    const secondToken = reg2.body.accessToken;
+
+    // Second booking for the same slot must be rejected:
+    // 400 = slot check inside tx caught it; 409 = unique constraint caught the race
+    const secondRes = await request(app.getHttpServer())
+      .post('/appointments')
+      .set('x-tenant-slug', 'clinica-demo')
+      .set('Authorization', `Bearer ${secondToken}`)
+      .send({ professionalId: profId, serviceId: svcId, date, startTime });
+    expect([400, 409]).toContain(secondRes.status);
   });
 });

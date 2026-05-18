@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, eq, count, desc, gte, lte, notInArray } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import {
@@ -47,14 +47,15 @@ export class AppointmentsService {
       dto.clientId && (userRole === 'tenant_admin' || userRole === 'professional')
         ? dto.clientId
         : userId;
-    const availableSlots = await this.availabilityService.getAvailableSlots(
-      dto.professionalId, dto.date, tenantId,
-    );
-    if (!availableSlots.includes(dto.startTime)) {
-      throw new BadRequestException('Selected slot is not available');
-    }
 
     const appointment = await withTenant(this.db, tenantId, async (tx) => {
+      const availableSlots = await this.availabilityService.getAvailableSlots(
+        dto.professionalId, dto.date, tenantId, tx,
+      );
+      if (!availableSlots.includes(dto.startTime)) {
+        throw new BadRequestException('Selected slot is not available');
+      }
+
       const [svc] = await tx
         .select({ durationMinutes: services.durationMinutes })
         .from(services)
@@ -135,17 +136,21 @@ export class AppointmentsService {
         status = isPrivileged && dto.initialStatus ? dto.initialStatus : 'pending';
       }
 
-      const [appt] = await tx.insert(appointments).values({
-        tenantId,
-        professionalId: dto.professionalId,
-        serviceId: dto.serviceId,
-        clientId,
-        startsAt,
-        endsAt,
-        status,
-      }).returning();
-
-      return appt;
+      try {
+        const [appt] = await tx.insert(appointments).values({
+          tenantId,
+          professionalId: dto.professionalId,
+          serviceId: dto.serviceId,
+          clientId,
+          startsAt,
+          endsAt,
+          status,
+        }).returning();
+        return appt;
+      } catch (err: any) {
+        if (err.code === '23505') throw new ConflictException('Slot no longer available');
+        throw err;
+      }
     });
 
     await this.notificationsService.dispatch({
