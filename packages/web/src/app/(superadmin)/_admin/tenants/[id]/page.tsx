@@ -1,0 +1,93 @@
+'use client'
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import Link from 'next/link'
+import { useParams } from 'next/navigation'
+import { superAdminFetch } from '@/lib/super-admin-api'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+
+interface Tenant {
+  id: string
+  slug: string
+  name: string
+  active: boolean
+  createdAt: string
+}
+
+export default function TenantDetailPage() {
+  const { id } = useParams<{ id: string }>()
+  const queryClient = useQueryClient()
+
+  const { data: tenant, isLoading, isError } = useQuery<Tenant>({
+    queryKey: ['sa-tenant', id],
+    queryFn: async () => {
+      const res = await superAdminFetch(`/super-admin/tenants/${id}`)
+      return res.json()
+    },
+  })
+
+  const toggleActive = useMutation({
+    mutationFn: async (active: boolean) => {
+      const res = await superAdminFetch(`/super-admin/tenants/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ active }),
+      })
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sa-tenant', id] })
+      queryClient.invalidateQueries({ queryKey: ['sa-tenants'] })
+    },
+  })
+
+  if (isLoading) return <p className="text-muted-foreground text-sm">Carregando...</p>
+  if (isError || !tenant) return <p className="text-destructive text-sm">Tenant não encontrado.</p>
+
+  return (
+    <div className="max-w-lg space-y-6">
+      <div className="flex items-center gap-4">
+        <Link href="/_admin/tenants" className="text-sm text-muted-foreground hover:underline">
+          ← Tenants
+        </Link>
+        <h1 className="text-2xl font-semibold">{tenant.name}</h1>
+        <span className={cn(
+          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+          tenant.active
+            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+            : 'bg-muted text-muted-foreground',
+        )}>
+          {tenant.active ? 'Ativo' : 'Inativo'}
+        </span>
+      </div>
+
+      <dl className="space-y-3 text-sm">
+        <div className="flex gap-4">
+          <dt className="w-24 text-muted-foreground">Slug</dt>
+          <dd className="font-mono">{tenant.slug}</dd>
+        </div>
+        <div className="flex gap-4">
+          <dt className="w-24 text-muted-foreground">ID</dt>
+          <dd className="font-mono text-xs text-muted-foreground">{tenant.id}</dd>
+        </div>
+        <div className="flex gap-4">
+          <dt className="w-24 text-muted-foreground">Criado em</dt>
+          <dd>{new Date(tenant.createdAt).toLocaleDateString('pt-BR')}</dd>
+        </div>
+      </dl>
+
+      <div className="flex gap-3 pt-2 border-t">
+        <Button asChild>
+          <Link href={`/_admin/tenants/${id}/edit`}>Editar</Link>
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => toggleActive.mutate(!tenant.active)}
+          disabled={toggleActive.isPending}
+        >
+          {tenant.active ? 'Desativar' : 'Reativar'}
+        </Button>
+      </div>
+    </div>
+  )
+}
