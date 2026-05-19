@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
-import { useRouter } from 'next/navigation'
 import { useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
-import { cn } from '@/lib/utils'
 import { SuperAdminApiError } from '@/lib/super-admin-api'
+import { cn } from '@/lib/utils'
 
 const schema = z.object({
   email:    z.string().email('Informe um e-mail válido'),
@@ -17,99 +16,73 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function SuperAdminLoginPage() {
-  const { login, user } = useSuperAdminAuth()
-  const router = useRouter()
+  const { login } = useSuperAdminAuth()
+  const [error, setError] = useState<string | null>(null)
 
-  // If already authenticated, redirect to tenants list
-  useEffect(() => {
-    if (user) router.replace('/_admin/tenants')
-  }, [user, router])
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  })
 
   async function onSubmit(data: FormData) {
+    setError(null)
     try {
       await login(data.email, data.password)
-      router.replace('/_admin/tenants')
     } catch (err) {
-      if (err instanceof SuperAdminApiError && err.status === 401) {
-        setError('root', { message: 'Email ou senha inválidos' })
-      } else {
-        setError('root', { message: 'Erro ao fazer login. Tente novamente.' })
-      }
+      setError(err instanceof SuperAdminApiError && err.status === 401
+        ? 'Credenciais inválidas'
+        : 'Erro inesperado. Tente novamente.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Super Admin</h1>
-          <p className="text-sm text-muted-foreground">Acesso restrito à plataforma</p>
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-full max-w-sm space-y-6 p-8 border rounded-xl bg-card shadow-sm">
+        <div>
+          <h1 className="text-xl font-semibold">Admin Panel</h1>
+          <p className="text-sm text-muted-foreground mt-1">Acesso restrito</p>
         </div>
 
-        <div className="bg-card rounded-xl p-8 border border-border shadow-sm">
-          <form onSubmit={handleSubmit(onSubmit)} noValidate>
-            <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1.5">
-                E-mail
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                placeholder="admin@example.com"
-                {...register('email')}
-                className={cn(
-                  'w-full h-11 px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-muted-foreground',
-                  errors.email ? 'border-destructive' : 'border-border',
-                )}
-              />
-              {errors.email && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.email.message}</p>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-1">
+            <label className="text-sm font-medium">E-mail</label>
+            <input
+              {...register('email')}
+              type="email"
+              autoComplete="email"
+              className={cn(
+                'w-full rounded-md border bg-background px-3 py-2 text-sm',
+                'focus:outline-none focus:ring-2 focus:ring-ring',
+                errors.email && 'border-destructive',
               )}
-            </div>
+            />
+            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+          </div>
 
-            <div className="mb-6">
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1.5">
-                Senha
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                placeholder="••••••••"
-                {...register('password')}
-                className={cn(
-                  'w-full h-11 px-3.5 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 placeholder:text-muted-foreground',
-                  errors.password ? 'border-destructive' : 'border-border',
-                )}
-              />
-              {errors.password && (
-                <p className="mt-1.5 text-xs text-destructive">{errors.password.message}</p>
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Senha</label>
+            <input
+              {...register('password')}
+              type="password"
+              autoComplete="current-password"
+              className={cn(
+                'w-full rounded-md border bg-background px-3 py-2 text-sm',
+                'focus:outline-none focus:ring-2 focus:ring-ring',
+                errors.password && 'border-destructive',
               )}
-            </div>
+            />
+            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+          </div>
 
-            {errors.root && (
-              <div className="mb-4 rounded-lg bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-                {errors.root.message}
-              </div>
-            )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full h-11 bg-blue-600 text-white font-semibold rounded-lg border-0 cursor-pointer flex items-center justify-center hover:bg-blue-700 disabled:opacity-65 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
-        </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isSubmitting ? 'Entrando...' : 'Entrar'}
+          </button>
+        </form>
       </div>
     </div>
   )
