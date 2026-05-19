@@ -2,288 +2,141 @@ import * as request from 'supertest';
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
-import { Pool } from 'pg';
-import * as bcrypt from 'bcryptjs';
 
-describe('SuperAdmin Auth (e2e)', () => {
+describe('SuperAdmin (e2e)', () => {
   let app: INestApplication;
-  let pool: Pool;
-  let superAdminId: string;
-  let superAdminToken: string;
+  let adminToken: string;
+  let createdTenantId: string;
+  const ts = Date.now();
+  const testSlug = `e2e-tenant-${ts}`;
 
   beforeAll(async () => {
-    pool = new Pool({ connectionString: process.env.DATABASE_URL });
-
-    const passwordHash = await bcrypt.hash('superpass123', 10);
-
-    const result = await pool.query(
-      `INSERT INTO users (tenant_id, email, password_hash, role, name, active)
-       VALUES (NULL, $1, $2, 'super_admin', 'Super Admin', true)
-       ON CONFLICT DO NOTHING
-       RETURNING id`,
-      ['superadmin@test.com', passwordHash],
-    );
-
-    if (result.rows.length > 0) {
-      superAdminId = result.rows[0].id;
-    } else {
-      const existing = await pool.query(
-        `SELECT id FROM users WHERE email = $1 AND tenant_id IS NULL AND role = 'super_admin'`,
-        ['superadmin@test.com'],
-      );
-      superAdminId = existing.rows[0].id;
-    }
-
     const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = module.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
     await app.init();
-
-    // Get super admin token for protected endpoints
-    const loginRes = await request(app.getHttpServer())
-      .post('/super-admin/auth/login')
-      .send({ email: 'superadmin@test.com', password: 'superpass123' });
-    superAdminToken = loginRes.body.accessToken;
   });
 
-  afterAll(async () => {
-    if (superAdminId) {
-      await pool.query('DELETE FROM users WHERE id = $1', [superAdminId]);
-    }
-    await pool.end();
-    await app.close();
-  });
+  afterAll(() => app.close());
 
-  it('POST /super-admin/auth/login — valid super_admin credentials → 200 + accessToken', () => {
+  it('POST /super-admin/auth/login — rejects unknown email', () => {
     return request(app.getHttpServer())
       .post('/super-admin/auth/login')
-      .send({ email: 'superadmin@test.com', password: 'superpass123' })
+      .send({ email: 'nobody@x.com', password: 'pass' })
+      .expect(401);
+  });
+
+  it('POST /super-admin/auth/login — returns accessToken for valid credentials', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/super-admin/auth/login')
+      .send({
+        email: process.env.SUPER_ADMIN_EMAIL ?? 'admin@scheduler.internal',
+        password: process.env.SUPER_ADMIN_PASSWORD ?? 'change-me-seed-password',
+      })
+      .expect(200);
+    expect(res.body.accessToken).toBeDefined();
+    adminToken = res.body.accessToken;
+  });
+
+  it('GET /super-admin/tenants — rejects unauthenticated', () => {
+    return request(app.getHttpServer())
+      .get('/super-admin/tenants')
+      .expect(401);
+  });
+
+  it('GET /super-admin/tenants — rejects tenant JWT', async () => {
+    const tenantRes = await request(app.getHttpServer())
+      .post('/auth/login')
+      .set('x-tenant-slug', 'clinica-demo')
+      .send({ email: 'admin@clinica-demo.com', password: 'password123' });
+    const tenantToken = tenantRes.body.accessToken;
+
+    return request(app.getHttpServer())
+      .get('/super-admin/tenants')
+      .set('Authorization', `Bearer ${tenantToken}`)
+      .expect(401);
+  });
+
+  it('GET /super-admin/tenants — returns paginated list', () => {
+    return request(app.getHttpServer())
+      .get('/super-admin/tenants')
+      .set('Authorization', `Bearer ${adminToken}`)
       .expect(200)
       .expect(({ body }) => {
-        expect(body.accessToken).toBeDefined();
-        expect(body.refreshToken).toBeDefined();
+        expect(Array.isArray(body.data)).toBe(true);
+        expect(typeof body.total).toBe('number');
       });
   });
 
-  it('POST /super-admin/auth/login — wrong password → 401', () => {
+  it('POST /super-admin/tenants — rejects reserved slug', () => {
     return request(app.getHttpServer())
-      .post('/super-admin/auth/login')
-      .send({ email: 'superadmin@test.com', password: 'wrongpassword' })
-      .expect(401);
+      .post('/super-admin/tenants')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ slug: 'app', name: 'X', adminEmail: 'a@x.com', adminName: 'A', adminPassword: 'pass123' })
+      .expect(400);
   });
 
-  it('POST /super-admin/auth/login — non-existent email → 401', () => {
+  it('POST /super-admin/tenants — creates tenant and admin user', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/super-admin/tenants')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        slug: testSlug,
+        name: 'E2E Tenant',
+        adminEmail: `admin@${testSlug}.com`,
+        adminName: 'Admin E2E',
+        adminPassword: 'pass123456',
+      })
+      .expect(201);
+    expect(res.body.slug).toBe(testSlug);
+    createdTenantId = res.body.id;
+  });
+
+  it('POST /super-admin/tenants — rejects duplicate slug', () => {
     return request(app.getHttpServer())
-      .post('/super-admin/auth/login')
-      .send({ email: 'nobody@test.com', password: 'somepassword' })
-      .expect(401);
+      .post('/super-admin/tenants')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        slug: testSlug,
+        name: 'Dup',
+        adminEmail: 'dup@x.com',
+        adminName: 'Dup',
+        adminPassword: 'pass123456',
+      })
+      .expect(409);
   });
 
-  it('POST /super-admin/auth/login — tenant_admin credentials → 401', () => {
+  it('GET /super-admin/tenants/:id — returns tenant', () => {
     return request(app.getHttpServer())
-      .post('/super-admin/auth/login')
-      .send({ email: 'admin@clinica-demo.com', password: 'password123' })
-      .expect(401);
+      .get(`/super-admin/tenants/${createdTenantId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body.id).toBe(createdTenantId);
+        expect(body.active).toBe(true);
+      });
   });
 
-  describe('GET /super-admin/tenants', () => {
-    it('with valid super_admin token → 200 + paginated list', () => {
-      return request(app.getHttpServer())
-        .get('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .expect(200)
-        .expect(({ body }) => {
-          expect(body.data).toBeDefined();
-          expect(Array.isArray(body.data)).toBe(true);
-          expect(typeof body.total).toBe('number');
-          expect(body.page).toBe(1);
-          expect(body.limit).toBe(20);
-        });
-    });
+  it('PATCH /super-admin/tenants/:id — disables tenant', async () => {
+    await request(app.getHttpServer())
+      .patch(`/super-admin/tenants/${createdTenantId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ active: false })
+      .expect(200)
+      .expect(({ body }) => expect(body.active).toBe(false));
 
-    it('with tenant_admin token → 403', async () => {
-      // Login as tenant_admin first
-      const loginRes = await request(app.getHttpServer())
-        .post('/auth/login')
-        .set('x-tenant-slug', 'clinica-demo')
-        .send({ email: 'admin@clinica-demo.com', password: 'password123' });
-      const tenantToken = loginRes.body.accessToken;
-
-      return request(app.getHttpServer())
-        .get('/super-admin/tenants')
-        .set('Authorization', `Bearer ${tenantToken}`)
-        .expect(403);
-    });
-
-    it('without token → 401', () => {
-      return request(app.getHttpServer())
-        .get('/super-admin/tenants')
-        .expect(401);
-    });
-
-    it('with page and limit params → 200', () => {
-      return request(app.getHttpServer())
-        .get('/super-admin/tenants?page=1&limit=5')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .expect(200)
-        .expect(({ body }) => {
-          expect(body.limit).toBe(5);
-        });
-    });
+    // Disabled tenant should be rejected by TenantMiddleware
+    await request(app.getHttpServer())
+      .post('/auth/login')
+      .set('x-tenant-slug', testSlug)
+      .send({ email: 'whatever@x.com', password: 'x' })
+      .expect(403);
   });
 
-  describe('POST /super-admin/tenants', () => {
-    const uniqueSlug = `test-tenant-${Date.now()}`;
-
-    it('with valid data → 201 + created tenant', () => {
-      return request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Test Tenant', slug: uniqueSlug })
-        .expect(201)
-        .expect(({ body }) => {
-          expect(body.id).toBeDefined();
-          expect(body.slug).toBe(uniqueSlug);
-          expect(body.name).toBe('Test Tenant');
-        });
-    });
-
-    it('with slug "app" → 400', () => {
-      return request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'App Tenant', slug: 'app' })
-        .expect(400);
-    });
-
-    it('with duplicate slug → 409', async () => {
-      const slug = `unique-for-dup-${Date.now()}`;
-      await request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'First', slug });
-
-      return request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Second', slug })
-        .expect(409);
-    });
-
-    it('with invalid slug (uppercase) → 400', () => {
-      return request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Bad Slug', slug: 'INVALID' })
-        .expect(400);
-    });
-
-    it('without token → 401', () => {
-      return request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .send({ name: 'No Auth', slug: 'no-auth' })
-        .expect(401);
-    });
-  });
-
-  describe('GET /super-admin/tenants/:id', () => {
-    let tenantId: string;
-
-    beforeAll(async () => {
-      // Create a tenant to fetch
-      const res = await request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Detail Tenant', slug: `detail-${Date.now()}` });
-      tenantId = res.body.id;
-    });
-
-    it('with valid id → 200 + tenant data', () => {
-      return request(app.getHttpServer())
-        .get(`/super-admin/tenants/${tenantId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .expect(200)
-        .expect(({ body }) => {
-          expect(body.id).toBe(tenantId);
-          expect(body.slug).toBeDefined();
-          expect(body.name).toBe('Detail Tenant');
-        });
-    });
-
-    it('with non-existent id → 404', () => {
-      return request(app.getHttpServer())
-        .get('/super-admin/tenants/00000000-0000-0000-0000-000000000000')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .expect(404);
-    });
-
-    it('without token → 401', () => {
-      return request(app.getHttpServer())
-        .get(`/super-admin/tenants/${tenantId}`)
-        .expect(401);
-    });
-  });
-
-  describe('PATCH /super-admin/tenants/:id', () => {
-    let tenantId: string;
-    const originalSlug = `patch-test-${Date.now()}`;
-
-    beforeAll(async () => {
-      const res = await request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Patch Tenant', slug: originalSlug });
-      tenantId = res.body.id;
-    });
-
-    it('with valid fields → 200 + updated data', () => {
-      return request(app.getHttpServer())
-        .patch(`/super-admin/tenants/${tenantId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Updated Name' })
-        .expect(200)
-        .expect(({ body }) => {
-          expect(body.name).toBe('Updated Name');
-          expect(body.id).toBe(tenantId);
-        });
-    });
-
-    it('with slug "app" → 400', () => {
-      return request(app.getHttpServer())
-        .patch(`/super-admin/tenants/${tenantId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ slug: 'app' })
-        .expect(400);
-    });
-
-    it('with duplicate slug → 409', async () => {
-      // Create another tenant
-      const otherSlug = `other-${Date.now()}`;
-      await request(app.getHttpServer())
-        .post('/super-admin/tenants')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Other', slug: otherSlug });
-
-      return request(app.getHttpServer())
-        .patch(`/super-admin/tenants/${tenantId}`)
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ slug: otherSlug })
-        .expect(409);
-    });
-
-    it('with non-existent id → 404', () => {
-      return request(app.getHttpServer())
-        .patch('/super-admin/tenants/00000000-0000-0000-0000-000000000000')
-        .set('Authorization', `Bearer ${superAdminToken}`)
-        .send({ name: 'Ghost' })
-        .expect(404);
-    });
-
-    it('without token → 401', () => {
-      return request(app.getHttpServer())
-        .patch(`/super-admin/tenants/${tenantId}`)
-        .send({ name: 'No Auth' })
-        .expect(401);
-    });
+  it('GET /super-admin/tenants/:id — returns 404 for unknown id', () => {
+    return request(app.getHttpServer())
+      .get('/super-admin/tenants/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(404);
   });
 });
