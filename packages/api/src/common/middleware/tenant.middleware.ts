@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NestMiddleware } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { TenantsService } from '../../tenants/tenants.service';
 
@@ -14,10 +14,11 @@ export class TenantMiddleware implements NestMiddleware {
     const slug = req.headers['x-tenant-slug'] as string | undefined;
     if (!slug) return next();
 
-    const tenantId = await this.tenantsService.resolveTenantId(slug);
-    if (!tenantId) throw new BadRequestException(`Tenant '${slug}' not found`);
+    const tenant = await this.tenantsService.resolveTenantId(slug);
+    if (!tenant) throw new BadRequestException(`Tenant '${slug}' not found`);
+    if (!tenant.active) throw new ForbiddenException(`Tenant '${slug}' is disabled`);
 
-    req.tenantId = tenantId;
+    req.tenantId = tenant.id;
     next();
   }
 }
