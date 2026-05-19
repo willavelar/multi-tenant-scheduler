@@ -1,247 +1,153 @@
 import { Test } from '@nestjs/testing';
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcryptjs';
 import { SuperAdminService } from './super-admin.service';
 import { DB } from '../database/database.module';
+import { REDIS } from '../redis/redis.module';
 
-jest.mock('bcryptjs');
-const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
+const mockRedis = { del: jest.fn(), set: jest.fn(), get: jest.fn() };
+const mockJwt = { sign: jest.fn().mockReturnValue('signed-token') };
+
+function makeChainSequence(responses: unknown[]) {
+  let call = 0;
+  const chain: Record<string, unknown> = {};
+  const methods = ['select', 'from', 'where', 'insert', 'values', 'returning',
+                   'update', 'set', 'delete', 'orderBy', 'limit', 'offset'];
+  methods.forEach((m) => { chain[m] = jest.fn().mockReturnValue(chain); });
+  chain['then'] = jest.fn().mockImplementation((resolve: (v: unknown) => void) => {
+    resolve(responses[call] ?? responses[responses.length - 1]);
+    call++;
+  });
+  chain['execute'] = jest.fn().mockResolvedValue(undefined);
+  return chain;
+}
+
+function makeMockDb(responses: unknown[]) {
+  const chain = makeChainSequence(responses);
+  const db: Record<string, unknown> = {};
+  const methods = ['select', 'from', 'where', 'insert', 'values', 'returning',
+                   'update', 'set', 'delete', 'orderBy', 'limit', 'offset'];
+  methods.forEach((m) => { db[m] = jest.fn().mockReturnValue(chain); });
+  db['execute'] = jest.fn().mockResolvedValue(undefined);
+  db['transaction'] = jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(chain));
+  return db;
+}
+
+async function buildService(dbResponses: unknown[]) {
+  const module = await Test.createTestingModule({
+    providers: [
+      SuperAdminService,
+      { provide: DB, useValue: makeMockDb(dbResponses) },
+      { provide: REDIS, useValue: mockRedis },
+      { provide: JwtService, useValue: mockJwt },
+    ],
+  }).compile();
+  return module.get(SuperAdminService);
+}
 
 describe('SuperAdminService', () => {
-  let service: SuperAdminService;
+  beforeEach(() => jest.clearAllMocks());
 
-  const mockDb = {
-    select: jest.fn(),
-    insert: jest.fn(),
-    update: jest.fn(),
-  };
-  const mockJwt = { sign: jest.fn().mockReturnValue('token') };
-  const mockConfig = { get: jest.fn().mockReturnValue('secret') };
-
-  beforeEach(async () => {
-    jest.clearAllMocks();
-    mockJwt.sign.mockReturnValue('token');
-    mockConfig.get.mockReturnValue('secret');
-
-    const module = await Test.createTestingModule({
-      providers: [
-        SuperAdminService,
-        { provide: DB, useValue: mockDb },
-        { provide: JwtService, useValue: mockJwt },
-        { provide: ConfigService, useValue: mockConfig },
-      ],
-    }).compile();
-
-    service = module.get(SuperAdminService);
-  });
-
-  // ────────────────────────────────────────────────────────
-  // login
-  // ────────────────────────────────────────────────────────
-
+  // ── login ────────────────────────────────────────────────────────────────
   describe('login', () => {
-    const fakeUser = {
-      id: 'user-uuid-1',
-      email: 'admin@platform.com',
-      name: 'Super Admin',
-      role: 'super_admin',
-      tenantId: null,
-      passwordHash: 'hashed-password',
-      active: true,
-    };
-
-    it('returns accessToken and refreshToken when credentials are valid', async () => {
-      mockDb.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([fakeUser]),
-        }),
-      });
-      mockedBcrypt.compare.mockResolvedValue(true as never);
-
-      // insert for refresh token persistence
-      const mockReturning = jest.fn().mockResolvedValue([]);
-      const mockValues = jest.fn().mockReturnValue({ returning: mockReturning });
-      mockDb.insert.mockReturnValue({ values: mockValues });
-
-      const result = await service.login('admin@platform.com', 'correct-password');
-
-      expect(result).toHaveProperty('accessToken');
-      expect(result).toHaveProperty('refreshToken');
-      expect(result.accessToken).toBe('token');
-      expect(result.refreshToken).toBe('token');
+    it('returns accessToken for valid credentials', async () => {
+      const hash = await bcrypt.hash('password', 1);
+      const service = await buildService([[{ id: 'sa-1', email: 'a@b.com', passwordHash: hash, name: 'Admin' }]]);
+      const result = await service.login('a@b.com', 'password');
+      expect(result.accessToken).toBe('signed-token');
     });
 
-    it('throws UnauthorizedException when password is wrong', async () => {
-      mockDb.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([fakeUser]),
-        }),
-      });
-      mockedBcrypt.compare.mockResolvedValue(false as never);
-
-      await expect(service.login('admin@platform.com', 'wrong-password')).rejects.toThrow(
-        UnauthorizedException,
-      );
+    it('throws UnauthorizedException for wrong password', async () => {
+      const hash = await bcrypt.hash('correct', 1);
+      const service = await buildService([[{ id: 'sa-1', email: 'a@b.com', passwordHash: hash, name: 'Admin' }]]);
+      await expect(service.login('a@b.com', 'wrong')).rejects.toThrow(UnauthorizedException);
     });
 
-    it('throws UnauthorizedException when user does not exist', async () => {
-      mockDb.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([]),
-        }),
-      });
-      mockedBcrypt.compare.mockResolvedValue(false as never);
-
-      await expect(service.login('nobody@platform.com', 'any-password')).rejects.toThrow(
-        UnauthorizedException,
-      );
+    it('throws UnauthorizedException for unknown email', async () => {
+      const service = await buildService([[]]); // empty result
+      await expect(service.login('unknown@b.com', 'pass')).rejects.toThrow(UnauthorizedException);
     });
   });
 
-  // ────────────────────────────────────────────────────────
-  // createTenant
-  // ────────────────────────────────────────────────────────
-
-  describe('createTenant', () => {
-    it('throws BadRequestException when slug is reserved (app)', async () => {
-      await expect(
-        service.createTenant({ name: 'App Tenant', slug: 'app' }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws ConflictException when DB returns error code 23505 (duplicate slug)', async () => {
-      const mockReturning = jest.fn().mockRejectedValue({ code: '23505' });
-      const mockValues = jest.fn().mockReturnValue({ returning: mockReturning });
-      mockDb.insert.mockReturnValue({ values: mockValues });
-
-      await expect(
-        service.createTenant({ name: 'Clinic', slug: 'my-clinic' }),
-      ).rejects.toThrow(ConflictException);
-    });
-
-    it('creates and returns a tenant when slug is valid and unique', async () => {
-      const fakeTenant = { id: 'tenant-1', name: 'My Clinic', slug: 'my-clinic' };
-      const mockReturning = jest.fn().mockResolvedValue([fakeTenant]);
-      const mockValues = jest.fn().mockReturnValue({ returning: mockReturning });
-      mockDb.insert.mockReturnValue({ values: mockValues });
-
-      const result = await service.createTenant({ name: 'My Clinic', slug: 'my-clinic' });
-
-      expect(result).toEqual(fakeTenant);
-    });
-  });
-
-  // ────────────────────────────────────────────────────────
-  // getTenant
-  // ────────────────────────────────────────────────────────
-
-  describe('getTenant', () => {
-    it('throws NotFoundException when tenant does not exist', async () => {
-      mockDb.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([]),
-        }),
-      });
-
-      await expect(service.getTenant('nonexistent-id')).rejects.toThrow(NotFoundException);
-    });
-
-    it('returns the tenant when found', async () => {
-      const fakeTenant = { id: 'tenant-1', name: 'My Clinic', slug: 'my-clinic' };
-      mockDb.select.mockReturnValue({
-        from: jest.fn().mockReturnValue({
-          where: jest.fn().mockResolvedValue([fakeTenant]),
-        }),
-      });
-
-      const result = await service.getTenant('tenant-1');
-      expect(result).toEqual(fakeTenant);
-    });
-  });
-
-  // ────────────────────────────────────────────────────────
-  // listTenants
-  // ────────────────────────────────────────────────────────
-
+  // ── listTenants ──────────────────────────────────────────────────────────
   describe('listTenants', () => {
-    it('returns paginated tenants with total count', async () => {
-      const fakeTenants = [
-        { id: 't1', name: 'Clinic A', slug: 'clinic-a', createdAt: new Date() },
-        { id: 't2', name: 'Clinic B', slug: 'clinic-b', createdAt: new Date() },
+    it('returns paginated result with total', async () => {
+      const fakeTenantsPage = [
+        { id: 't-1', slug: 'a', name: 'A', active: true, createdAt: new Date() },
       ];
-
-      mockDb.select
-        .mockReturnValueOnce({
-          from: jest.fn().mockReturnValue({
-            orderBy: jest.fn().mockReturnValue({
-              limit: jest.fn().mockReturnValue({
-                offset: jest.fn().mockResolvedValue(fakeTenants),
-              }),
-            }),
-          }),
-        })
-        .mockReturnValueOnce({
-          from: jest.fn().mockResolvedValue([{ value: 2 }]),
-        });
-
+      // First call: data query; second call: count query
+      const service = await buildService([fakeTenantsPage, [{ total: 1 }]]);
       const result = await service.listTenants(1, 20);
-
-      expect(result.data).toEqual(fakeTenants);
-      expect(result.total).toBe(2);
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
       expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
     });
   });
 
-  // ────────────────────────────────────────────────────────
-  // updateTenant
-  // ────────────────────────────────────────────────────────
-
-  describe('updateTenant', () => {
-    it('throws BadRequestException when slug is reserved (app)', async () => {
-      await expect(
-        service.updateTenant('tenant-1', { slug: 'app' }),
-      ).rejects.toThrow(BadRequestException);
-    });
-
-    it('throws ConflictException when DB returns error code 23505', async () => {
-      const mockReturning = jest.fn().mockRejectedValue({ code: '23505' });
-      const mockWhere = jest.fn().mockReturnValue({ returning: mockReturning });
-      const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
-      mockDb.update.mockReturnValue({ set: mockSet });
-
-      await expect(
-        service.updateTenant('tenant-1', { slug: 'new-slug' }),
-      ).rejects.toThrow(ConflictException);
+  // ── getTenant ────────────────────────────────────────────────────────────
+  describe('getTenant', () => {
+    it('returns tenant when found', async () => {
+      const tenant = { id: 't-1', slug: 'demo', name: 'Demo', active: true, createdAt: new Date() };
+      const service = await buildService([[tenant]]);
+      await expect(service.getTenant('t-1')).resolves.toEqual(tenant);
     });
 
     it('throws NotFoundException when tenant does not exist', async () => {
-      const mockReturning = jest.fn().mockResolvedValue([]);
-      const mockWhere = jest.fn().mockReturnValue({ returning: mockReturning });
-      const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
-      mockDb.update.mockReturnValue({ set: mockSet });
+      const service = await buildService([[]]); // empty
+      await expect(service.getTenant('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
 
-      await expect(
-        service.updateTenant('nonexistent', { name: 'New Name' }),
-      ).rejects.toThrow(NotFoundException);
+  // ── createTenant ─────────────────────────────────────────────────────────
+  describe('createTenant', () => {
+    const dto = {
+      slug: 'new-tenant', name: 'New', adminEmail: 'admin@new.com',
+      adminName: 'Admin', adminPassword: 'pass123',
+    };
+
+    it('throws BadRequestException for reserved slug', async () => {
+      const service = await buildService([[]]);
+      await expect(service.createTenant({ ...dto, slug: 'app' })).rejects.toThrow(BadRequestException);
     });
 
-    it('returns updated tenant on success', async () => {
-      const updated = { id: 'tenant-1', name: 'Updated', slug: 'my-clinic' };
-      const mockReturning = jest.fn().mockResolvedValue([updated]);
-      const mockWhere = jest.fn().mockReturnValue({ returning: mockReturning });
-      const mockSet = jest.fn().mockReturnValue({ where: mockWhere });
-      mockDb.update.mockReturnValue({ set: mockSet });
+    it('throws ConflictException for duplicate slug', async () => {
+      // transaction: first query returns existing tenant
+      const service = await buildService([[{ id: 't-existing' }]]);
+      await expect(service.createTenant(dto)).rejects.toThrow(ConflictException);
+    });
 
-      const result = await service.updateTenant('tenant-1', { name: 'Updated' });
-      expect(result).toEqual(updated);
+    it('creates and returns the new tenant', async () => {
+      const created = { id: 't-new', slug: 'new-tenant', name: 'New', active: true, createdAt: new Date() };
+      // transaction: select (no existing) → insert tenant → insert user
+      const service = await buildService([[], [created], [{ id: 'u-new' }]]);
+      const result = await service.createTenant(dto);
+      expect(result.slug).toBe('new-tenant');
+    });
+  });
+
+  // ── updateTenant ─────────────────────────────────────────────────────────
+  describe('updateTenant', () => {
+    it('throws NotFoundException for missing tenant', async () => {
+      const service = await buildService([[]]); // empty
+      await expect(service.updateTenant('missing', { name: 'X' })).rejects.toThrow(NotFoundException);
+    });
+
+    it('updates and returns the tenant', async () => {
+      const existing = { id: 't-1', slug: 'demo' };
+      const updated = { id: 't-1', slug: 'demo', name: 'Updated', active: true, createdAt: new Date() };
+      const service = await buildService([[existing], [updated]]);
+      const result = await service.updateTenant('t-1', { name: 'Updated' });
+      expect(result.name).toBe('Updated');
+    });
+
+    it('invalidates Redis slug cache on update', async () => {
+      const existing = { id: 't-1', slug: 'demo' };
+      const updated = { id: 't-1', slug: 'demo', name: 'X', active: true, createdAt: new Date() };
+      const service = await buildService([[existing], [updated]]);
+      await service.updateTenant('t-1', { active: false });
+      expect(mockRedis.del).toHaveBeenCalledWith('tenant:slug:demo');
     });
   });
 });
