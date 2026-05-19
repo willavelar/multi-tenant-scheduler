@@ -6,7 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { count, desc, eq } from 'drizzle-orm';
 import { superAdmins, tenants, users } from '@scheduler/shared';
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 import { DB, DrizzleDB } from '../database/database.module';
 import { REDIS } from '../redis/redis.module';
 import { RESERVED_SLUGS } from '../common/constants/password';
@@ -42,11 +42,12 @@ export class SuperAdminService {
 
   async listTenants(page = 1, limit = 20) {
     const offset = (page - 1) * limit;
-    const [data, [{ total }]] = await Promise.all([
+    const [data, countResult] = await Promise.all([
       this.db.select().from(tenants).orderBy(desc(tenants.createdAt)).limit(limit).offset(offset),
       this.db.select({ total: count() }).from(tenants),
     ]);
-    return { data, total: Number(total), page, limit };
+    const total = Number(countResult[0]?.total ?? 0);
+    return { data, total, page, limit };
   }
 
   async getTenant(id: string) {
@@ -63,6 +64,7 @@ export class SuperAdminService {
       throw new BadRequestException('Slug is reserved');
     }
 
+    const passwordHash = await bcrypt.hash(dto.adminPassword, 10);
     return this.db.transaction(async (tx) => {
       const [existing] = await tx
         .select({ id: tenants.id })
@@ -76,7 +78,6 @@ export class SuperAdminService {
         .values({ slug: dto.slug, name: dto.name })
         .returning();
 
-      const passwordHash = await bcrypt.hash(dto.adminPassword, 10);
       await tx.insert(users).values({
         tenantId: tenant.id,
         email: dto.adminEmail,
@@ -97,6 +98,10 @@ export class SuperAdminService {
 
     if (!existing) throw new NotFoundException();
 
+    if (dto.slug && (RESERVED_SLUGS as readonly string[]).includes(dto.slug)) {
+      throw new BadRequestException('Slug is reserved');
+    }
+
     const updates: Partial<typeof tenants.$inferInsert> = {};
     if (dto.name !== undefined) updates.name = dto.name;
     if (dto.slug !== undefined) updates.slug = dto.slug;
@@ -109,6 +114,8 @@ export class SuperAdminService {
       .set(updates)
       .where(eq(tenants.id, id))
       .returning();
+
+    if (!updated) throw new NotFoundException();
 
     await this.redis.del(`tenant:slug:${existing.slug}`);
     if (dto.slug && dto.slug !== existing.slug) {

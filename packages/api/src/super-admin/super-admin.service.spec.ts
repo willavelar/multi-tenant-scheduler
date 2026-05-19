@@ -134,6 +134,12 @@ describe('SuperAdminService', () => {
       await expect(service.updateTenant('missing', { name: 'X' })).rejects.toThrow(NotFoundException);
     });
 
+    it('throws BadRequestException for reserved slug update', async () => {
+      const existing = { id: 't-1', slug: 'demo' };
+      const service = await buildService([[existing]]);
+      await expect(service.updateTenant('t-1', { slug: 'app' })).rejects.toThrow(BadRequestException);
+    });
+
     it('updates and returns the tenant', async () => {
       const existing = { id: 't-1', slug: 'demo' };
       const updated = { id: 't-1', slug: 'demo', name: 'Updated', active: true, createdAt: new Date() };
