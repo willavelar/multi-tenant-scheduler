@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useOAuthAccounts, useUnlinkOAuth } from '@/hooks/useOAuthAccounts'
+import { useOAuthAccounts, useUnlinkOAuth } from '@/hooks/auth/useOAuthAccounts'
 import { useTenant } from '@/providers/TenantProvider'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/providers/AuthProvider'
