@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
 import { MIN_PASSWORD_LENGTH } from '../../common/constants/password';
 
 export class CreateTenantDto {
@@ -7,12 +7,14 @@ export class CreateTenantDto {
   slug: string;
 
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsEmail()
   adminEmail: string;
 
   @IsString()
+  @IsNotEmpty()
   adminName: string;
 
   @IsString()
