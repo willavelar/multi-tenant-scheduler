@@ -34,5 +34,5 @@ export function useOAuthExchange(): void {
         router.replace(destination)
       })
       .catch(() => router.replace('/login?reason=oauth_error'))
-  }, [])
+  }, [searchParams, router, slug])
 }
