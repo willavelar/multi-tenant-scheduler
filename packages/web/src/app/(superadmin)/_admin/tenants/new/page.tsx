@@ -104,8 +104,8 @@ export default function NewTenantPage() {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Criando...' : 'Criar Tenant'}
           </Button>
-          <Button variant="outline" type="button" asChild>
-            <Link href="/_admin/tenants">Cancelar</Link>
+          <Button variant="secondary" type="button" onClick={() => router.push('/_admin/tenants')}>
+            Cancelar
           </Button>
         </div>
       </form>

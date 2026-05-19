@@ -34,7 +34,7 @@ export function SuperAdminShell({ children }: { children: React.ReactNode }) {
 
         <div className="mt-auto pt-4 border-t">
           <p className="text-xs text-muted-foreground mb-2 truncate">{user?.email}</p>
-          <Button variant="outline" size="sm" className="w-full" onClick={logout}>
+          <Button variant="secondary" size="sm" className="w-full" onClick={logout}>
             Sair
           </Button>
         </div>

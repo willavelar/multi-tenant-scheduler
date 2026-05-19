@@ -117,8 +117,8 @@ export default function EditTenantPage() {
           <Button type="submit" disabled={isSubmitting || mutation.isPending}>
             {isSubmitting || mutation.isPending ? 'Salvando...' : 'Salvar'}
           </Button>
-          <Button variant="outline" type="button" asChild>
-            <Link href={`/_admin/tenants/${id}`}>Cancelar</Link>
+          <Button variant="secondary" type="button" onClick={() => router.push(`/_admin/tenants/${id}`)}>
+            Cancelar
           </Button>
         </div>
       </form>

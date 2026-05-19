@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ interface Tenant {
 
 export default function TenantDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const router = useRouter()
   const queryClient = useQueryClient()
 
   const { data: tenant, isLoading, isError } = useQuery<Tenant>({
@@ -77,11 +78,11 @@ export default function TenantDetailPage() {
       </dl>
 
       <div className="flex gap-3 pt-2 border-t">
-        <Button asChild>
-          <Link href={`/_admin/tenants/${id}/edit`}>Editar</Link>
+        <Button onClick={() => router.push(`/_admin/tenants/${id}/edit`)}>
+          Editar
         </Button>
         <Button
-          variant="outline"
+          variant="secondary"
           onClick={() => toggleActive.mutate(!tenant.active)}
           disabled={toggleActive.isPending}
         >

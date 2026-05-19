@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,7 @@ interface TenantsPage {
 }
 
 export default function TenantsPage() {
+  const router = useRouter()
   const [page, setPage] = useState(1)
   const limit = 20
 
@@ -40,8 +42,8 @@ export default function TenantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Tenants</h1>
-        <Button asChild>
-          <Link href="/_admin/tenants/new">Novo tenant</Link>
+        <Button onClick={() => router.push('/_admin/tenants/new')}>
+          Novo tenant
         </Button>
       </div>
 
@@ -96,7 +98,7 @@ export default function TenantsPage() {
           {totalPages > 1 && (
             <div className="flex items-center gap-2 justify-end">
               <Button
-                variant="outline" size="sm"
+                variant="secondary" size="sm"
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
@@ -106,7 +108,7 @@ export default function TenantsPage() {
                 {page} / {totalPages}
               </span>
               <Button
-                variant="outline" size="sm"
+                variant="secondary" size="sm"
                 disabled={page === totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
