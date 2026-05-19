@@ -21,10 +21,10 @@ export function SuperAdminShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <Link
-          href="/_admin/tenants"
+          href="/admin/tenants"
           className={cn(
             'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-            pathname.startsWith('/_admin/tenants')
+            pathname.startsWith('/admin/tenants')
               ? 'bg-accent text-accent-foreground'
               : 'hover:bg-accent/50 text-muted-foreground',
           )}

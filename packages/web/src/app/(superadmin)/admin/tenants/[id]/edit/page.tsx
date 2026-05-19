@@ -58,7 +58,7 @@ export default function EditTenantPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sa-tenant', id] })
       queryClient.invalidateQueries({ queryKey: ['sa-tenants'] })
-      router.push(`/_admin/tenants/${id}`)
+      router.push(`/admin/tenants/${id}`)
     },
   })
 
@@ -78,7 +78,7 @@ export default function EditTenantPage() {
   return (
     <div className="max-w-lg space-y-6">
       <div className="flex items-center gap-4">
-        <Link href={`/_admin/tenants/${id}`} className="text-sm text-muted-foreground hover:underline">
+        <Link href={`/admin/tenants/${id}`} className="text-sm text-muted-foreground hover:underline">
           ← {tenant.name}
         </Link>
         <h1 className="text-2xl font-semibold">Editar Tenant</h1>
@@ -117,7 +117,7 @@ export default function EditTenantPage() {
           <Button type="submit" disabled={isSubmitting || mutation.isPending}>
             {isSubmitting || mutation.isPending ? 'Salvando...' : 'Salvar'}
           </Button>
-          <Button variant="secondary" type="button" onClick={() => router.push(`/_admin/tenants/${id}`)}>
+          <Button variant="secondary" type="button" onClick={() => router.push(`/admin/tenants/${id}`)}>
             Cancelar
           </Button>
         </div>

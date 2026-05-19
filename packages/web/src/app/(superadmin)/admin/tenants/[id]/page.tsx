@@ -48,7 +48,7 @@ export default function TenantDetailPage() {
   return (
     <div className="max-w-lg space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/_admin/tenants" className="text-sm text-muted-foreground hover:underline">
+        <Link href="/admin/tenants" className="text-sm text-muted-foreground hover:underline">
           ← Tenants
         </Link>
         <h1 className="text-2xl font-semibold">{tenant.name}</h1>
@@ -78,7 +78,7 @@ export default function TenantDetailPage() {
       </dl>
 
       <div className="flex gap-3 pt-2 border-t">
-        <Button onClick={() => router.push(`/_admin/tenants/${id}/edit`)}>
+        <Button onClick={() => router.push(`/admin/tenants/${id}/edit`)}>
           Editar
         </Button>
         <Button

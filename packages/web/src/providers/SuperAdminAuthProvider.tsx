@@ -55,13 +55,13 @@ export function SuperAdminAuthProvider({ children }: { children: React.ReactNode
     const { accessToken } = await res.json()
     localStorage.setItem('sa_accessToken', accessToken)
     setUser(tokenToUser(accessToken))
-    router.replace('/_admin/tenants')
+    router.replace('/admin/tenants')
   }, [router])
 
   const logout = useCallback(() => {
     localStorage.removeItem('sa_accessToken')
     setUser(null)
-    router.replace('/_admin/login')
+    router.replace('/admin/login')
   }, [router])
 
   return (

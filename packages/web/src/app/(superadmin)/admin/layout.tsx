@@ -10,10 +10,10 @@ function Inner({ children }: { children: React.ReactNode }) {
   const { user } = useSuperAdminAuth()
   const pathname = usePathname()
   const router = useRouter()
-  const isLoginPage = pathname === '/_admin/login'
+  const isLoginPage = pathname === '/admin/login'
 
   useEffect(() => {
-    if (!user && !isLoginPage) router.replace('/_admin/login')
+    if (!user && !isLoginPage) router.replace('/admin/login')
   }, [user, isLoginPage, router])
 
   if (isLoginPage) return <>{children}</>

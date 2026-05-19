@@ -8,9 +8,9 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     const pathname = url.pathname
 
-    // Already under /_admin — don't double-rewrite
-    if (!pathname.startsWith('/_admin')) {
-      url.pathname = `/_admin${pathname === '/' ? '/tenants' : pathname}`
+    // Already under /admin — don't double-rewrite
+    if (!pathname.startsWith('/admin')) {
+      url.pathname = `/admin${pathname === '/' ? '/tenants' : pathname}`
     }
 
     const res = NextResponse.rewrite(url)

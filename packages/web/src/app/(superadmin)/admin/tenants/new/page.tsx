@@ -60,7 +60,7 @@ export default function NewTenantPage() {
         method: 'POST',
         body: JSON.stringify(data),
       })
-      router.push('/_admin/tenants')
+      router.push('/admin/tenants')
     } catch (err) {
       if (err instanceof SuperAdminApiError) {
         setServerError(err.status === 409 ? 'Slug já em uso' : err.message)
@@ -71,7 +71,7 @@ export default function NewTenantPage() {
   return (
     <div className="max-w-lg space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/_admin/tenants" className="text-sm text-muted-foreground hover:underline">
+        <Link href="/admin/tenants" className="text-sm text-muted-foreground hover:underline">
           ← Tenants
         </Link>
         <h1 className="text-2xl font-semibold">Novo Tenant</h1>
@@ -104,7 +104,7 @@ export default function NewTenantPage() {
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Criando...' : 'Criar Tenant'}
           </Button>
-          <Button variant="secondary" type="button" onClick={() => router.push('/_admin/tenants')}>
+          <Button variant="secondary" type="button" onClick={() => router.push('/admin/tenants')}>
             Cancelar
           </Button>
         </div>

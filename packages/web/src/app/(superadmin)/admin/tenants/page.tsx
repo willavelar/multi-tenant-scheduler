@@ -42,7 +42,7 @@ export default function TenantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Tenants</h1>
-        <Button onClick={() => router.push('/_admin/tenants/new')}>
+        <Button onClick={() => router.push('/admin/tenants/new')}>
           Novo tenant
         </Button>
       </div>
@@ -83,7 +83,7 @@ export default function TenantsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
-                        href={`/_admin/tenants/${tenant.id}`}
+                        href={`/admin/tenants/${tenant.id}`}
                         className="text-sm text-primary hover:underline"
                       >
                         Ver
