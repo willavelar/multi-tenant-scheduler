@@ -120,6 +120,13 @@
       "when": 1779065028781,
       "tag": "0018_salty_kulan_gath",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1779155032170,
+      "tag": "0019_fluffy_slyde",
+      "breakpoints": true
     }
   ]
 }
