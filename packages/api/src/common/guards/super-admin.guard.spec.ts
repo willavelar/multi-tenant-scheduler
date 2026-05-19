@@ -1,25 +1,44 @@
-import { ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { JwtService } from '@nestjs/jwt';
 import { SuperAdminGuard } from './super-admin.guard';
 
-const makeCtx = (user?: object): ExecutionContext =>
-  ({
+function mockContext(authHeader?: string): ExecutionContext {
+  return {
     switchToHttp: () => ({
-      getRequest: () => ({ user }),
+      getRequest: () => ({ headers: { authorization: authHeader } }),
     }),
-  }) as unknown as ExecutionContext;
+  } as unknown as ExecutionContext;
+}
+
+async function buildGuard(verifyImpl: () => unknown) {
+  const module = await Test.createTestingModule({
+    providers: [
+      SuperAdminGuard,
+      { provide: JwtService, useValue: { verify: jest.fn().mockImplementation(verifyImpl) } },
+    ],
+  }).compile();
+  return module.get(SuperAdminGuard);
+}
 
 describe('SuperAdminGuard', () => {
-  const guard = new SuperAdminGuard();
-
-  it('allows super_admin', () => {
-    expect(guard.canActivate(makeCtx({ role: 'super_admin' }))).toBe(true);
+  it('passes with valid super_admin token', async () => {
+    const guard = await buildGuard(() => ({ sub: 'sa-1', type: 'super_admin' }));
+    expect(guard.canActivate(mockContext('Bearer valid-token'))).toBe(true);
   });
 
-  it('blocks tenant_admin', () => {
-    expect(() => guard.canActivate(makeCtx({ role: 'tenant_admin' }))).toThrow(ForbiddenException);
+  it('rejects when Authorization header is missing', async () => {
+    const guard = await buildGuard(() => ({}));
+    expect(() => guard.canActivate(mockContext())).toThrow(UnauthorizedException);
   });
 
-  it('blocks when no user', () => {
-    expect(() => guard.canActivate(makeCtx(undefined))).toThrow(ForbiddenException);
+  it('rejects a tenant JWT (no type claim)', async () => {
+    const guard = await buildGuard(() => ({ sub: 'u-1', role: 'tenant_admin', tenantId: 't-1' }));
+    expect(() => guard.canActivate(mockContext('Bearer tenant-token'))).toThrow(UnauthorizedException);
+  });
+
+  it('rejects an expired token', async () => {
+    const guard = await buildGuard(() => { throw new Error('jwt expired'); });
+    expect(() => guard.canActivate(mockContext('Bearer expired-token'))).toThrow(UnauthorizedException);
   });
 });
