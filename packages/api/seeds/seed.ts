@@ -223,6 +223,25 @@ async function seed() {
   }
 
   console.log(`${created} appointments created`);
+  // ── Super Admin ──────────────────────────────────────────────────────────
+  const saEmail    = process.env.SUPER_ADMIN_EMAIL;
+  const saName     = process.env.SUPER_ADMIN_NAME;
+  const saPassword = process.env.SUPER_ADMIN_PASSWORD;
+
+  if (saEmail && saName && saPassword) {
+    const saHash = await bcrypt.hash(saPassword, 10);
+    await db
+      .insert(schema.superAdmins)
+      .values({ email: saEmail, name: saName, passwordHash: saHash })
+      .onConflictDoUpdate({
+        target: schema.superAdmins.email,
+        set: { name: saName, passwordHash: saHash },
+      });
+    console.log('Super admin upserted:', saEmail);
+  } else {
+    console.warn('Skipping super admin seed: SUPER_ADMIN_EMAIL, SUPER_ADMIN_NAME, SUPER_ADMIN_PASSWORD not set');
+  }
+
   console.log('\nSeed complete!');
   await redis.quit();
   await client.end();
