@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
@@ -18,6 +19,7 @@ type FormData = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {
   const mutation = useRequestPasswordReset()
+  const [submitted, setSubmitted] = useState(false)
 
   const {
     register,
@@ -31,9 +33,10 @@ export default function ForgotPasswordPage() {
     clearErrors('root')
     try {
       await mutation.mutateAsync(data.email)
+      setSubmitted(true)
     } catch (err) {
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-        // treat 4xx as success — don't leak whether the email exists
+        setSubmitted(true)
       } else {
         setError('root', { message: 'Ocorreu um erro. Tente novamente.' })
       }
@@ -61,7 +64,7 @@ export default function ForgotPasswordPage() {
         {/* Card */}
         <div className="bg-card rounded-xl p-8 border border-border shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
 
-          {mutation.isSuccess ? (
+          {submitted ? (
             /* Success state */
             <div className="flex flex-col items-center gap-3 py-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="w-11 h-11 rounded-full bg-green-50 dark:bg-green-500/20 flex items-center justify-center">
