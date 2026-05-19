@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX IF NOT EXISTS "users_superadmin_email_unique" ON "users" ("email") WHERE tenant_id IS NULL;

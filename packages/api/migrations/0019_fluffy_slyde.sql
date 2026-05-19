@@ -9,4 +9,4 @@ CREATE TABLE IF NOT EXISTS "super_admins" (
 );
 --> statement-breakpoint
 ALTER TABLE "tenants" ADD COLUMN "active" boolean DEFAULT true NOT NULL;--> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "users_superadmin_email_unique" ON "users" ("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "users_superadmin_email_unique" ON "users" ("email") WHERE tenant_id IS NULL;
