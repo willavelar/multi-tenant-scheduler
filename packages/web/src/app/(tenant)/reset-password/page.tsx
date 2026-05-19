@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 import {Spinner} from "@/components/ui/Spinner";
 import {EyeIcon} from "@/components/ui/EyeIcon";
 import { Alert } from '@/components/ui/Alert';
+import { useValidateToken } from '@/hooks/auth/useValidateToken'
 
 const schema = z
   .object({
@@ -25,20 +26,13 @@ const schema = z
 
 type FormData = z.infer<typeof schema>
 
-type PageState =
-  | { status: 'loading' }
-  | { status: 'valid'; email: string }
-  | { status: 'invalid' }
-
-
-
 function ResetPasswordContent() {
   const { slug } = useTenant()
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
-  const [pageState, setPageState] = useState<PageState>({ status: 'loading' })
+  const pageState = useValidateToken(token, '/auth/reset-password/validate')
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -49,27 +43,6 @@ function ResetPasswordContent() {
     setError,
     clearErrors,
   } = useForm<FormData>({ resolver: zodResolver(schema) })
-
-  useEffect(() => {
-    if (!token) {
-      setPageState({ status: 'invalid' })
-      return
-    }
-
-    apiFetch(`/auth/reset-password/validate?token=${encodeURIComponent(token)}`, {
-      slug,
-      method: 'GET',
-    })
-      .then((res) => res.json())
-      .then((data: unknown) => {
-        const email = (data as { email?: string }).email
-        if (!email) { setPageState({ status: 'invalid' }); return }
-        setPageState({ status: 'valid', email })
-      })
-      .catch(() => {
-        setPageState({ status: 'invalid' })
-      })
-  }, [token, slug])
 
   async function onSubmit(data: FormData) {
     if (!token) return
