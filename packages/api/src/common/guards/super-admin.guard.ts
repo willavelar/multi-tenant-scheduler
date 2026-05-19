@@ -16,13 +16,14 @@ export class SuperAdminGuard implements CanActivate {
     const token = this.extractToken(request);
     if (!token) throw new UnauthorizedException();
 
+    let payload: SuperAdminJwtPayload;
     try {
-      const payload = this.jwtService.verify<SuperAdminJwtPayload>(token);
-      if (payload.type !== 'super_admin') throw new UnauthorizedException();
-      return true;
+      payload = this.jwtService.verify<SuperAdminJwtPayload>(token);
     } catch {
       throw new UnauthorizedException();
     }
+    if (payload.type !== 'super_admin') throw new UnauthorizedException();
+    return true;
   }
 
   private extractToken(request: Request): string | null {
