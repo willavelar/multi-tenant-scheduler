@@ -1,12 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { useOAuthAccounts, useUnlinkOAuth } from '@/hooks/auth/useOAuthAccounts'
-import { useTenant } from '@/providers/TenantProvider'
+import { useOAuthLinkIntent } from '@/hooks/auth/useOAuthLinkIntent'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/providers/AuthProvider'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
 type Provider = 'google' | 'microsoft' | 'facebook'
 
@@ -47,33 +43,11 @@ const PROVIDERS: { id: Provider; label: string; icon: React.ReactNode }[] = [
 ]
 
 export function LinkedAccountsCard() {
-  const { slug }                           = useTenant()
-  const { accessToken }                    = useAuth()
   const { data: accounts = [], isLoading } = useOAuthAccounts()
   const unlink                             = useUnlinkOAuth()
-  const [linking, setLinking]              = useState<Provider | null>(null)
+  const { linking, linkProvider }          = useOAuthLinkIntent()
 
   const linkedProviders = new Set(accounts.map((a) => a.provider))
-
-  async function handleLink(provider: Provider) {
-    setLinking(provider)
-    try {
-      const res = await fetch(`${API_URL}/auth/oauth/link/intent`, {
-        method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          Authorization:   `Bearer ${accessToken}`,
-          'x-tenant-slug': slug,
-        },
-        body: JSON.stringify({ provider, returnTo: window.location.pathname }),
-      })
-      if (!res.ok) throw new Error()
-      const { authUrl } = await res.json() as { authUrl: string }
-      window.location.href = authUrl
-    } catch {
-      setLinking(null)
-    }
-  }
 
   return (
     <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
@@ -128,7 +102,7 @@ export function LinkedAccountsCard() {
                     <button
                       type="button"
                       disabled={linking === id}
-                      onClick={() => handleLink(id)}
+                      onClick={() => linkProvider(id)}
                       className={cn(
                         'text-xs font-semibold text-blue-600 border border-blue-200 rounded-md px-2.5 py-1',
                         'hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
