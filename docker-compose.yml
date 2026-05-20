@@ -2,7 +2,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: packages/api/Dockerfile
+      dockerfile: packages/api/Dockerfile.dev
     ports:
       - "3001:3001"
     environment:
@@ -28,7 +28,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: pnpm --filter api dev
 
   web:
     build:

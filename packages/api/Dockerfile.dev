@@ -1,0 +1,21 @@
+FROM node:20-alpine
+RUN npm install -g pnpm
+WORKDIR /app
+
+# Install dependencies — layer is cached separately from source
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/api/package.json ./packages/api/
+RUN pnpm install
+
+# Config files not covered by volume mounts
+COPY packages/shared/tsconfig.json ./packages/shared/
+COPY packages/api/nest-cli.json packages/api/tsconfig.json packages/api/tsconfig.build.json ./packages/api/
+COPY packages/api/drizzle.config.ts ./packages/api/
+COPY packages/api/migrations ./packages/api/migrations
+
+COPY packages/api/docker-entrypoint.dev.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 3001
+ENTRYPOINT ["/entrypoint.sh"]
