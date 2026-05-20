@@ -4,8 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 
 interface Tenant {
   id: string
@@ -47,19 +47,15 @@ export default function TenantDetailPage() {
 
   return (
     <div className="max-w-lg space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Link href="/admin/tenants" className="text-sm text-muted-foreground hover:underline">
           ← Tenants
         </Link>
         <h1 className="text-2xl font-semibold">{tenant.name}</h1>
-        <span className={cn(
-          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-          tenant.active
-            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-            : 'bg-muted text-muted-foreground',
-        )}>
-          {tenant.active ? 'Ativo' : 'Inativo'}
-        </span>
+        <StatusBadge
+          label={tenant.active ? 'Ativo' : 'Inativo'}
+          variant={tenant.active ? 'success' : 'neutral'}
+        />
       </div>
 
       <dl className="space-y-3 text-sm">

@@ -1,12 +1,10 @@
 'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useTenant } from '@/providers/TenantProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { useTheme } from '@/providers/ThemeProvider'
-import { cn } from '@/lib/utils'
+import { SidebarNavLink } from './SidebarNavLink'
 
 function CalendarIcon() {
   return (
@@ -85,7 +83,6 @@ const SETTINGS_ITEMS: NavItem[] = [
 ]
 
 export function Sidebar() {
-  const pathname = usePathname()
   const { slug } = useTenant()
   const { user } = useAuth()
   const { tenantName, tenantLogoUrl, tenantLogoDarkUrl } = useTenantSettingsContext()
@@ -129,48 +126,18 @@ export function Sidebar() {
         <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-[0.08em] uppercase px-3 mb-2">
           Menu
         </p>
-        {items.map(item => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/')
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                'flex items-center gap-2.5 px-3 py-2.25 rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
-                active
-                  ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-              )}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          )
-        })}
+        {items.map(item => (
+          <SidebarNavLink key={item.href} href={item.href} icon={item.icon} label={item.label} />
+        ))}
 
         {settingsItems.length > 0 && (
           <>
             <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-[0.08em] uppercase px-3 mb-2 mt-5">
               Configurações
             </p>
-            {settingsItems.map(item => {
-              const active = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-2.5 px-3 py-2.25 rounded-lg text-[13.5px] font-medium mb-0.5 no-underline transition-colors',
-                    active
-                      ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400'
-                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              )
-            })}
+            {settingsItems.map(item => (
+              <SidebarNavLink key={item.href} href={item.href} icon={item.icon} label={item.label} />
+            ))}
           </>
         )}
       </nav>

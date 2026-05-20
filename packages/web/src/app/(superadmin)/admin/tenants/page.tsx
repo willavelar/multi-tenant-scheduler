@@ -5,8 +5,11 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { StatusBadge } from '@/components/ui/StatusBadge'
+import { DateTimeCell } from '@/components/ui/DateTimeCell'
 
 interface Tenant {
   id: string
@@ -23,6 +26,8 @@ interface TenantsPage {
   limit: number
 }
 
+const COLS = ['Nome', 'Slug', 'Status', 'Criado em', '']
+
 export default function TenantsPage() {
   const router = useRouter()
   const [page, setPage] = useState(1)
@@ -36,88 +41,89 @@ export default function TenantsPage() {
     },
   })
 
+  const tenants    = data?.data ?? []
   const totalPages = data ? Math.ceil(data.total / limit) : 1
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Tenants</h1>
-        <Button onClick={() => router.push('/admin/tenants/new')}>
-          Novo tenant
-        </Button>
+        <Button onClick={() => router.push('/admin/tenants/new')}>Novo tenant</Button>
       </div>
 
-      {isLoading && <p className="text-muted-foreground text-sm">Carregando...</p>}
-      {isError  && <p className="text-destructive text-sm">Erro ao carregar tenants.</p>}
-
-      {data && (
-        <>
-          <div className="rounded-md border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium">Nome</th>
-                  <th className="px-4 py-3 text-left font-medium">Slug</th>
-                  <th className="px-4 py-3 text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-left font-medium">Criado em</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {data.data.map((tenant) => (
-                  <tr key={tenant.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">{tenant.name}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{tenant.slug}</td>
-                    <td className="px-4 py-3">
-                      <span className={cn(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                        tenant.active
-                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                          : 'bg-muted text-muted-foreground',
-                      )}>
-                        {tenant.active ? 'Ativo' : 'Inativo'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(tenant.createdAt).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/admin/tenants/${tenant.id}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        Ver
-                      </Link>
-                    </td>
+      <div className="bg-background border border-border rounded-xl overflow-hidden shadow-sm">
+        {isLoading ? (
+          <TableSkeleton cols={5} />
+        ) : isError ? (
+          <EmptyState title="Erro ao carregar" description="Não foi possível carregar os tenants." />
+        ) : !tenants.length ? (
+          <EmptyState
+            title="Nenhum tenant"
+            description="Tenants aparecerão aqui após serem cadastrados."
+            action={{ label: 'Novo tenant', onClick: () => router.push('/admin/tenants/new') }}
+          />
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-border">
+                    {COLS.map((col, i) => (
+                      <th key={i} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
+                        {col}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center gap-2 justify-end">
-              <Button
-                variant="secondary" size="sm"
-                disabled={page === 1}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                Anterior
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {page} / {totalPages}
-              </span>
-              <Button
-                variant="secondary" size="sm"
-                disabled={page === totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Próxima
-              </Button>
+                </thead>
+                <tbody>
+                  {tenants.map((tenant) => (
+                    <tr key={tenant.id} className="border-b border-border transition-colors hover:bg-accent">
+                      <td className="px-4 py-3 font-medium">{tenant.name}</td>
+                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{tenant.slug}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge
+                          label={tenant.active ? 'Ativo' : 'Inativo'}
+                          variant={tenant.active ? 'success' : 'neutral'}
+                        />
+                      </td>
+                      <td className="px-4 py-3"><DateTimeCell iso={tenant.createdAt} /></td>
+                      <td className="px-4 py-3 text-right">
+                        <Link href={`/admin/tenants/${tenant.id}`} className="text-sm text-primary hover:underline">
+                          Ver
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </>
-      )}
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+                <p className="text-[13px] text-muted-foreground m-0">
+                  Página {page} de {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary" size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage(p => p - 1)}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="secondary" size="sm"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => p + 1)}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   )
 }

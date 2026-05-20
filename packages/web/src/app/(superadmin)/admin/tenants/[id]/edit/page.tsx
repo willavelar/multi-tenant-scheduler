@@ -10,6 +10,8 @@ import Link from 'next/link'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { FormField } from '@/components/ui/FormField'
+import { Alert } from '@/components/ui/Alert'
 
 interface Tenant {
   id: string
@@ -24,6 +26,12 @@ const schema = z.object({
 })
 
 type FormData = z.infer<typeof schema>
+
+const inputCls = (hasError = false) => cn(
+  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
+  'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+  hasError ? 'border-destructive' : 'border-border',
+)
 
 export default function EditTenantPage() {
   const { id } = useParams<{ id: string }>()
@@ -85,33 +93,15 @@ export default function EditTenantPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Nome</label>
-          <input
-            {...register('name')}
-            className={cn(
-              'w-full rounded-md border bg-background px-3 py-2 text-sm',
-              'focus:outline-none focus:ring-2 focus:ring-ring',
-              errors.name && 'border-destructive',
-            )}
-          />
-          {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
-        </div>
+        <FormField label="Nome" error={errors.name?.message}>
+          <input {...register('name')} className={inputCls(!!errors.name)} />
+        </FormField>
 
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Slug</label>
-          <input
-            {...register('slug')}
-            className={cn(
-              'w-full rounded-md border bg-background px-3 py-2 text-sm font-mono',
-              'focus:outline-none focus:ring-2 focus:ring-ring',
-              errors.slug && 'border-destructive',
-            )}
-          />
-          {errors.slug && <p className="text-xs text-destructive">{errors.slug.message}</p>}
-        </div>
+        <FormField label="Slug" error={errors.slug?.message}>
+          <input {...register('slug')} className={cn(inputCls(!!errors.slug), 'font-mono')} />
+        </FormField>
 
-        {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+        {serverError && <Alert variant="error" size="sm">{serverError}</Alert>}
 
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isSubmitting || mutation.isPending}>

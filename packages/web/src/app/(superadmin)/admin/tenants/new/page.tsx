@@ -9,6 +9,8 @@ import Link from 'next/link'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { FormField } from '@/components/ui/FormField'
+import { Alert } from '@/components/ui/Alert'
 
 const schema = z.object({
   slug:          z.string().min(1).regex(/^[a-z0-9-]+$/, 'Apenas letras minúsculas, números e hífens'),
@@ -20,30 +22,11 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-function Field({
-  label, error, children,
-}: { label: string; error?: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <label className="text-sm font-medium">{label}</label>
-      {children}
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
-  )
-}
-
-function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
-    <input
-      {...props}
-      className={cn(
-        'w-full rounded-md border bg-background px-3 py-2 text-sm',
-        'focus:outline-none focus:ring-2 focus:ring-ring',
-        className,
-      )}
-    />
-  )
-}
+const inputCls = (hasError = false) => cn(
+  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
+  'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
+  hasError ? 'border-destructive' : 'border-border',
+)
 
 export default function NewTenantPage() {
   const router = useRouter()
@@ -78,27 +61,30 @@ export default function NewTenantPage() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Field label="Slug" error={errors.slug?.message}>
-          <Input {...register('slug')} placeholder="minha-empresa" />
-        </Field>
-        <Field label="Nome" error={errors.name?.message}>
-          <Input {...register('name')} placeholder="Minha Empresa" />
-        </Field>
+        <FormField label="Slug" error={errors.slug?.message}>
+          <input {...register('slug')} placeholder="minha-empresa" className={inputCls(!!errors.slug)} />
+        </FormField>
+
+        <FormField label="Nome" error={errors.name?.message}>
+          <input {...register('name')} placeholder="Minha Empresa" className={inputCls(!!errors.name)} />
+        </FormField>
 
         <hr className="my-2" />
         <p className="text-sm font-medium text-muted-foreground">Admin inicial</p>
 
-        <Field label="E-mail do admin" error={errors.adminEmail?.message}>
-          <Input {...register('adminEmail')} type="email" />
-        </Field>
-        <Field label="Nome do admin" error={errors.adminName?.message}>
-          <Input {...register('adminName')} />
-        </Field>
-        <Field label="Senha do admin" error={errors.adminPassword?.message}>
-          <Input {...register('adminPassword')} type="password" />
-        </Field>
+        <FormField label="E-mail do admin" error={errors.adminEmail?.message}>
+          <input {...register('adminEmail')} type="email" className={inputCls(!!errors.adminEmail)} />
+        </FormField>
 
-        {serverError && <p className="text-sm text-destructive">{serverError}</p>}
+        <FormField label="Nome do admin" error={errors.adminName?.message}>
+          <input {...register('adminName')} className={inputCls(!!errors.adminName)} />
+        </FormField>
+
+        <FormField label="Senha do admin" error={errors.adminPassword?.message}>
+          <input {...register('adminPassword')} type="password" className={inputCls(!!errors.adminPassword)} />
+        </FormField>
+
+        {serverError && <Alert variant="error" size="sm">{serverError}</Alert>}
 
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isSubmitting}>
