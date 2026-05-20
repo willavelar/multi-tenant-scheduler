@@ -12,3 +12,4 @@ export * from './client-service-limits.schema';
 export * from './refresh-tokens.schema';
 export * from './notifications.schema';
 export * from './oauth-accounts.schema';
+export * from './super-admins.schema';

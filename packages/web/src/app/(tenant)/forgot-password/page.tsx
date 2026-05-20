@@ -4,8 +4,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
-import { useTenant } from '@/providers/TenantProvider'
-import { apiFetch, ApiError } from '@/lib/api'
+import { ApiError } from '@/lib/api'
+import { useRequestPasswordReset } from '@/hooks/auth/useRequestPasswordReset'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
 import {Spinner} from "@/components/ui/Spinner";
@@ -18,7 +18,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>
 
 export default function ForgotPasswordPage() {
-  const { slug } = useTenant()
+  const mutation = useRequestPasswordReset()
   const [submitted, setSubmitted] = useState(false)
 
   const {
@@ -32,15 +32,10 @@ export default function ForgotPasswordPage() {
   async function onSubmit(data: FormData) {
     clearErrors('root')
     try {
-      await apiFetch('/auth/forgot-password', {
-        slug,
-        method: 'POST',
-        body: JSON.stringify({ email: data.email }),
-      })
+      await mutation.mutateAsync(data.email)
       setSubmitted(true)
     } catch (err) {
       if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-        // treat 4xx as success too — don't leak whether the email exists
         setSubmitted(true)
       } else {
         setError('root', { message: 'Ocorreu um erro. Tente novamente.' })

@@ -15,6 +15,7 @@ export const tenants = pgTable('tenants', {
   cancellationReasonMode: cancellationReasonModeEnum('cancellation_reason_mode').notNull().default('no'),
   cancellationDeadlineValue: integer('cancellation_deadline_value'),
   cancellationDeadlineUnit: cancellationDeadlineUnitEnum('cancellation_deadline_unit'),
+  active:    boolean('active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

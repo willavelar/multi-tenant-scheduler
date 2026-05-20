@@ -124,7 +124,7 @@ describe('OAuthService.resolveTenantId', () => {
   })
 
   it('retorna tenantId quando TenantsService resolve o slug', async () => {
-    const tenantsSvc = { resolveTenantId: jest.fn().mockResolvedValue('tenant-uuid') }
+    const tenantsSvc = { resolveTenantId: jest.fn().mockResolvedValue({ id: 'tenant-uuid', active: true }) }
     const svc = await buildService(makeMockDb(makeChain((r) => r([]))), makeRedis(), tenantsSvc)
     const id = await svc.resolveTenantId('clinic')
     expect(id).toBe('tenant-uuid')

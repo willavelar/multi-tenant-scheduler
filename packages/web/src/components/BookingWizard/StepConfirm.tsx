@@ -4,12 +4,10 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
-import { useApi } from '@/hooks/useApi'
 import { useFormatTime } from '@/hooks/useFormatTime'
-import { apiFetch } from '@/lib/api'
+import { useBookingConfirm } from './useBookingConfirm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,47 +39,12 @@ const registerSchema = z.object({
 export function StepConfirm({ professionalId, serviceId, date, startTime, onBack, onDone }: Props) {
   const { user, login, register: registerUser } = useAuth()
   const { slug } = useTenant()
-  const api = useApi()
-  const queryClient = useQueryClient()
   const { formatTime } = useFormatTime()
   const [showAuth, setShowAuth] = useState(false)
-  const [result, setResult] = useState<{ status: string } | null>(null)
-  const [bookError, setBookError] = useState<string | null>(null)
-
-  const bookMutation = useMutation({
-    mutationFn: async () => {
-      const res = await api('/appointments', {
-        method: 'POST',
-        body: JSON.stringify({ professionalId, serviceId, date, startTime }),
-      })
-      return res.json()
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['slots'] })
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      setResult(data)
-    },
-  })
+  const { bookMutation, bookWithToken, result, bookError } = useBookingConfirm({ professionalId, serviceId, date, startTime })
 
   const loginForm = useForm<z.infer<typeof loginSchema>>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<z.infer<typeof registerSchema>>({ resolver: zodResolver(registerSchema) })
-
-  async function authAndBook(freshToken: string) {
-    try {
-      const res = await apiFetch('/appointments', {
-        method: 'POST',
-        slug,
-        token: freshToken,
-        body: JSON.stringify({ professionalId, serviceId, date, startTime }),
-      })
-      const data = await res.json()
-      queryClient.invalidateQueries({ queryKey: ['slots'] })
-      queryClient.invalidateQueries({ queryKey: ['appointments'] })
-      setResult(data)
-    } catch (err) {
-      setBookError(err instanceof Error ? err.message : 'Erro ao agendar')
-    }
-  }
 
   async function handleConfirm() {
     if (!user) {
@@ -95,7 +58,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
     try {
       const freshToken = await login(data.email, data.password, slug)
       setShowAuth(false)
-      await authAndBook(freshToken)
+      await bookWithToken(freshToken)
     } catch (err) {
       loginForm.setError('root', {
         message: 'Email ou senha incorretos',
@@ -107,7 +70,7 @@ export function StepConfirm({ professionalId, serviceId, date, startTime, onBack
     try {
       const freshToken = await registerUser(data, slug)
       setShowAuth(false)
-      await authAndBook(freshToken)
+      await bookWithToken(freshToken)
     } catch (err) {
       registerForm.setError('root', {
         message: err instanceof Error ? err.message : 'Erro ao criar conta',

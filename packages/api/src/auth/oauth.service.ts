@@ -255,9 +255,9 @@ export class OAuthService {
   async resolveTenantId(slug: string): Promise<string> {
     // Delegates to TenantsService which caches in Redis (TTL 3600s), avoiding
     // repeated DB queries on every OAuth callback for the same tenant.
-    const tenantId = await this.tenantsService.resolveTenantId(slug)
-    if (!tenantId) throw new NotFoundException(`Tenant '${slug}' not found`)
-    return tenantId
+    const tenant = await this.tenantsService.resolveTenantId(slug)
+    if (!tenant) throw new NotFoundException(`Tenant '${slug}' not found`)
+    return tenant.id
   }
 
   /** Returns the user if found/linked, null if new user must register. */

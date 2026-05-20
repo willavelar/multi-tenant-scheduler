@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 import { Spinner } from '@/components/ui/Spinner'
 import { EyeIcon } from '@/components/ui/EyeIcon'
 import { Alert } from '@/components/ui/Alert'
-import { apiFetch } from '@/lib/api'
+import { useOAuthPendingData } from '@/hooks/auth/useOAuthPendingData'
 
 const PROVIDER_LABEL: Record<string, string> = {
   google: 'Google', microsoft: 'Microsoft', facebook: 'Facebook',
@@ -38,20 +38,11 @@ function RegisterContent() {
   const searchParams = useSearchParams()
   const ssoCode      = searchParams.get('sso_code')
 
-  const [ssoData, setSsoData] = useState<{ provider: string; name: string; email: string } | null>(null)
-  const [ssoError, setSsoError] = useState(false)
+  const { ssoData, ssoError } = useOAuthPendingData(ssoCode)
 
   useEffect(() => {
     if (user) router.replace('/appointments')
   }, [user, router])
-
-  useEffect(() => {
-    if (!ssoCode) return
-    apiFetch(`/auth/oauth/pending?code=${ssoCode}`, { slug, method: 'GET' })
-      .then((res) => res.json())
-      .then((data: { provider: string; name: string; email: string }) => setSsoData(data))
-      .catch(() => setSsoError(true))
-  }, [ssoCode, slug])
 
   const [showPassword,    setShowPassword]    = useState(false)
   const [showConfirmPass, setShowConfirmPass] = useState(false)

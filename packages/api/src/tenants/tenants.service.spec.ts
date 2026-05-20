@@ -41,9 +41,9 @@ describe('TenantsService', () => {
   // ──────────────────────────────────────────────────────────────────────────
 
   it('returns tenant id from cache when present', async () => {
-    mockRedis.get.mockResolvedValue('tenant-uuid-123');
+    mockRedis.get.mockResolvedValue(JSON.stringify({ id: 'tenant-uuid-123', active: true }));
     const result = await service.resolveTenantId('my-clinic');
-    expect(result).toBe('tenant-uuid-123');
+    expect(result).toEqual({ id: 'tenant-uuid-123', active: true });
     expect(mockDb.select).not.toHaveBeenCalled();
   });
 

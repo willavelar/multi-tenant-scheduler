@@ -18,20 +18,32 @@ export class TenantsService {
 
   // Bootstrap exception: resolves tenantId from slug before any tenantId is known,
   // so withTenant cannot be used here (circular dependency). Direct DB access is intentional.
-  async resolveTenantId(slug: string): Promise<string | null> {
+  async resolveTenantId(slug: string): Promise<{ id: string; active: boolean } | null> {
     const cacheKey = `tenant:slug:${slug}`;
     const cached = await this.redis.get(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as { id: string; active: boolean };
+        if (typeof parsed === 'object' && parsed.id) return parsed;
+      } catch {
+        // stale string value from old cache format — fall through to DB
+      }
+    }
 
     const [tenant] = await this.db
-      .select({ id: tenants.id })
+      .select({ id: tenants.id, active: tenants.active })
       .from(tenants)
       .where(eq(tenants.slug, slug));
 
     if (!tenant) return null;
 
-    await this.redis.set(cacheKey, tenant.id, 'EX', TENANT_CACHE_TTL);
-    return tenant.id;
+    await this.redis.set(
+      cacheKey,
+      JSON.stringify({ id: tenant.id, active: tenant.active }),
+      'EX',
+      TENANT_CACHE_TTL,
+    );
+    return { id: tenant.id, active: tenant.active };
   }
 
   async findCurrent(tenantId: string) {
