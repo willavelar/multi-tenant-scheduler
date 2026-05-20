@@ -29,3 +29,7 @@ docs/superpowers/
 # Claude
 .claude
 
+# Specs and memory (local only)
+.specs/
+memory/
+
