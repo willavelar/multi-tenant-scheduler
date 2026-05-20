@@ -152,6 +152,10 @@ Key tables: `tenants`, `users`, `professionals`, `clients`, `appointments`, `ser
 
 The `entryFile` in `nest-cli.json` is `api/src/main` (not the default `main`) because TypeScript infers the rootDir at the monorepo level, placing output at `dist/api/src/main.js`.
 
+### API
+
+For API-specific details (all endpoints, guard stack, withTenant pattern, email queue, environment variables, testing): see [`packages/api/AGENTS.md`](packages/api/AGENTS.md).
+
 ### Frontend
 
 For frontend-specific architecture (routing, styling, API integration, environment, Next.js version guidance), see [`packages/web/AGENTS.md`](packages/web/AGENTS.md).
@@ -160,7 +164,7 @@ For frontend-specific architecture (routing, styling, API integration, environme
 
 - **pnpm workspaces** monorepo. Always use `pnpm --filter <package> <script>` to target a specific package.
 - **TypeScript strict mode** throughout.
-- **NestJS patterns**: modules, services, controllers, DTOs with `class-validator`. Guards and decorators live in `api/src/common/`.
+- **NestJS patterns**: modules, services, controllers, DTOs with `class-validator`. Guards and decorators live in `api/src/common/`. See [`rules/nestjs-best-practices.md`](rules/nestjs-best-practices.md) for conventions.
 - **Drizzle ORM** for all DB access. Schema changes require `pnpm db:generate` → `pnpm db:migrate`. Never hand-edit migration files.
 - **Frontend**: see [`packages/web/AGENTS.md`](packages/web/AGENTS.md) for styling, routing, and Next.js-specific conventions.
 - Tests: Jest for unit tests; separate `jest-e2e.json` config for e2e tests that hit a real database.

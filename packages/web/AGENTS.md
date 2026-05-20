@@ -1,6 +1,7 @@
 # Web Package — Frontend Guide
 
 > Full project context (commands, architecture, multi-tenancy, API): see root [`AGENTS.md`](../../AGENTS.md).
+> Next.js best practices (DRY, component extraction, custom hooks, data fetching, Server vs Client Components): see [`rules/nextjs-best-practices.md`](../../rules/nextjs-best-practices.md).
 
 <!-- BEGIN:nextjs-agent-rules -->
 ## Next.js version
