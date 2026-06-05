@@ -99,4 +99,13 @@ describe('SsoConfigService', () => {
     const result = await svc.getConfig('google')
     expect(result).toBeNull()
   })
+
+  it('falls back to env vars when DB row exists, enabled=true, but credentials are incomplete', async () => {
+    const { svc } = await makeService(
+      [{ provider: 'google', enabled: true, clientId: null, clientSecretEnc: null }],
+      { GOOGLE_CLIENT_ID: 'env-id', GOOGLE_CLIENT_SECRET: 'env-secret' },
+    )
+    const result = await svc.getConfig('google')
+    expect(result).toEqual({ clientId: 'env-id', clientSecret: 'env-secret' })
+  })
 })
