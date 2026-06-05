@@ -75,8 +75,24 @@ export class OAuthController {
       returnTo: dto.returnTo ?? '/me',
       userId:   req.user.id,
     })
-    const authUrl = this.oauthService.getAuthorizationUrl(dto.provider, stateId)
+    let authUrl: string
+    try {
+      authUrl = await this.oauthService.getAuthorizationUrl(dto.provider, stateId)
+    } catch {
+      throw new BadRequestException('provider_not_configured')
+    }
     return { authUrl }
+  }
+
+  @Get('providers')
+  async getEnabledProviders() {
+    const results = await Promise.all(
+      (['google', 'microsoft', 'facebook'] as const).map(async (p) => {
+        const creds = await this.oauthService.getSsoConfig(p)
+        return creds ? p : null
+      }),
+    )
+    return { providers: results.filter(Boolean) }
   }
 
   @Delete(':provider')
@@ -104,7 +120,12 @@ export class OAuthController {
     if (!slug) throw new BadRequestException('slug is required')
 
     const stateId = await this.oauthService.generateState(slug, 'login', { returnTo })
-    const authUrl = this.oauthService.getAuthorizationUrl(provider, stateId)
+    let authUrl: string
+    try {
+      authUrl = await this.oauthService.getAuthorizationUrl(provider, stateId)
+    } catch {
+      return res.redirect(`${this.frontendBase(slug)}/login?reason=oauth_error`)
+    }
     return res.redirect(authUrl)
   }
 

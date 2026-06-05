@@ -12,6 +12,15 @@ function BuildingIcon() {
   )
 }
 
+function KeyIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7.5" cy="15.5" r="5.5"/>
+      <path d="M21 2l-9.6 9.6M15.5 7.5l3 3"/>
+    </svg>
+  )
+}
+
 export function SuperAdminSidebar() {
   const { user } = useSuperAdminAuth()
 
@@ -34,6 +43,11 @@ export function SuperAdminSidebar() {
           Menu
         </p>
         <SidebarNavLink href="/admin/tenants" icon={<BuildingIcon />} label="Tenants" />
+
+        <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-[0.08em] uppercase px-3 mt-5 mb-2">
+          Configurações
+        </p>
+        <SidebarNavLink href="/admin/settings/sso" icon={<KeyIcon />} label="SSO" />
       </nav>
 
       <div className="p-3 border-t border-sidebar-border text-[11px] text-sidebar-foreground/40 text-center">

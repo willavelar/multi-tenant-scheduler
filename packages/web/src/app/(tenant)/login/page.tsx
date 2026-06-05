@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
@@ -45,25 +45,36 @@ const FacebookIcon = () => (
   </svg>
 )
 
-function SSOButtons({ slug, returnTo }: { slug: string; returnTo: string }) {
+const PROVIDER_ICONS: Record<string, React.ReactNode> = {
+  google:    <GoogleIcon />,
+  microsoft: <MicrosoftIcon />,
+  facebook:  <FacebookIcon />,
+}
+const PROVIDER_LABELS: Record<string, string> = {
+  google: 'Google', microsoft: 'Microsoft', facebook: 'Facebook',
+}
+
+function SSOButtons({ slug, returnTo, providers }: { slug: string; returnTo: string; providers: string[] }) {
   const btnCls = 'flex-1 flex items-center justify-center h-11.5 rounded-lg border border-border bg-background cursor-pointer hover:bg-accent hover:border-border/80 transition-colors'
 
-  function handleSSO(provider: 'google' | 'microsoft' | 'facebook') {
+  function handleSSO(provider: string) {
     window.location.href =
       `${API_URL}/auth/oauth/${provider}?slug=${encodeURIComponent(slug)}&returnTo=${encodeURIComponent(returnTo)}`
   }
 
   return (
     <div className="flex gap-2.5">
-      <button type="button" className={btnCls} aria-label="Continuar com Google" onClick={() => handleSSO('google')}>
-        <GoogleIcon />
-      </button>
-      <button type="button" className={btnCls} aria-label="Continuar com Microsoft" onClick={() => handleSSO('microsoft')}>
-        <MicrosoftIcon />
-      </button>
-      <button type="button" className={btnCls} aria-label="Continuar com Facebook" onClick={() => handleSSO('facebook')}>
-        <FacebookIcon />
-      </button>
+      {providers.map(p => (
+        <button
+          key={p}
+          type="button"
+          className={btnCls}
+          aria-label={`Continuar com ${PROVIDER_LABELS[p] ?? p}`}
+          onClick={() => handleSSO(p)}
+        >
+          {PROVIDER_ICONS[p]}
+        </button>
+      ))}
     </div>
   )
 }
@@ -88,10 +99,18 @@ function LoginContent() {
   const reason          = searchParams.get('reason')
   const provider        = searchParams.get('provider')
   const returnTo        = resolveReturnTo(searchParams)
+  const [enabledProviders, setEnabledProviders] = useState<string[] | null>(null)
 
   useEffect(() => {
     if (user) router.replace('/appointments')
   }, [user, router])
+
+  useEffect(() => {
+    fetch(`${API_URL}/auth/oauth/providers`)
+      .then(r => r.json())
+      .then((data: { providers: string[] }) => setEnabledProviders(data.providers))
+      .catch(() => setEnabledProviders([]))
+  }, [])
 
   async function handleLogin(data: LoginCardData) {
     try {
@@ -134,6 +153,10 @@ function LoginContent() {
     </>
   )
 
+  const ssoSlot = enabledProviders && enabledProviders.length > 0
+    ? <><Divider /><SSOButtons slug={slug} returnTo={returnTo} providers={enabledProviders} /></>
+    : null
+
   return (
     <LoginCard
       title="Bem-vindo de volta"
@@ -141,7 +164,7 @@ function LoginContent() {
       onSubmit={handleLogin}
       showForgotPassword
       alertsSlot={alertsSlot}
-      ssoSlot={<><Divider /><SSOButtons slug={slug} returnTo={returnTo} /></>}
+      ssoSlot={ssoSlot}
       footer={
         <>
           Ainda não tem conta?{' '}

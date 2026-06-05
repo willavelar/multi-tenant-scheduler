@@ -5,6 +5,7 @@ import { OAuthService } from './oauth.service'
 import { DB } from '../database/database.module'
 import { REDIS } from '../redis/redis.module'
 import { TenantsService } from '../tenants/tenants.service'
+import { SsoConfigService } from '../common/sso-config/sso-config.service'
 
 const QUERY_METHODS = [
   'select', 'from', 'where', 'innerJoin', 'leftJoin',
@@ -37,18 +38,27 @@ function makeRedis(overrides: Record<string, jest.Mock> = {}) {
   }
 }
 
+function makeSsoConfig(overrides: Partial<Record<string, jest.Mock>> = {}) {
+  return {
+    getConfig: jest.fn().mockResolvedValue(null),
+    ...overrides,
+  }
+}
+
 async function buildService(
   db: unknown,
   redis: unknown,
   tenantsService: Partial<TenantsService> = { resolveTenantId: jest.fn().mockResolvedValue(null) },
+  ssoConfig: Partial<SsoConfigService> = makeSsoConfig(),
 ) {
   const module = await Test.createTestingModule({
     providers: [
       OAuthService,
-      { provide: DB,             useValue: db },
-      { provide: REDIS,          useValue: redis },
-      { provide: ConfigService,  useValue: { get: jest.fn().mockReturnValue('mock-value') } },
-      { provide: TenantsService, useValue: tenantsService },
+      { provide: DB,              useValue: db },
+      { provide: REDIS,           useValue: redis },
+      { provide: ConfigService,   useValue: { get: jest.fn().mockReturnValue('mock-value') } },
+      { provide: TenantsService,  useValue: tenantsService },
+      { provide: SsoConfigService, useValue: ssoConfig },
     ],
   }).compile()
   return module.get(OAuthService)
@@ -135,7 +145,12 @@ describe('OAuthService.resolveTenantId', () => {
 // ── getAuthorizationUrl ────────────────────────────────────────────────────
 
 describe('OAuthService.getAuthorizationUrl', () => {
-  async function buildWithConfig() {
+  async function buildWithSsoConfig(credentials: Record<string, { clientId: string; clientSecret: string } | null>) {
+    const ssoConfig = makeSsoConfig({
+      getConfig: jest.fn().mockImplementation((provider: string) =>
+        Promise.resolve(credentials[provider] ?? null),
+      ),
+    })
     const module = await Test.createTestingModule({
       providers: [
         OAuthService,
@@ -146,37 +161,40 @@ describe('OAuthService.getAuthorizationUrl', () => {
           provide: ConfigService,
           useValue: {
             get: jest.fn((key: string) => ({
-              GOOGLE_CLIENT_ID:        'gid',
-              MICROSOFT_CLIENT_ID:     'mid',
-              FACEBOOK_CLIENT_ID:      'fid',
               OAUTH_CALLBACK_BASE_URL: 'https://api.example.com',
             }[key] ?? '')),
           },
         },
+        { provide: SsoConfigService, useValue: ssoConfig },
       ],
     }).compile()
     return module.get(OAuthService)
   }
 
   it('gera URL do Google com client_id e state corretos', async () => {
-    const svc = await buildWithConfig()
-    const url = svc.getAuthorizationUrl('google', 'state123')
+    const svc = await buildWithSsoConfig({ google: { clientId: 'gid', clientSecret: 'gsec' } })
+    const url = await svc.getAuthorizationUrl('google', 'state123')
     expect(url).toContain('accounts.google.com')
     expect(url).toContain('client_id=gid')
     expect(url).toContain('state=state123')
   })
 
   it('gera URL da Microsoft com client_id e state corretos', async () => {
-    const svc = await buildWithConfig()
-    const url = svc.getAuthorizationUrl('microsoft', 'state456')
+    const svc = await buildWithSsoConfig({ microsoft: { clientId: 'mid', clientSecret: 'msec' } })
+    const url = await svc.getAuthorizationUrl('microsoft', 'state456')
     expect(url).toContain('login.microsoftonline.com')
     expect(url).toContain('client_id=mid')
   })
 
   it('gera URL do Facebook com client_id correto', async () => {
-    const svc = await buildWithConfig()
-    const url = svc.getAuthorizationUrl('facebook', 'state789')
+    const svc = await buildWithSsoConfig({ facebook: { clientId: 'fid', clientSecret: 'fsec' } })
+    const url = await svc.getAuthorizationUrl('facebook', 'state789')
     expect(url).toContain('facebook.com')
     expect(url).toContain('client_id=fid')
+  })
+
+  it('lança erro quando provider não está configurado', async () => {
+    const svc = await buildWithSsoConfig({ google: null })
+    await expect(svc.getAuthorizationUrl('google', 'state')).rejects.toThrow('google_not_configured')
   })
 })

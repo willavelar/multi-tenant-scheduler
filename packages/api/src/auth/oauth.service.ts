@@ -8,8 +8,10 @@ import { DB, DrizzleDB } from '../database/database.module'
 import { REDIS } from '../redis/redis.module'
 import { withTenant } from '../database/with-tenant'
 import { TenantsService } from '../tenants/tenants.service'
+import { SsoConfigService, OAuthProvider } from '../common/sso-config/sso-config.service'
 
-export type OAuthProvider = 'google' | 'microsoft' | 'facebook'
+// Re-export OAuthProvider so existing code importing it from here still works
+export type { OAuthProvider }
 
 const VALID_PROVIDERS: OAuthProvider[] = ['google', 'microsoft', 'facebook']
 
@@ -52,6 +54,7 @@ export class OAuthService {
     @Inject(REDIS) private readonly redis: Redis,
     private readonly config: ConfigService,
     private readonly tenantsService: TenantsService,
+    private readonly ssoConfig: SsoConfigService,
   ) {}
 
   // ── Redis: state ─────────────────────────────────────────────────────────
@@ -105,14 +108,17 @@ export class OAuthService {
 
   // ── Provider helpers ──────────────────────────────────────────────────────
 
-  getAuthorizationUrl(provider: OAuthProvider, stateId: string): string {
+  async getAuthorizationUrl(provider: OAuthProvider, stateId: string): Promise<string> {
+    const credentials = await this.ssoConfig.getConfig(provider)
+    if (!credentials) throw new Error(`${provider}_not_configured`)
+
     const base = this.config.get<string>('OAUTH_CALLBACK_BASE_URL') ?? 'http://localhost:3001'
     const redirectUri = `${base}/auth/oauth/${provider}/callback`
 
     switch (provider) {
       case 'google': {
         const p = new URLSearchParams({
-          client_id:     this.config.get<string>('GOOGLE_CLIENT_ID')!,
+          client_id:     credentials.clientId,
           redirect_uri:  redirectUri,
           response_type: 'code',
           scope:         'openid email profile',
@@ -123,7 +129,7 @@ export class OAuthService {
       }
       case 'microsoft': {
         const p = new URLSearchParams({
-          client_id:     this.config.get<string>('MICROSOFT_CLIENT_ID')!,
+          client_id:     credentials.clientId,
           redirect_uri:  redirectUri,
           response_type: 'code',
           scope:         'openid email profile',
@@ -134,7 +140,7 @@ export class OAuthService {
       }
       case 'facebook': {
         const p = new URLSearchParams({
-          client_id:     this.config.get<string>('FACEBOOK_CLIENT_ID')!,
+          client_id:     credentials.clientId,
           redirect_uri:  redirectUri,
           response_type: 'code',
           scope:         'email',
@@ -145,25 +151,32 @@ export class OAuthService {
     }
   }
 
+  async getSsoConfig(provider: OAuthProvider) {
+    return this.ssoConfig.getConfig(provider)
+  }
+
   async exchangeCodeForProfile(provider: OAuthProvider, code: string): Promise<OAuthProfile> {
-    const base       = this.config.get<string>('OAUTH_CALLBACK_BASE_URL') ?? 'http://localhost:3001'
+    const credentials = await this.ssoConfig.getConfig(provider)
+    if (!credentials) throw new Error(`${provider}_not_configured`)
+
+    const base = this.config.get<string>('OAUTH_CALLBACK_BASE_URL') ?? 'http://localhost:3001'
     const redirectUri = `${base}/auth/oauth/${provider}/callback`
 
     switch (provider) {
-      case 'google':    return this.exchangeGoogle(code, redirectUri)
-      case 'microsoft': return this.exchangeMicrosoft(code, redirectUri)
-      case 'facebook':  return this.exchangeFacebook(code, redirectUri)
+      case 'google':    return this.exchangeGoogle(code, redirectUri, credentials.clientId, credentials.clientSecret)
+      case 'microsoft': return this.exchangeMicrosoft(code, redirectUri, credentials.clientId, credentials.clientSecret)
+      case 'facebook':  return this.exchangeFacebook(code, redirectUri, credentials.clientId, credentials.clientSecret)
     }
   }
 
-  private async exchangeGoogle(code: string, redirectUri: string): Promise<OAuthProfile> {
+  private async exchangeGoogle(code: string, redirectUri: string, clientId: string, clientSecret: string): Promise<OAuthProfile> {
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
-        client_id:     this.config.get<string>('GOOGLE_CLIENT_ID')!,
-        client_secret: this.config.get<string>('GOOGLE_CLIENT_SECRET')!,
+        client_id:     clientId,
+        client_secret: clientSecret,
         redirect_uri:  redirectUri,
         grant_type:    'authorization_code',
       }),
@@ -187,14 +200,14 @@ export class OAuthService {
     }
   }
 
-  private async exchangeMicrosoft(code: string, redirectUri: string): Promise<OAuthProfile> {
+  private async exchangeMicrosoft(code: string, redirectUri: string, clientId: string, clientSecret: string): Promise<OAuthProfile> {
     const tokenRes = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
       method:  'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         code,
-        client_id:     this.config.get<string>('MICROSOFT_CLIENT_ID')!,
-        client_secret: this.config.get<string>('MICROSOFT_CLIENT_SECRET')!,
+        client_id:     clientId,
+        client_secret: clientSecret,
         redirect_uri:  redirectUri,
         grant_type:    'authorization_code',
         scope:         'openid email profile',
@@ -221,13 +234,13 @@ export class OAuthService {
     }
   }
 
-  private async exchangeFacebook(code: string, redirectUri: string): Promise<OAuthProfile> {
+  private async exchangeFacebook(code: string, redirectUri: string, clientId: string, clientSecret: string): Promise<OAuthProfile> {
     const tokenRes = await fetch(
       `https://graph.facebook.com/v18.0/oauth/access_token?` +
       new URLSearchParams({
         code,
-        client_id:     this.config.get<string>('FACEBOOK_CLIENT_ID')!,
-        client_secret: this.config.get<string>('FACEBOOK_CLIENT_SECRET')!,
+        client_id:     clientId,
+        client_secret: clientSecret,
         redirect_uri:  redirectUri,
       }),
     )
