@@ -84,6 +84,17 @@ export class OAuthController {
     return { authUrl }
   }
 
+  @Get('providers')
+  async getEnabledProviders() {
+    const results = await Promise.all(
+      (['google', 'microsoft', 'facebook'] as const).map(async (p) => {
+        const creds = await this.oauthService.getSsoConfig(p)
+        return creds ? p : null
+      }),
+    )
+    return { providers: results.filter(Boolean) }
+  }
+
   @Delete(':provider')
   @HttpCode(204)
   @UseGuards(JwtAuthGuard, TenantGuard)
