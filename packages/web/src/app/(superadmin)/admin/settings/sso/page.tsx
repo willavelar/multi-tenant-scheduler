@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
 
@@ -63,6 +63,11 @@ function ProviderCard({
   const queryClient = useQueryClient()
   const [clientId, setClientId] = useState(provider.clientId ?? '')
   const [clientSecret, setClientSecret] = useState('')
+
+  // Sync clientId input when the provider data refreshes after a save
+  useEffect(() => {
+    setClientId(provider.clientId ?? '')
+  }, [provider.clientId])
 
   const upsert = useMutation({
     mutationFn: async (body: object) => {
