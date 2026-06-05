@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, Suspense } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
@@ -45,7 +46,7 @@ const FacebookIcon = () => (
 )
 
 function SSOButtons({ slug, returnTo }: { slug: string; returnTo: string }) {
-  const btnCls = 'w-full flex items-center gap-3 px-4 h-11.5 rounded-lg border border-border bg-background text-sm font-medium text-foreground cursor-pointer hover:bg-accent hover:border-border/80 transition-colors'
+  const btnCls = 'flex-1 flex items-center justify-center h-11.5 rounded-lg border border-border bg-background cursor-pointer hover:bg-accent hover:border-border/80 transition-colors'
 
   function handleSSO(provider: 'google' | 'microsoft' | 'facebook') {
     window.location.href =
@@ -53,15 +54,15 @@ function SSOButtons({ slug, returnTo }: { slug: string; returnTo: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2.5 mb-5">
-      <button type="button" className={btnCls} onClick={() => handleSSO('google')}>
-        <GoogleIcon /><span>Continuar com Google</span>
+    <div className="flex gap-2.5">
+      <button type="button" className={btnCls} aria-label="Continuar com Google" onClick={() => handleSSO('google')}>
+        <GoogleIcon />
       </button>
-      <button type="button" className={btnCls} onClick={() => handleSSO('microsoft')}>
-        <MicrosoftIcon /><span>Continuar com Microsoft</span>
+      <button type="button" className={btnCls} aria-label="Continuar com Microsoft" onClick={() => handleSSO('microsoft')}>
+        <MicrosoftIcon />
       </button>
-      <button type="button" className={btnCls} onClick={() => handleSSO('facebook')}>
-        <FacebookIcon /><span className="text-[#1877f2]">Continuar com Facebook</span>
+      <button type="button" className={btnCls} aria-label="Continuar com Facebook" onClick={() => handleSSO('facebook')}>
+        <FacebookIcon />
       </button>
     </div>
   )
@@ -69,9 +70,9 @@ function SSOButtons({ slug, returnTo }: { slug: string; returnTo: string }) {
 
 function Divider() {
   return (
-    <div className="flex items-center gap-3 mb-5">
+    <div className="flex items-center gap-3 my-5">
       <div className="flex-1 h-px bg-border" />
-      <span className="text-xs text-muted-foreground font-medium">ou entre com e-mail</span>
+      <span className="text-xs text-muted-foreground font-medium">ou continue com</span>
       <div className="flex-1 h-px bg-border" />
     </div>
   )
@@ -136,11 +137,11 @@ function LoginContent() {
   return (
     <LoginCard
       title="Bem-vindo de volta"
-      subtitle="Acesse sua conta para continuar"
+      logo={<Image src="/logo.png" alt="Time Up" width={160} height={138} priority />}
       onSubmit={handleLogin}
       showForgotPassword
       alertsSlot={alertsSlot}
-      ssoSlot={<><SSOButtons slug={slug} returnTo={returnTo} /><Divider /></>}
+      ssoSlot={<><Divider /><SSOButtons slug={slug} returnTo={returnTo} /></>}
       footer={
         <>
           Ainda não tem conta?{' '}

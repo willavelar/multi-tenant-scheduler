@@ -9,13 +9,13 @@ export class UpdateTenantDto {
   @IsOptional()
   @ValidateIf((o) => o.logoUrl !== null)
   @IsString()
-  @MaxLength(200_000)
+  @MaxLength(1_500_000)
   logoUrl?: string | null;
 
   @IsOptional()
   @ValidateIf((o) => o.logoDarkUrl !== null)
   @IsString()
-  @MaxLength(200_000)
+  @MaxLength(1_500_000)
   logoDarkUrl?: string | null;
 
   @IsOptional()

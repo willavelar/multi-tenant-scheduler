@@ -15,6 +15,7 @@ export type LoginCardData = { email: string; password: string }
 type Props = {
   title: string
   subtitle?: string
+  logo?: React.ReactNode
   onSubmit: (data: LoginCardData) => Promise<void>
   passwordMinLength?: number
   showThemeToggle?: boolean
@@ -28,6 +29,7 @@ type Props = {
 export function LoginCard({
   title,
   subtitle,
+  logo,
   onSubmit,
   passwordMinLength = 6,
   showThemeToggle = true,
@@ -76,15 +78,14 @@ export function LoginCard({
 
       <div className="w-full max-w-110 animate-in fade-in slide-in-from-bottom-3 duration-300">
         <div className="text-center mb-7">
-          <h1 className="text-2xl font-bold text-foreground m-0 mb-2 tracking-[-0.015em]">{title}</h1>
+          {logo && <div className="flex justify-center mb-5">{logo}</div>}
+          <h1 className="text-xl font-bold text-foreground m-0 mb-2 tracking-[-0.015em]">{title}</h1>
           {subtitle && <p className="text-sm text-muted-foreground m-0">{subtitle}</p>}
         </div>
 
         {alertsSlot}
 
         <div className="bg-card rounded-xl p-8 border border-border shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.06)]">
-          {ssoSlot}
-
           <form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
             <div className="mb-4.5">
               <label htmlFor="email" className="block text-[13px] font-medium text-foreground mb-1.5">
@@ -159,6 +160,8 @@ export function LoginCard({
               {isSubmitting ? <><Spinner />Entrando...</> : 'Entrar'}
             </button>
           </form>
+
+          {ssoSlot}
         </div>
 
         {footer && (

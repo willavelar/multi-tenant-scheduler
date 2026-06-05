@@ -24,7 +24,7 @@ coverage/
 .playwright-mcp/
 
 # Local planning docs (superpowers)
-docs/superpowers/
+docs/
 
 # Claude
 .claude

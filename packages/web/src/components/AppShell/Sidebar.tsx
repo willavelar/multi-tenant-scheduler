@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+import Link from 'next/link'
 import { useTenant } from '@/providers/TenantProvider'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
@@ -97,28 +99,14 @@ export function Sidebar() {
     <aside className="w-65 min-h-screen bg-sidebar fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-sidebar-border">
 
       {/* Brand */}
-      <div className="px-5 pt-5 pb-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-2.5">
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={tenantName}
-              className="h-9 w-auto max-w-full object-contain"
-            />
-          ) : (
-            <>
-              <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shrink-0">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" strokeWidth="2"/>
-                  <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              <span className="text-[15px] font-bold text-sidebar-foreground tracking-[-0.01em]">
-                {process.env.NEXT_PUBLIC_APP_NAME || 'TimoUp'}
-              </span>
-            </>
-          )}
-        </div>
+      <div className="border-b border-sidebar-border">
+        <Link href="/appointments" className="flex items-center gap-2.5 w-full px-5 pt-5 pb-4">
+          <img
+            src={logoUrl ?? '/logo-default.png'}
+            alt={tenantName}
+            className="max-w-full h-auto object-contain p-3"
+          />
+        </Link>
       </div>
 
       {/* Nav */}
@@ -143,8 +131,8 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-sidebar-border text-[11px] text-sidebar-foreground/40 text-center">
-        {slug}
+      <div className="p-3 border-t border-sidebar-border flex justify-center">
+        <Image src="/logo.png" alt="Time Up" width={50} height={43} />
       </div>
     </aside>
   )

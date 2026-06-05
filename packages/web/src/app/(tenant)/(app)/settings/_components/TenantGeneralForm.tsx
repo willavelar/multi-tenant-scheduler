@@ -60,6 +60,7 @@ export function TenantGeneralForm() {
   const [name,         setName]         = useState('')
   const [logoUrl,      setLogoUrl]      = useState<string | null>(null)
   const [logoDarkUrl,  setLogoDarkUrl]  = useState<string | null>(null)
+  const [twoLogos,     setTwoLogos]     = useState(false)
   const [error,        setError]        = useState('')
   const [success,      setSuccess]      = useState(false)
 
@@ -74,6 +75,7 @@ export function TenantGeneralForm() {
     setName(data.name)
     setLogoUrl(data.logoUrl)
     setLogoDarkUrl(data.logoDarkUrl)
+    setTwoLogos(!!data.logoDarkUrl && data.logoDarkUrl !== data.logoUrl)
     setAllowPaidStatus(data.allowPaidStatus)
     setRequiresConfirm(data.confirmationMode === 'manual')
     setCancelReasonMode(data.cancellationReasonMode)
@@ -99,7 +101,7 @@ export function TenantGeneralForm() {
       await mutateAsync({
         name: name.trim(),
         logoUrl,
-        logoDarkUrl,
+        logoDarkUrl: twoLogos ? logoDarkUrl : null,
         allowPaidStatus,
         confirmationMode: requiresConfirm ? 'manual' : 'auto',
         cancellationReasonMode: cancelReasonMode,
@@ -120,36 +122,58 @@ export function TenantGeneralForm() {
       <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm">
         <p className="text-sm font-bold text-foreground m-0 mb-1">Logo</p>
         <p className="text-[13px] text-muted-foreground m-0 mb-5">
-          Aparece no topo do menu lateral. Proporção 6:1 (horizontal).
+          Aparece no topo do menu lateral. Sem restrição de proporção.
         </p>
-        <div className="grid grid-cols-2 gap-6">
+
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <p className="text-[12px] font-semibold text-foreground m-0 mb-3">Tema claro</p>
+            <p className="text-[13px] font-medium text-foreground m-0 mb-0.5">Logo separada por tema</p>
+            <p className="text-[12px] text-muted-foreground m-0">Usar logos diferentes para o tema claro e escuro.</p>
+          </div>
+          <Toggle
+            checked={twoLogos}
+            onChange={(v) => {
+              setTwoLogos(v)
+              if (!v) setLogoDarkUrl(null)
+              setSuccess(false)
+            }}
+          />
+        </div>
+
+        {twoLogos ? (
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <p className="text-[12px] font-semibold text-foreground m-0 mb-3">Tema claro</p>
+              <LogoCropField value={logoUrl} onChange={(v) => { setLogoUrl(v); setSuccess(false) }} />
+              {logoUrl && (
+                <button type="button" onClick={() => { setLogoUrl(null); setSuccess(false) }}
+                  className="mt-2 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer p-0 transition-colors">
+                  Remover logo
+                </button>
+              )}
+            </div>
+            <div>
+              <p className="text-[12px] font-semibold text-foreground m-0 mb-3">Tema escuro</p>
+              <LogoCropField value={logoDarkUrl} onChange={(v) => { setLogoDarkUrl(v); setSuccess(false) }} />
+              {logoDarkUrl && (
+                <button type="button" onClick={() => { setLogoDarkUrl(null); setSuccess(false) }}
+                  className="mt-2 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer p-0 transition-colors">
+                  Remover logo
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div>
             <LogoCropField value={logoUrl} onChange={(v) => { setLogoUrl(v); setSuccess(false) }} />
             {logoUrl && (
-              <button
-                type="button"
-                onClick={() => { setLogoUrl(null); setSuccess(false) }}
-                className="mt-2 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer p-0 transition-colors"
-              >
+              <button type="button" onClick={() => { setLogoUrl(null); setSuccess(false) }}
+                className="mt-2 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer p-0 transition-colors">
                 Remover logo
               </button>
             )}
           </div>
-          <div>
-            <p className="text-[12px] font-semibold text-foreground m-0 mb-3">Tema escuro</p>
-            <LogoCropField value={logoDarkUrl} onChange={(v) => { setLogoDarkUrl(v); setSuccess(false) }} />
-            {logoDarkUrl && (
-              <button
-                type="button"
-                onClick={() => { setLogoDarkUrl(null); setSuccess(false) }}
-                className="mt-2 text-xs text-red-500 hover:text-red-700 bg-transparent border-0 cursor-pointer p-0 transition-colors"
-              >
-                Remover logo
-              </button>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ── Dados ── */}
