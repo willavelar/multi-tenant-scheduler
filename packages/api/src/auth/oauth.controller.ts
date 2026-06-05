@@ -75,7 +75,12 @@ export class OAuthController {
       returnTo: dto.returnTo ?? '/me',
       userId:   req.user.id,
     })
-    const authUrl = await this.oauthService.getAuthorizationUrl(dto.provider, stateId)
+    let authUrl: string
+    try {
+      authUrl = await this.oauthService.getAuthorizationUrl(dto.provider, stateId)
+    } catch {
+      throw new BadRequestException('provider_not_configured')
+    }
     return { authUrl }
   }
 
@@ -108,9 +113,7 @@ export class OAuthController {
     try {
       authUrl = await this.oauthService.getAuthorizationUrl(provider, stateId)
     } catch {
-      const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000'
-      const protocol = domain.startsWith('localhost') ? 'http' : 'https'
-      return res.redirect(`${protocol}://${slug}.${domain}/login?reason=oauth_error`)
+      return res.redirect(`${this.frontendBase(slug)}/login?reason=oauth_error`)
     }
     return res.redirect(authUrl)
   }
