@@ -7,7 +7,7 @@ import { EncryptionService } from '../../common/encryption/encryption.service'
 import { UpsertSsoDto } from './dto/upsert-sso.dto'
 
 export type SsoProviderName = 'google' | 'microsoft' | 'facebook'
-const PROVIDERS: SsoProviderName[] = ['google', 'microsoft', 'facebook']
+export const PROVIDERS: SsoProviderName[] = ['google', 'microsoft', 'facebook']
 
 export interface SsoProviderDto {
   provider: SsoProviderName
