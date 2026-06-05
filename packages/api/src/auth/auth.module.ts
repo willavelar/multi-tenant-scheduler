@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { EmailQueueModule } from '../email-queue/email-queue.module';
 import { TenantsModule } from '../tenants/tenants.module';
+import { SsoConfigModule } from '../common/sso-config/sso-config.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { TenantsModule } from '../tenants/tenants.module';
     }),
     EmailQueueModule,
     TenantsModule,
+    SsoConfigModule,
   ],
   providers: [AuthService, OAuthService, JwtStrategy, LocalStrategy],
   controllers: [AuthController, OAuthController],

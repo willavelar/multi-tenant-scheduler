@@ -75,7 +75,7 @@ export class OAuthController {
       returnTo: dto.returnTo ?? '/me',
       userId:   req.user.id,
     })
-    const authUrl = this.oauthService.getAuthorizationUrl(dto.provider, stateId)
+    const authUrl = await this.oauthService.getAuthorizationUrl(dto.provider, stateId)
     return { authUrl }
   }
 
@@ -104,7 +104,14 @@ export class OAuthController {
     if (!slug) throw new BadRequestException('slug is required')
 
     const stateId = await this.oauthService.generateState(slug, 'login', { returnTo })
-    const authUrl = this.oauthService.getAuthorizationUrl(provider, stateId)
+    let authUrl: string
+    try {
+      authUrl = await this.oauthService.getAuthorizationUrl(provider, stateId)
+    } catch {
+      const domain = this.config.get<string>('FRONTEND_BASE_DOMAIN') ?? 'localhost:3000'
+      const protocol = domain.startsWith('localhost') ? 'http' : 'https'
+      return res.redirect(`${protocol}://${slug}.${domain}/login?reason=oauth_error`)
+    }
     return res.redirect(authUrl)
   }
 
