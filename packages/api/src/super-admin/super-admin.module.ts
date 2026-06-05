@@ -5,6 +5,7 @@ import { SuperAdminController } from './super-admin.controller';
 import { SuperAdminService } from './super-admin.service';
 import { SuperAdminGuard } from '../common/guards/super-admin.guard';
 import { RedisModule } from '../redis/redis.module';
+import { SsoModule } from './sso/sso.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { RedisModule } from '../redis/redis.module';
       }),
     }),
     RedisModule,
+    SsoModule,
   ],
   controllers: [SuperAdminController],
   providers: [SuperAdminService, SuperAdminGuard],
