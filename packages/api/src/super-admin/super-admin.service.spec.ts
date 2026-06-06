@@ -156,4 +156,77 @@ describe('SuperAdminService', () => {
       expect(mockRedis.del).toHaveBeenCalledWith('tenant:slug:demo');
     });
   });
+
+  // ── login (inactive) ───────────────────────────────────────────────────────
+  describe('login (active flag)', () => {
+    it('throws UnauthorizedException for an inactive account', async () => {
+      const hash = await bcrypt.hash('password', 1);
+      const service = await buildService([[{ id: 'sa-1', email: 'a@b.com', passwordHash: hash, name: 'Admin', active: false }]]);
+      await expect(service.login('a@b.com', 'password')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  // ── listUsers ──────────────────────────────────────────────────────────────
+  describe('listUsers', () => {
+    it('returns paginated users with total', async () => {
+      const page = [{ id: 'sa-1', name: 'A', email: 'a@b.com', avatarUrl: null, active: true, createdAt: new Date() }];
+      const service = await buildService([page, [{ total: 1 }]]);
+      const result = await service.listUsers(1, 20);
+      expect(result.data).toHaveLength(1);
+      expect(result.total).toBe(1);
+      expect(result.limit).toBe(20);
+    });
+  });
+
+  // ── getUser ────────────────────────────────────────────────────────────────
+  describe('getUser', () => {
+    it('returns the user when found', async () => {
+      const user = { id: 'sa-1', name: 'A', email: 'a@b.com', avatarUrl: null, active: true, createdAt: new Date() };
+      const service = await buildService([[user]]);
+      await expect(service.getUser('sa-1')).resolves.toEqual(user);
+    });
+
+    it('throws NotFoundException when missing', async () => {
+      const service = await buildService([[]]);
+      await expect(service.getUser('missing')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  // ── createUser ─────────────────────────────────────────────────────────────
+  describe('createUser', () => {
+    const dto = { name: 'New', email: 'new@b.com', password: 'pass123' };
+
+    it('throws ConflictException for duplicate email', async () => {
+      const service = await buildService([[{ id: 'sa-existing' }]]);
+      await expect(service.createUser(dto)).rejects.toThrow(ConflictException);
+    });
+
+    it('creates and returns the user without passwordHash', async () => {
+      const created = { id: 'sa-new', name: 'New', email: 'new@b.com', avatarUrl: null, active: true, createdAt: new Date() };
+      const service = await buildService([[], [created]]);
+      const result = await service.createUser(dto);
+      expect(result.email).toBe('new@b.com');
+      expect((result as Record<string, unknown>).passwordHash).toBeUndefined();
+    });
+  });
+
+  // ── updateUser ─────────────────────────────────────────────────────────────
+  describe('updateUser', () => {
+    it('throws NotFoundException when target does not exist', async () => {
+      const service = await buildService([[]]);
+      await expect(service.updateUser('missing', { name: 'X' }, 'caller-1')).rejects.toThrow(NotFoundException);
+    });
+
+    it('blocks deactivating your own account', async () => {
+      const service = await buildService([[{ id: 'sa-1' }]]);
+      await expect(service.updateUser('sa-1', { active: false }, 'sa-1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('updates and returns the user', async () => {
+      const updated = { id: 'sa-1', name: 'Updated', email: 'a@b.com', avatarUrl: null, active: true, createdAt: new Date() };
+      const service = await buildService([[{ id: 'sa-1' }], [updated]]);
+      const result = await service.updateUser('sa-1', { name: 'Updated' }, 'caller-2');
+      expect(result.name).toBe('Updated');
+    });
+  });
 });

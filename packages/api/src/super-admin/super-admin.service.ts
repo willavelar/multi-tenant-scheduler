@@ -12,6 +12,8 @@ import { REDIS } from '../redis/redis.module';
 import { RESERVED_SLUGS } from '../common/constants/password';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { CreateSuperAdminUserDto } from './dto/create-super-admin-user.dto';
+import { UpdateSuperAdminUserDto } from './dto/update-super-admin-user.dto';
 
 @Injectable()
 export class SuperAdminService {
@@ -21,13 +23,22 @@ export class SuperAdminService {
     @Inject(REDIS) private readonly redis: Redis,
   ) {}
 
+  private static readonly USER_FIELDS = {
+    id:        superAdmins.id,
+    name:      superAdmins.name,
+    email:     superAdmins.email,
+    avatarUrl: superAdmins.avatarUrl,
+    active:    superAdmins.active,
+    createdAt: superAdmins.createdAt,
+  };
+
   async login(email: string, password: string): Promise<{ accessToken: string }> {
     const [admin] = await this.db
       .select()
       .from(superAdmins)
       .where(eq(superAdmins.email, email));
 
-    if (!admin || !(await bcrypt.compare(password, admin.passwordHash))) {
+    if (!admin || admin.active === false || !(await bcrypt.compare(password, admin.passwordHash))) {
       throw new UnauthorizedException();
     }
 
@@ -35,6 +46,7 @@ export class SuperAdminService {
       sub: admin.id,
       email: admin.email,
       name: admin.name,
+      avatarUrl: admin.avatarUrl,
       type: 'super_admin',
     });
     return { accessToken };
@@ -133,6 +145,86 @@ export class SuperAdminService {
       await this.redis.del(`tenant:slug:${dto.slug}`);
     }
 
+    return updated;
+  }
+
+  async listUsers(
+    page = 1,
+    limit = 20,
+    filters: { q?: string; active?: string } = {},
+  ) {
+    const offset = (page - 1) * limit;
+    const where = and(
+      filters.q
+        ? or(ilike(superAdmins.name, `%${filters.q}%`), ilike(superAdmins.email, `%${filters.q}%`))
+        : undefined,
+      filters.active === 'true' ? eq(superAdmins.active, true) : undefined,
+      filters.active === 'false' ? eq(superAdmins.active, false) : undefined,
+    );
+    const [data, countResult] = await Promise.all([
+      this.db.select(SuperAdminService.USER_FIELDS).from(superAdmins).where(where).orderBy(desc(superAdmins.createdAt)).limit(limit).offset(offset),
+      this.db.select({ total: count() }).from(superAdmins).where(where),
+    ]);
+    const total = Number(countResult[0]?.total ?? 0);
+    return { data, total, page, limit };
+  }
+
+  async getUser(id: string) {
+    const [user] = await this.db
+      .select(SuperAdminService.USER_FIELDS)
+      .from(superAdmins)
+      .where(eq(superAdmins.id, id));
+    if (!user) throw new NotFoundException();
+    return user;
+  }
+
+  async createUser(dto: CreateSuperAdminUserDto) {
+    const [existing] = await this.db
+      .select({ id: superAdmins.id })
+      .from(superAdmins)
+      .where(eq(superAdmins.email, dto.email));
+    if (existing) throw new ConflictException('E-mail já está em uso');
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const [created] = await this.db
+      .insert(superAdmins)
+      .values({
+        name:         dto.name,
+        email:        dto.email,
+        passwordHash,
+        avatarUrl:    dto.avatarUrl ?? null,
+      })
+      .returning(SuperAdminService.USER_FIELDS);
+    return created;
+  }
+
+  async updateUser(id: string, dto: UpdateSuperAdminUserDto, callerId: string) {
+    const [existing] = await this.db
+      .select({ id: superAdmins.id })
+      .from(superAdmins)
+      .where(eq(superAdmins.id, id));
+    if (!existing) throw new NotFoundException();
+
+    if (dto.active === false && id === callerId) {
+      throw new BadRequestException('Você não pode desativar a própria conta');
+    }
+
+    const patch: Partial<typeof superAdmins.$inferInsert> = {};
+    if (dto.name      !== undefined) patch.name      = dto.name;
+    if (dto.avatarUrl !== undefined) patch.avatarUrl = dto.avatarUrl;
+    if (dto.active    !== undefined) patch.active    = dto.active;
+    if (dto.password) patch.passwordHash = await bcrypt.hash(dto.password, 10);
+
+    if (Object.keys(patch).length) {
+      patch.updatedAt = new Date();
+      await this.db.update(superAdmins).set(patch).where(eq(superAdmins.id, id));
+    }
+
+    const [updated] = await this.db
+      .select(SuperAdminService.USER_FIELDS)
+      .from(superAdmins)
+      .where(eq(superAdmins.id, id));
+    if (!updated) throw new NotFoundException();
     return updated;
   }
 }
