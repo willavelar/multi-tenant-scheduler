@@ -38,7 +38,8 @@ export class SuperAdminService {
       .from(superAdmins)
       .where(eq(superAdmins.email, email));
 
-    if (!admin || admin.active === false || !(await bcrypt.compare(password, admin.passwordHash))) {
+    const passwordOk = admin ? await bcrypt.compare(password, admin.passwordHash) : false;
+    if (!admin || admin.active === false || !passwordOk) {
       throw new UnauthorizedException();
     }
 
@@ -215,15 +216,14 @@ export class SuperAdminService {
     if (dto.active    !== undefined) patch.active    = dto.active;
     if (dto.password) patch.passwordHash = await bcrypt.hash(dto.password, 10);
 
-    if (Object.keys(patch).length) {
-      patch.updatedAt = new Date();
-      await this.db.update(superAdmins).set(patch).where(eq(superAdmins.id, id));
-    }
+    if (!Object.keys(patch).length) return this.getUser(id);
 
+    patch.updatedAt = new Date();
     const [updated] = await this.db
-      .select(SuperAdminService.USER_FIELDS)
-      .from(superAdmins)
-      .where(eq(superAdmins.id, id));
+      .update(superAdmins)
+      .set(patch)
+      .where(eq(superAdmins.id, id))
+      .returning(SuperAdminService.USER_FIELDS);
     if (!updated) throw new NotFoundException();
     return updated;
   }

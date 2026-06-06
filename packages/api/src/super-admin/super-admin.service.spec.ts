@@ -174,6 +174,7 @@ describe('SuperAdminService', () => {
       const result = await service.listUsers(1, 20);
       expect(result.data).toHaveLength(1);
       expect(result.total).toBe(1);
+      expect(result.page).toBe(1);
       expect(result.limit).toBe(20);
     });
   });
