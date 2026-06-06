@@ -5,6 +5,11 @@ import { SuperAdminLoginDto } from './dto/login.dto';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { ListTenantsQueryDto } from './dto/list-tenants-query.dto';
+import { CreateSuperAdminUserDto } from './dto/create-super-admin-user.dto';
+import { UpdateSuperAdminUserDto } from './dto/update-super-admin-user.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
+import { CurrentSuperAdmin } from '../common/decorators/current-super-admin.decorator';
+import type { SuperAdminJwtPayload } from '../common/guards/super-admin.guard';
 
 @Controller('super-admin')
 export class SuperAdminController {
@@ -41,5 +46,36 @@ export class SuperAdminController {
   @UseGuards(SuperAdminGuard)
   updateTenant(@Param('id') id: string, @Body() dto: UpdateTenantDto) {
     return this.superAdminService.updateTenant(id, dto);
+  }
+
+  @Get('users')
+  @UseGuards(SuperAdminGuard)
+  listUsers(@Query() query: ListUsersQueryDto) {
+    return this.superAdminService.listUsers(query.page, query.limit, {
+      q: query.q,
+      active: query.active,
+    });
+  }
+
+  @Get('users/:id')
+  @UseGuards(SuperAdminGuard)
+  getUser(@Param('id') id: string) {
+    return this.superAdminService.getUser(id);
+  }
+
+  @Post('users')
+  @UseGuards(SuperAdminGuard)
+  createUser(@Body() dto: CreateSuperAdminUserDto) {
+    return this.superAdminService.createUser(dto);
+  }
+
+  @Patch('users/:id')
+  @UseGuards(SuperAdminGuard)
+  updateUser(
+    @Param('id') id: string,
+    @Body() dto: UpdateSuperAdminUserDto,
+    @CurrentSuperAdmin() caller: SuperAdminJwtPayload,
+  ) {
+    return this.superAdminService.updateUser(id, dto, caller.sub);
   }
 }
