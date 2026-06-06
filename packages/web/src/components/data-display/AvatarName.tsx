@@ -1,14 +1,4 @@
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
-
-function pickColor(str: string) {
-  let h = 0
-  for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return COLORS[h % COLORS.length]
-}
-
-function initials(name: string) {
-  return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
-}
+import { pickColor, initials } from '@/lib/avatar'
 
 type Props = {
   name: string

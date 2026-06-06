@@ -1,11 +1,14 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { DetailHeader } from '@/components/sections/DetailHeader'
+import { DetailIdentity } from '@/components/sections/DetailIdentity'
+import { DetailCard } from '@/components/sections/DetailCard'
+import { FieldRow } from '@/components/data-display/FieldRow'
 
 interface Tenant {
   id: string
@@ -46,45 +49,34 @@ export default function TenantDetailPage() {
   if (isError || !tenant) return <p className="text-destructive text-sm">Tenant não encontrado.</p>
 
   return (
-    <div className="max-w-lg space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href="/admin/tenants" className="text-sm text-muted-foreground hover:underline">
-          ← Tenants
-        </Link>
-        <h1 className="text-2xl font-semibold">{tenant.name}</h1>
-        <StatusBadge
-          label={tenant.active ? 'Ativo' : 'Inativo'}
-          variant={tenant.active ? 'success' : 'neutral'}
-        />
-      </div>
-
-      <dl className="space-y-3 text-sm">
-        <div className="flex gap-4">
-          <dt className="w-24 text-muted-foreground">Slug</dt>
-          <dd className="font-mono">{tenant.slug}</dd>
-        </div>
-        <div className="flex gap-4">
-          <dt className="w-24 text-muted-foreground">ID</dt>
-          <dd className="font-mono text-xs text-muted-foreground">{tenant.id}</dd>
-        </div>
-        <div className="flex gap-4">
-          <dt className="w-24 text-muted-foreground">Criado em</dt>
-          <dd>{new Date(tenant.createdAt).toLocaleDateString('pt-BR')}</dd>
-        </div>
-      </dl>
-
-      <div className="flex gap-3 pt-2 border-t">
-        <Button onClick={() => router.push(`/admin/tenants/${id}/edit`)}>
-          Editar
-        </Button>
+    <div>
+      <DetailHeader backHref="/admin/tenants" backLabel="Voltar para tenants">
         <Button
           variant="secondary"
+          size="md"
           onClick={() => toggleActive.mutate(!tenant.active)}
           disabled={toggleActive.isPending}
         >
           {tenant.active ? 'Desativar' : 'Reativar'}
         </Button>
-      </div>
+        <Button variant="primary" size="md" onClick={() => router.push(`/admin/tenants/${id}/edit`)}>
+          Editar tenant
+        </Button>
+      </DetailHeader>
+
+      <DetailIdentity name={tenant.name} subtitle={tenant.slug} id={tenant.id} />
+
+      <DetailCard>
+        <FieldRow label="Nome" value={tenant.name} />
+        <FieldRow label="Slug" value={<span className="font-mono">{tenant.slug}</span>} />
+        <FieldRow label="Status" value={
+          <StatusBadge
+            label={tenant.active ? 'Ativo' : 'Inativo'}
+            variant={tenant.active ? 'success' : 'neutral'}
+          />
+        } />
+        <FieldRow label="Criado em" value={new Date(tenant.createdAt).toLocaleDateString('pt-BR')} />
+      </DetailCard>
     </div>
   )
 }

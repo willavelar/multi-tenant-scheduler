@@ -10,7 +10,10 @@ import {
 } from '@/lib/super-admin-api'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/feedback/StatusBadge'
-import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { DetailHeader } from '@/components/sections/DetailHeader'
+import { DetailIdentity } from '@/components/sections/DetailIdentity'
+import { DetailCard } from '@/components/sections/DetailCard'
+import { FieldRow } from '@/components/data-display/FieldRow'
 import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
 import { EmptyState } from '@/components/feedback/EmptyState'
 
@@ -43,56 +46,51 @@ export default function SuggestionDetailPage({ params }: { params: Promise<{ id:
   if (isLoading) return <DetailSkeleton />
   if (isError || !data) return <EmptyState title="Não encontrada" description="Esta sugestão não existe mais." />
 
+  const isResolved = data.status === 'resolved'
+
   return (
-    <div className="space-y-6 max-w-2xl">
-      <button onClick={() => router.push('/admin/suggestions')} className="text-sm text-muted-foreground hover:text-foreground">
-        ← Voltar
-      </button>
-
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Sugestão</h1>
-        <StatusBadge
-          label={data.status === 'resolved' ? 'Resolvida' : 'Nova'}
-          variant={data.status === 'resolved' ? 'success' : 'purple'}
-        />
-      </div>
-
-      <div className="bg-background border border-border rounded-xl p-5 space-y-4 shadow-sm">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div><div className="text-muted-foreground">Tenant</div><div className="font-medium">{data.tenantName ?? '—'}</div></div>
-          <div><div className="text-muted-foreground">Data</div><div className="font-medium"><DateTimeCell iso={data.createdAt} /></div></div>
-          <div><div className="text-muted-foreground">Usuário</div><div className="font-medium">{data.userName}</div></div>
-          <div><div className="text-muted-foreground">Email</div><div className="font-medium">{data.userEmail}</div></div>
-        </div>
-
-        <div>
-          <div className="text-muted-foreground text-sm mb-1">Conteúdo</div>
-          <p className="whitespace-pre-wrap text-sm">{data.content}</p>
-        </div>
-
-        {data.imageUrl && (
-          <div>
-            <div className="text-muted-foreground text-sm mb-1">Anexo</div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={data.imageUrl} alt="anexo" className="max-w-full rounded-lg border border-border" />
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center gap-3">
-        {data.status !== 'resolved' && (
-          <Button onClick={() => resolveMutation.mutate()} disabled={resolveMutation.isPending}>
+    <div>
+      <DetailHeader backHref="/admin/suggestions" backLabel="Voltar para sugestões">
+        {!isResolved && (
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => resolveMutation.mutate()}
+            disabled={resolveMutation.isPending}
+          >
             {resolveMutation.isPending ? 'Salvando…' : 'Marcar resolvida'}
           </Button>
         )}
         <Button
           variant="destructive-outline"
+          size="md"
           onClick={() => { if (confirm('Excluir esta sugestão?')) deleteMutation.mutate() }}
           disabled={deleteMutation.isPending}
         >
           {deleteMutation.isPending ? 'Excluindo…' : 'Excluir'}
         </Button>
-      </div>
+      </DetailHeader>
+
+      <DetailIdentity name={data.userName} subtitle={data.userEmail} id={data.id} />
+
+      <DetailCard>
+        <FieldRow label="Tenant" value={data.tenantName ?? '—'} />
+        <FieldRow label="Usuário" value={data.userName} />
+        <FieldRow label="Status" value={
+          <StatusBadge
+            label={isResolved ? 'Resolvida' : 'Nova'}
+            variant={isResolved ? 'success' : 'purple'}
+          />
+        } />
+        <FieldRow label="Criado em" value={new Date(data.createdAt).toLocaleDateString('pt-BR')} />
+        <FieldRow label="Conteúdo" value={<span className="whitespace-pre-wrap">{data.content}</span>} />
+        {data.imageUrl && (
+          <FieldRow label="Anexo" value={
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={data.imageUrl} alt="anexo" className="max-w-full rounded-lg border border-border" />
+          } />
+        )}
+      </DetailCard>
     </div>
   )
 }

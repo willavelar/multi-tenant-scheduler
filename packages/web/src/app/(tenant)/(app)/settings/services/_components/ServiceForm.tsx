@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { inputCls } from '@/components/fields/inputStyles'
 import { Button } from '@/components/ui/button'
 import { ColorPicker } from '@/components/fields/ColorPicker'
 import type { Service } from '@/types'
@@ -29,12 +30,6 @@ type FormState = {
   active: boolean
   color: string
 }
-
-const inputCls = (hasError = false) => cn(
-  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
-  'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-  hasError ? 'border-red-400' : 'border-border',
-)
 
 const DURATION_PRESETS = [15, 30, 45, 60, 90, 120]
 

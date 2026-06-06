@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
 import { Button } from '@/components/ui/button'
@@ -11,6 +10,11 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@
 import { EmptyState } from '@/components/feedback/EmptyState'
 import { StatusBadge } from '@/components/feedback/StatusBadge'
 import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { ViewButton } from '@/components/navigation/ViewButton'
+import { TablePagination } from '@/components/navigation/TablePagination'
+import { FilterBar } from '@/components/filters/FilterBar'
+import { SearchField } from '@/components/filters/SearchField'
+import { SelectField } from '@/components/filters/SelectField'
 
 interface Tenant {
   id: string
@@ -27,31 +31,66 @@ interface TenantsPage {
   limit: number
 }
 
-const COLS = ['Nome', 'Slug', 'Status', 'Criado em', '']
+const COLS = ['Nome', 'Slug', 'Status', 'Criado em', 'Ações']
 
 export default function TenantsPage() {
   const router = useRouter()
   const [page, setPage] = useState(1)
+  const [q, setQ] = useState('')
+  const [active, setActive] = useState('')
   const limit = 20
 
+  const hasFilters = !!(q || active)
+
+  const onSearch = (v: string) => { setQ(v); setPage(1) }
+  const onStatus = (v: string) => { setActive(v); setPage(1) }
+  const onClear  = () => { setQ(''); setActive(''); setPage(1) }
+
   const { data, isLoading, isError } = useQuery<TenantsPage>({
-    queryKey: ['sa-tenants', page],
+    queryKey: ['sa-tenants', page, q, active],
     queryFn: async () => {
-      const res = await superAdminFetch(`/super-admin/tenants?page=${page}&limit=${limit}`)
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+      if (q) params.set('q', q)
+      if (active) params.set('active', active)
+      const res = await superAdminFetch(`/super-admin/tenants?${params.toString()}`)
       return res.json()
     },
   })
 
   const tenants    = data?.data ?? []
-  const totalPages = data ? Math.ceil(data.total / limit) : 1
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / limit)) : 1
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Tenants</h1>
-        <Button onClick={() => router.push('/admin/tenants/new')}>Novo tenant</Button>
+    <div className="w-full">
+
+      {/* Header row */}
+      <div className="flex justify-end mb-4">
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => router.push('/admin/tenants/new')}
+          icon={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>}
+        >
+          Novo tenant
+        </Button>
       </div>
 
+      {/* Filters */}
+      <FilterBar showClear={hasFilters} onClear={onClear}>
+        <SearchField value={q} onChange={onSearch} placeholder="Nome ou slug…" />
+        <SelectField
+          label="Status"
+          value={active}
+          onChange={onStatus}
+          options={[
+            { value: '', label: 'Todos' },
+            { value: 'true', label: 'Ativo' },
+            { value: 'false', label: 'Inativo' },
+          ]}
+        />
+      </FilterBar>
+
+      {/* Table card */}
       <div className="bg-background border border-border rounded-xl overflow-hidden shadow-sm">
         {isLoading ? (
           <TableSkeleton cols={5} />
@@ -60,8 +99,7 @@ export default function TenantsPage() {
         ) : !tenants.length ? (
           <EmptyState
             title="Nenhum tenant"
-            description="Tenants aparecerão aqui após serem cadastrados."
-            action={{ label: 'Novo tenant', onClick: () => router.push('/admin/tenants/new') }}
+            description={hasFilters ? 'Nenhum tenant encontrado para os filtros aplicados.' : 'Tenants aparecerão aqui após serem cadastrados.'}
           />
         ) : (
           <>
@@ -85,39 +123,16 @@ export default function TenantsPage() {
                       />
                     </TableCell>
                     <TableCell><DateTimeCell iso={tenant.createdAt} /></TableCell>
-                    <TableCell className="text-right">
-                      <Link href={`/admin/tenants/${tenant.id}`} className="text-sm text-primary hover:underline">
-                        Ver
-                      </Link>
+                    <TableCell>
+                      <ViewButton onClick={() => router.push(`/admin/tenants/${tenant.id}`)} />
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-                <p className="text-[13px] text-muted-foreground m-0">
-                  Página {page} de {totalPages}
-                </p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary" size="sm"
-                    disabled={page === 1}
-                    onClick={() => setPage(p => p - 1)}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="secondary" size="sm"
-                    disabled={page === totalPages}
-                    onClick={() => setPage(p => p + 1)}
-                  >
-                    Próxima
-                  </Button>
-                </div>
-              </div>
-            )}
+            {/* Pagination */}
+            <TablePagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </>
         )}
       </div>

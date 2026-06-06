@@ -1,7 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { BackButton } from '@/components/navigation/BackButton'
+import { DetailHeader } from '@/components/sections/DetailHeader'
+import { DetailIdentity } from '@/components/sections/DetailIdentity'
 import { DetailCard } from '@/components/sections/DetailCard'
 import { FieldRow } from '@/components/data-display/FieldRow'
 import { DangerZone } from '@/components/sections/DangerZone'
@@ -9,15 +10,6 @@ import { StatusBadge } from '@/components/feedback/StatusBadge'
 import { AvatarName } from '@/components/data-display/AvatarName'
 import type { ClientDetail } from '@/types'
 import { Button } from '@/components/ui/button'
-
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#06b6d4', '#10b981', '#f59e0b']
-function pickColor(str: string) {
-  let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) >>> 0
-  return COLORS[h % COLORS.length]
-}
-function initials(name: string) {
-  return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
-}
 
 function formatBirthDate(dateStr: string | null) {
   if (!dateStr) return '—'
@@ -49,37 +41,20 @@ export function ClientDetailView({ client, isAdmin, isOwnProfile, profilePage, o
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-7">
-        {showBack
-          ? <BackButton href="/clients">Voltar para clientes</BackButton>
-          : <div />
-        }
+      <DetailHeader backHref={showBack ? '/clients' : undefined} backLabel="Voltar para clientes">
         {showEdit && (
           <Button variant="primary" size="md" onClick={() => router.push(`/clients/${client.id}/edit`)}>
             {profilePage ? 'Editar' : 'Editar cliente'}
           </Button>
         )}
-      </div>
+      </DetailHeader>
 
-      <div className="flex items-center gap-4 mb-7">
-        {client.avatarUrl ? (
-          <img src={client.avatarUrl} alt={client.name} className="w-14 h-14 rounded-full object-cover shrink-0" />
-        ) : (
-          <div
-            className="w-14 h-14 rounded-full text-white flex items-center justify-center text-xl font-bold shrink-0"
-            style={{ background: pickColor(client.name) }}
-          >
-            {initials(client.name)}
-          </div>
-        )}
-        <div>
-          <h2 className="m-0 mb-0.5 text-lg font-bold text-foreground">{client.name}</h2>
-          <p className="m-0 mb-1 text-[13px] text-muted-foreground">{client.email}</p>
-          <code className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded">
-            ID: {client.id}
-          </code>
-        </div>
-      </div>
+      <DetailIdentity
+        name={client.name}
+        subtitle={client.email}
+        id={client.id}
+        avatarUrl={client.avatarUrl}
+      />
 
       <DetailCard>
         <FieldRow label="Nome" value={client.name} />

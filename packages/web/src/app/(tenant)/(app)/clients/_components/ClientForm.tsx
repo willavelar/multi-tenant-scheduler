@@ -10,6 +10,8 @@ import { NotificationPreferencesCard } from '@/components/sections/NotificationP
 import { LinkedAccountsCard } from '@/components/sections/LinkedAccountsCard'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { FormCard } from '@/components/sections/FormCard'
+import { inputCls } from '@/components/fields/inputStyles'
 import { FormSkeleton } from '@/components/loading/FormSkeleton'
 import { useResendInvite } from '@/hooks/useResendInvite'
 import type { Professional, Service, ClientDetail } from '@/types'
@@ -74,12 +76,6 @@ function applyPhoneMask(raw: string): string {
   if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
 }
-
-const inputCls = (hasError = false) => cn(
-  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
-  'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-  hasError ? 'border-red-400' : 'border-border',
-)
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -300,9 +296,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
     <form onSubmit={handleSubmit} noValidate>
 
       {/* ── Card 1: Dados pessoais ── */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-foreground m-0 mb-5">Dados pessoais</p>
-
+      <FormCard title="Dados pessoais">
         <div className="mb-5">
           <AvatarCropField value={avatarUrl} onChange={setAvatarUrl} name={form.name} />
         </div>
@@ -388,12 +382,10 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
           />
           {errors.birthDate && <p className="text-xs text-red-500 mt-1 m-0">{errors.birthDate}</p>}
         </div>
-      </div>
+      </FormCard>
 
       {/* ── Card 2: Perfil ── */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-foreground m-0 mb-5">Perfil</p>
-
+      <FormCard title="Perfil">
         <div className="mb-4">
           <label htmlFor="client-notes" className="block text-[13px] font-medium text-foreground mb-1.5">Observações</label>
           <textarea
@@ -448,7 +440,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             )}
           </div>
         )}
-      </div>
+      </FormCard>
 
       {/* ── Card 3: Notificações ── */}
       {mode === 'edit' && (
@@ -467,12 +459,11 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
       )}
 
       {/* ── Card 5: Profissionais vinculados ── */}
-      <div className="bg-background border border-border rounded-xl p-6 mb-5 shadow-sm relative">
-        <p className="text-sm font-bold text-foreground m-0 mb-5">Profissionais vinculados</p>
-        <p className="text-[13px] text-muted-foreground m-0 mb-4">
-          Restringe quais profissionais este cliente pode agendar. Deixe vazio para não restringir.
-        </p>
-
+      <FormCard
+        title="Profissionais vinculados"
+        description="Restringe quais profissionais este cliente pode agendar. Deixe vazio para não restringir."
+        className="bg-background relative"
+      >
         <label className="flex items-center gap-2.5 mb-4 cursor-pointer select-none">
           <input
             type="checkbox"
@@ -537,16 +528,14 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             )}
           </div>
         )}
-      </div>
+      </FormCard>
 
       {/* ── Card 6: Serviços permitidos ── */}
       {services.length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
-          <p className="text-sm font-bold text-foreground m-0 mb-5">Serviços permitidos</p>
-          <p className="text-[13px] text-muted-foreground m-0 mb-4">
-            Restringe quais serviços este cliente pode agendar. Deixe vazio para não restringir.
-          </p>
-
+        <FormCard
+          title="Serviços permitidos"
+          description="Restringe quais serviços este cliente pode agendar. Deixe vazio para não restringir."
+        >
           <label className="flex items-center gap-2.5 mb-4 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -584,15 +573,14 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
               ))}
             </div>
           )}
-        </div>
+        </FormCard>
       )}
 
       {/* ── Card 7: Limite de serviços ── */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-foreground m-0 mb-2">Limite de serviços</p>
-        <p className="text-[13px] text-muted-foreground m-0 mb-5">
-          Define quantos agendamentos este cliente pode fazer em um determinado período.
-        </p>
+      <FormCard
+        title="Limite de serviços"
+        description="Define quantos agendamentos este cliente pode fazer em um determinado período."
+      >
 
         {/* Mode selector */}
         <div className="flex flex-col gap-2 mb-5">
@@ -729,14 +717,13 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             )}
           </div>
         )}
-      </div>
+      </FormCard>
 
       {/* ── Card 8: Limite de cancelamentos ── */}
-      <div className="bg-card border border-border rounded-xl p-6 mb-5 shadow-sm">
-        <p className="text-sm font-bold text-foreground m-0 mb-2">Limite de cancelamentos</p>
-        <p className="text-[13px] text-muted-foreground m-0 mb-5">
-          Define quantos cancelamentos este cliente pode realizar em um determinado período. Deixe em branco para não restringir.
-        </p>
+      <FormCard
+        title="Limite de cancelamentos"
+        description="Define quantos cancelamentos este cliente pode realizar em um determinado período. Deixe em branco para não restringir."
+      >
         <div className="flex gap-3 items-end">
           <div className="[flex:0_0_140px]">
             <label htmlFor="client-cancel-limit-count" className="block text-[13px] font-medium text-foreground mb-1.5">
@@ -783,7 +770,7 @@ export function ClientForm({ mode, defaultValues, onSubmit, onCancel, isOwnProfi
             )}
           </div>
         </div>
-      </div>
+      </FormCard>
 
       {/* ── Card: Contas vinculadas ── */}
       {mode === 'edit' && isOwnProfile && <LinkedAccountsCard />}

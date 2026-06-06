@@ -20,7 +20,7 @@ function getBreadcrumbs(pathname: string): Crumb[] {
 
   // /admin/tenants/[id]
   if (segments[1] === 'tenants' && segments.length === 3)
-    return [{ label: 'Tenants', href: '/admin/tenants' }, { label: 'Detalhes do tenant' }]
+    return [{ label: 'Tenants', href: '/admin/tenants' }, { label: 'Visualizar tenant' }]
 
   // /admin/tenants/[id]/edit
   if (segments[1] === 'tenants' && segments.length === 4 && segments[3] === 'edit')

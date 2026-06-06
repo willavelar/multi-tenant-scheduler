@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
 import { SidebarNavLink } from '@/components/app-shell/SidebarNavLink'
 
@@ -34,16 +35,15 @@ export function SuperAdminSidebar() {
 
   return (
     <aside className="w-65 min-h-screen bg-sidebar fixed left-0 top-0 bottom-0 flex flex-col z-40 border-r border-sidebar-border">
-      <div className="px-5 pt-5 pb-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shrink-0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" strokeWidth="2"/>
-              <path d="M8 9h8M8 13h5" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <span className="text-[15px] font-bold text-sidebar-foreground tracking-[-0.01em]">Admin Panel</span>
-        </div>
+      {/* Brand — fixed TimoUp logo (not tenant-customizable) */}
+      <div className="border-b border-sidebar-border">
+        <Link href="/admin/tenants" className="flex items-center gap-2.5 w-full px-5 pt-5 pb-4">
+          <img
+            src="/logo-default.png"
+            alt="TimoUp"
+            className="max-w-full h-auto object-contain p-3"
+          />
+        </Link>
       </div>
 
       <nav className="px-3 pt-4 flex-1">

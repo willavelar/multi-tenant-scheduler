@@ -4,7 +4,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, or } from 'drizzle-orm';
 import { superAdmins, tenants, users } from '@scheduler/shared';
 import type Redis from 'ioredis';
 import { DB, DrizzleDB } from '../database/database.module';
@@ -40,11 +40,22 @@ export class SuperAdminService {
     return { accessToken };
   }
 
-  async listTenants(page = 1, limit = 20) {
+  async listTenants(
+    page = 1,
+    limit = 20,
+    filters: { q?: string; active?: string } = {},
+  ) {
     const offset = (page - 1) * limit;
+    const where = and(
+      filters.q
+        ? or(ilike(tenants.name, `%${filters.q}%`), ilike(tenants.slug, `%${filters.q}%`))
+        : undefined,
+      filters.active === 'true' ? eq(tenants.active, true) : undefined,
+      filters.active === 'false' ? eq(tenants.active, false) : undefined,
+    );
     const [data, countResult] = await Promise.all([
-      this.db.select().from(tenants).orderBy(desc(tenants.createdAt)).limit(limit).offset(offset),
-      this.db.select({ total: count() }).from(tenants),
+      this.db.select().from(tenants).where(where).orderBy(desc(tenants.createdAt)).limit(limit).offset(offset),
+      this.db.select({ total: count() }).from(tenants).where(where),
     ]);
     const total = Number(countResult[0]?.total ?? 0);
     return { data, total, page, limit };

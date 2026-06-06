@@ -8,6 +8,12 @@ export function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     const pathname = url.pathname
 
+    // Public static files (e.g. /logo-default.png) must be served as-is,
+    // not rewritten under /admin.
+    if (/\.[^/]+$/.test(pathname)) {
+      return NextResponse.next()
+    }
+
     // Already under /admin — don't double-rewrite
     if (!pathname.startsWith('/admin')) {
       url.pathname = `/admin${pathname === '/' ? '/tenants' : pathname}`

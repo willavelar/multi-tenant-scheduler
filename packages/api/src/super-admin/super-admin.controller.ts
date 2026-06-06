@@ -25,7 +25,10 @@ export class SuperAdminController {
   @Get('tenants')
   @UseGuards(SuperAdminGuard)
   listTenants(@Query() query: ListTenantsQueryDto) {
-    return this.superAdminService.listTenants(query.page, query.limit);
+    return this.superAdminService.listTenants(query.page, query.limit, {
+      q: query.q,
+      active: query.active,
+    });
   }
 
   @Get('tenants/:id')

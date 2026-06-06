@@ -8,6 +8,7 @@ import { AvatarCropField } from '@/components/fields/AvatarCropField'
 import { NotificationPreferencesCard } from '@/components/sections/NotificationPreferencesCard'
 import { LinkedAccountsCard } from '@/components/sections/LinkedAccountsCard'
 import { cn } from '@/lib/utils'
+import { inputCls } from '@/components/fields/inputStyles'
 import { Button } from '@/components/ui/button'
 import { useResendInvite } from '@/hooks/useResendInvite'
 
@@ -59,12 +60,6 @@ export type AdminFormProps = {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-const inputCls = (hasError = false) => cn(
-  'w-full h-[42px] px-3 text-sm text-foreground bg-background rounded-lg border outline-none transition-colors',
-  'focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10',
-  hasError ? 'border-red-400' : 'border-border',
-)
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
