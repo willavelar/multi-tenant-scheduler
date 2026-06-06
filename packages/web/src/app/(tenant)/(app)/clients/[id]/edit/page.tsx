@@ -3,9 +3,9 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useClient, useUpdateClient } from '@/hooks/useClients'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { ClientForm, type ClientFormData } from '../../_components/ClientForm'
-import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { FormSkeleton } from '@/components/loading/FormSkeleton'
 
 export default function EditClientPage() {
   const { id } = useParams<{ id: string }>()

@@ -4,15 +4,16 @@ import { useState, useEffect, useId } from 'react'
 import { cn } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useClients } from '@/hooks/useClients'
-import { AvatarName } from '@/components/ui/AvatarName'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { AvatarName } from '@/components/data-display/AvatarName'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { EmptyState } from '@/components/feedback/EmptyState'
 import { useAuth } from '@/providers/AuthProvider'
 import type { Client } from '@/types'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { ViewButton } from '@/components/ui/ViewButton'
+import { ViewButton } from '@/components/navigation/ViewButton'
 
 function formatBirthDate(dateStr: string | null) {
   if (!dateStr) return '—'
@@ -147,38 +148,34 @@ export default function ClientsPage() {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    {COLS.map((col, i) => (
-                      <th key={i} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {clients.map((client: Client) => (
-                    <tr key={client.id} className="border-b border-border transition-colors hover:bg-accent">
-                      <td className="px-4 py-3">
-                        <AvatarName name={client.name} size={32} avatarUrl={client.avatarUrl} />
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{client.phone ?? '—'}</td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatBirthDate(client.birthDate)}</td>
-                      <td className="px-4 py-3"><DateTimeCell iso={client.lastLoginAt} /></td>
-                      <td className="px-4 py-3"><DateTimeCell iso={client.createdAt} /></td>
-                      <td className="px-4 py-3">
-                        <ClientStatusBadge active={client.active} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <ViewButton onClick={() => router.push(`/clients/${client.id}`)} />
-                      </td>
-                    </tr>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {COLS.map((col, i) => (
+                    <TableHead key={i}>{col}</TableHead>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clients.map((client: Client) => (
+                  <TableRow key={client.id}>
+                    <TableCell>
+                      <AvatarName name={client.name} size={32} avatarUrl={client.avatarUrl} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{client.phone ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{formatBirthDate(client.birthDate)}</TableCell>
+                    <TableCell><DateTimeCell iso={client.lastLoginAt} /></TableCell>
+                    <TableCell><DateTimeCell iso={client.createdAt} /></TableCell>
+                    <TableCell>
+                      <ClientStatusBadge active={client.active} />
+                    </TableCell>
+                    <TableCell>
+                      <ViewButton onClick={() => router.push(`/clients/${client.id}`)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-3 border-t border-border">

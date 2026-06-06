@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { BackButton } from '@/components/ui/BackButton'
-import { DetailCard } from '@/components/ui/DetailCard'
-import { FieldRow } from '@/components/ui/FieldRow'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import type { StatusVariant } from '@/components/ui/StatusBadge'
-import { AvatarName } from '@/components/ui/AvatarName'
+import { BackButton } from '@/components/navigation/BackButton'
+import { DetailCard } from '@/components/sections/DetailCard'
+import { FieldRow } from '@/components/data-display/FieldRow'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import type { StatusVariant } from '@/components/feedback/StatusBadge'
+import { AvatarName } from '@/components/data-display/AvatarName'
 import type { AppointmentDetail } from '@/types'
 import { useFormatTime } from '@/hooks/useFormatTime'
 

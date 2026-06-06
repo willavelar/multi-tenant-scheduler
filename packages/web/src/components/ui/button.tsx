@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
-import {Spinner} from "@/components/ui/Spinner";
+import {Spinner} from "@/components/loading/Spinner";
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium whitespace-nowrap transition-colors outline-none cursor-pointer disabled:opacity-65 disabled:cursor-not-allowed disabled:pointer-events-none',

@@ -2,8 +2,8 @@
 
 import { useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import type { StatusVariant } from '@/components/ui/StatusBadge'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import type { StatusVariant } from '@/components/feedback/StatusBadge'
 import type { Appointment } from '@/types'
 
 const STATUS_LABELS: Record<Appointment['status'], string> = {

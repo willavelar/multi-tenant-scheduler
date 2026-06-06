@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useProfessional, useDeleteProfessional, useForceDeleteProfessional } from '@/hooks/useProfessionals'
 import { ProfessionalDetailView } from '../_components/ProfessionalDetailView'
-import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
+import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
 
 export default function ProfessionalDetailPage() {
   const { id } = useParams<{ id: string }>()

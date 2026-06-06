@@ -3,9 +3,9 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useProfessional, useUpdateProfessional } from '@/hooks/useProfessionals'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { ProfessionalForm, type ProfessionalFormData } from '../../_components/ProfessionalForm'
-import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { FormSkeleton } from '@/components/loading/FormSkeleton'
 
 export default function EditProfessionalPage() {
   const { id } = useParams<{ id: string }>()

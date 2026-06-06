@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert } from '@/components/ui/Alert'
+import { Alert } from '@/components/feedback/Alert'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { useAppointmentsCalendar } from '@/hooks/useAppointments'

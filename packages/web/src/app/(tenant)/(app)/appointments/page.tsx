@@ -9,15 +9,16 @@ import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { ConfirmStatusModal } from './_components/ConfirmStatusModal'
 import { CancelAppointmentModal } from './_components/CancelAppointmentModal'
 import { AppointmentStatusBadge } from './_components/AppointmentStatusBadge'
-import { ViewButton } from '@/components/ui/ViewButton'
-import { AvatarName } from '@/components/ui/AvatarName'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { ViewButton } from '@/components/navigation/ViewButton'
+import { AvatarName } from '@/components/data-display/AvatarName'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { EmptyState } from '@/components/feedback/EmptyState'
 import type { Appointment } from '@/types'
 import { AppointmentFilters } from './_components/AppointmentFilters'
 import { CalendarView } from './_components/CalendarView'
 import { CancellationDeadlineBanner } from './_components/CancellationDeadlineBanner'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 
 export default function AppointmentsPage() {
@@ -186,59 +187,55 @@ export default function AppointmentsPage() {
               />
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-[13px]">
-                    <thead>
-                      <tr className="border-b border-border">
-                        {['Agendado em', 'Cliente', 'Profissional', 'Serviço', 'Status', 'Cadastrado em', 'Ação'].map(col => (
-                          <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
-                            {col}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appointments.map((appt: Appointment) => (
-                        <tr key={appt.id} className="border-b border-border transition-colors hover:bg-accent">
-                          <td className="px-4 py-3.5">
-                            <DateTimeCell iso={appt.startsAt} />
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <Link href={`/clients/${appt.clientId}`} className="hover:opacity-75 transition-opacity">
-                              <AvatarName name={appt.clientName} avatarUrl={appt.clientAvatarUrl} />
-                            </Link>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <Link href={`/professionals/${appt.professionalId}`} className="hover:opacity-75 transition-opacity">
-                              <AvatarName name={appt.professionalName} avatarUrl={appt.professionalAvatarUrl} />
-                            </Link>
-                          </td>
-                          <td className="px-4 py-3.5 whitespace-nowrap text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: appt.serviceColor }} />
-                              {appt.serviceName}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <AppointmentStatusBadge
-                              status={appt.status}
-                              allowPaidStatus={allowPaidStatus}
-                              onConfirm={() => setConfirmTarget({ id: appt.id, action: 'confirm' })}
-                              onComplete={() => setConfirmTarget({ id: appt.id, action: 'complete' })}
-                              onCancel={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}
-                            />
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <DateTimeCell iso={appt.createdAt} />
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <ViewButton onClick={() => router.push(`/appointments/${appt.id}`)} />
-                          </td>
-                        </tr>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      {['Agendado em', 'Cliente', 'Profissional', 'Serviço', 'Status', 'Cadastrado em', 'Ação'].map(col => (
+                        <TableHead key={col}>{col}</TableHead>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {appointments.map((appt: Appointment) => (
+                      <TableRow key={appt.id}>
+                        <TableCell className="py-3.5">
+                          <DateTimeCell iso={appt.startsAt} />
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <Link href={`/clients/${appt.clientId}`} className="hover:opacity-75 transition-opacity">
+                            <AvatarName name={appt.clientName} avatarUrl={appt.clientAvatarUrl} />
+                          </Link>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <Link href={`/professionals/${appt.professionalId}`} className="hover:opacity-75 transition-opacity">
+                            <AvatarName name={appt.professionalName} avatarUrl={appt.professionalAvatarUrl} />
+                          </Link>
+                        </TableCell>
+                        <TableCell className="py-3.5 whitespace-nowrap text-muted-foreground">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: appt.serviceColor }} />
+                            {appt.serviceName}
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <AppointmentStatusBadge
+                            status={appt.status}
+                            allowPaidStatus={allowPaidStatus}
+                            onConfirm={() => setConfirmTarget({ id: appt.id, action: 'confirm' })}
+                            onComplete={() => setConfirmTarget({ id: appt.id, action: 'complete' })}
+                            onCancel={() => setCancelTarget({ id: appt.id, startsAt: appt.startsAt })}
+                          />
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <DateTimeCell iso={appt.createdAt} />
+                        </TableCell>
+                        <TableCell className="py-3.5">
+                          <ViewButton onClick={() => router.push(`/appointments/${appt.id}`)} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
 
                 {/* Pagination */}
                 <div className="flex items-center justify-between px-4 py-3 border-t border-border">

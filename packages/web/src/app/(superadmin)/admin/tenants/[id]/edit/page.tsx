@@ -10,8 +10,8 @@ import Link from 'next/link'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { FormField } from '@/components/ui/FormField'
-import { Alert } from '@/components/ui/Alert'
+import { FormField } from '@/components/fields/FormField'
+import { Alert } from '@/components/feedback/Alert'
 
 interface Tenant {
   id: string

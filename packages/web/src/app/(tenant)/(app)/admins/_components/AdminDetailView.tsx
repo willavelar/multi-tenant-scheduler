@@ -1,11 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { BackButton } from '@/components/ui/BackButton'
-import { DetailCard } from '@/components/ui/DetailCard'
-import { FieldRow } from '@/components/ui/FieldRow'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
+import { BackButton } from '@/components/navigation/BackButton'
+import { DetailCard } from '@/components/sections/DetailCard'
+import { FieldRow } from '@/components/data-display/FieldRow'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
 import type { Admin } from '@/types'
 import { Button } from '@/components/ui/button'
 

@@ -2,9 +2,9 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useService, useUpdateService } from '@/hooks/useServices'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { ServiceForm, type ServiceFormData } from '../../_components/ServiceForm'
-import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { FormSkeleton } from '@/components/loading/FormSkeleton'
 
 export default function EditServicePage() {
   const { id } = useParams<{ id: string }>()

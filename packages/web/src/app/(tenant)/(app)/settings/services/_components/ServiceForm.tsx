@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { ColorPicker } from '@/components/ui/ColorPicker'
+import { ColorPicker } from '@/components/fields/ColorPicker'
 import type { Service } from '@/types'
 
 export type ServiceFormData = {

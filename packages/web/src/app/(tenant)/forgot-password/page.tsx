@@ -6,10 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { ApiError } from '@/lib/api'
 import { useRequestPasswordReset } from '@/hooks/auth/useRequestPasswordReset'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { ThemeToggle } from '@/components/navigation/ThemeToggle'
 import { cn } from '@/lib/utils'
-import {Spinner} from "@/components/ui/Spinner";
-import { Alert } from '@/components/ui/Alert';
+import {Spinner} from "@/components/loading/Spinner";
+import { Alert } from '@/components/feedback/Alert';
 
 const schema = z.object({
   email: z.string().min(1, 'Informe seu e-mail').email('Informe um e-mail válido'),

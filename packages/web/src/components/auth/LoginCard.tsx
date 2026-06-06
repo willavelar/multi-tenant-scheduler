@@ -5,10 +5,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v3'
 import { cn } from '@/lib/utils'
-import { Spinner } from '@/components/ui/Spinner'
-import { EyeIcon } from '@/components/ui/EyeIcon'
-import { Alert } from '@/components/ui/Alert'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { Spinner } from '@/components/loading/Spinner'
+import { EyeIcon } from '@/components/fields/EyeIcon'
+import { Alert } from '@/components/feedback/Alert'
+import { ThemeToggle } from '@/components/navigation/ThemeToggle'
 
 export type LoginCardData = { email: string; password: string }
 

@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { listSuggestions, type SuggestionStatus } from '@/lib/super-admin-api'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { EmptyState } from '@/components/feedback/EmptyState'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
 
 const COLS = ['Tenant', 'Usuário', 'Conteúdo', 'Data', 'Status']
 
@@ -48,36 +49,36 @@ export default function SuggestionsPage() {
         ) : !items.length ? (
           <EmptyState title="Nenhuma sugestão" description="Ainda não há sugestões enviadas." />
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left text-muted-foreground">
-                {COLS.map((c) => <th key={c} className="px-4 py-3 font-medium">{c}</th>)}
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {COLS.map((c) => <TableHead key={c}>{c}</TableHead>)}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {items.map((s) => (
-                <tr
+                <TableRow
                   key={s.id}
                   onClick={() => router.push(`/admin/suggestions/${s.id}`)}
-                  className="border-b border-border last:border-0 hover:bg-muted/40 cursor-pointer"
+                  className="cursor-pointer"
                 >
-                  <td className="px-4 py-3">{s.tenantName ?? '—'}</td>
-                  <td className="px-4 py-3">
+                  <TableCell>{s.tenantName ?? '—'}</TableCell>
+                  <TableCell>
                     <div className="font-medium">{s.userName}</div>
                     <div className="text-xs text-muted-foreground">{s.userEmail}</div>
-                  </td>
-                  <td className="px-4 py-3 max-w-xs truncate">{s.content}</td>
-                  <td className="px-4 py-3"><DateTimeCell iso={s.createdAt} /></td>
-                  <td className="px-4 py-3">
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate">{s.content}</TableCell>
+                  <TableCell><DateTimeCell iso={s.createdAt} /></TableCell>
+                  <TableCell>
                     <StatusBadge
                       label={s.status === 'resolved' ? 'Resolvida' : 'Nova'}
                       variant={s.status === 'resolved' ? 'success' : 'purple'}
                     />
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </div>
 

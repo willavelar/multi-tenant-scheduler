@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useProfessionalsPage } from '@/hooks/useProfessionals'
-import { AvatarName } from '@/components/ui/AvatarName'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { AvatarName } from '@/components/data-display/AvatarName'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { EmptyState } from '@/components/feedback/EmptyState'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import type { Professional } from '@/types'
 import { Button } from '@/components/ui/button'
-import { ViewButton } from '@/components/ui/ViewButton'
+import { ViewButton } from '@/components/navigation/ViewButton'
 
 const COLS = ['Profissional', 'Cargo', 'Função', 'Último login', 'Cadastrado em', 'Status', 'Ações']
 
@@ -106,48 +107,44 @@ export default function ProfessionalsPage() {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13.5px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    {COLS.map(col => (
-                      <th key={col} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {professionals.map((prof: Professional) => (
-                    <tr key={prof.id} className="border-b border-border transition-colors hover:bg-accent">
-                      <td className="px-4 py-3">
-                        <button
-                          className="block w-full text-left bg-transparent border-0 p-0 cursor-pointer"
-                          onClick={() => router.push(`/professionals/${prof.id}`)}
-                        >
-                          <AvatarName name={prof.name} subtitle={prof.email} avatarUrl={prof.avatarUrl} />
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{prof.position ?? '—'}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {prof.role === 'tenant_admin' ? 'Administrador' : 'Profissional'}
-                      </td>
-                      <td className="px-4 py-3"><DateTimeCell iso={prof.lastLoginAt} /></td>
-                      <td className="px-4 py-3"><DateTimeCell iso={prof.createdAt} /></td>
-                      <td className="px-4 py-3">
-                        <StatusBadge
-                          label={prof.active ? 'Ativo' : 'Inativo'}
-                          variant={prof.active ? 'success' : 'neutral'}
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <ViewButton onClick={() => router.push(`/professionals/${prof.id}`)} />
-                      </td>
-                    </tr>
+            <Table className="text-[13.5px]">
+              <TableHeader>
+                <TableRow>
+                  {COLS.map(col => (
+                    <TableHead key={col}>{col}</TableHead>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {professionals.map((prof: Professional) => (
+                  <TableRow key={prof.id}>
+                    <TableCell>
+                      <button
+                        className="block w-full text-left bg-transparent border-0 p-0 cursor-pointer"
+                        onClick={() => router.push(`/professionals/${prof.id}`)}
+                      >
+                        <AvatarName name={prof.name} subtitle={prof.email} avatarUrl={prof.avatarUrl} />
+                      </button>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{prof.position ?? '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {prof.role === 'tenant_admin' ? 'Administrador' : 'Profissional'}
+                    </TableCell>
+                    <TableCell><DateTimeCell iso={prof.lastLoginAt} /></TableCell>
+                    <TableCell><DateTimeCell iso={prof.createdAt} /></TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        label={prof.active ? 'Ativo' : 'Inativo'}
+                        variant={prof.active ? 'success' : 'neutral'}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <ViewButton onClick={() => router.push(`/professionals/${prof.id}`)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-3 border-t border-border">
