@@ -18,11 +18,12 @@ Multi-tenant online scheduling system. Clients book services with professionals,
 ```
 scheduler/
 ├── packages/
-│   ├── api/          # NestJS REST API (port 3001)
-│   ├── web/          # Next.js frontend (port 3000)
+│   ├── api/          # NestJS REST API (port 3001) — has its own .env for local dev
+│   ├── web/          # Next.js frontend (port 3000) — has its own .env for local dev
 │   └── shared/       # Drizzle schema + shared types
 ├── docker-compose.yml
-└── .env
+├── .env.example      # template for the root .env (used by Docker Compose)
+└── .env              # git-ignored — create from .env.example
 ```
 
 ## Features
@@ -72,8 +73,9 @@ pnpm install
 # Start only the database and Redis via Docker
 docker compose up db redis -d
 
-# Copy and edit the .env file
-cp .env.example .env
+# Create the per-package env files from their templates and fill them in
+cp packages/api/.env.example packages/api/.env
+cp packages/web/.env.example packages/web/.env
 
 # Migrations and seed
 pnpm db:migrate
@@ -84,23 +86,47 @@ pnpm dev:api   # terminal 1
 pnpm dev:web   # terminal 2
 ```
 
+> Running locally, the API reads `packages/api/.env` and the web app reads
+> `packages/web/.env`. Both are git-ignored; only the `*.env.example` templates
+> are committed.
+
 ## Environment variables
 
-Create a `.env` file at the root based on the example below:
+No `.env` file is committed — each one is git-ignored. Copy the matching
+`.env.example` template and fill in the values:
 
-```env
-# Database
-DATABASE_URL=postgres://scheduler:scheduler@db:5432/scheduler
+| File | Used by | Create with |
+|---|---|---|
+| `.env` | Docker Compose (all services) | `cp .env.example .env` |
+| `packages/api/.env` | API in local dev (`pnpm dev:api`) | `cp packages/api/.env.example packages/api/.env` |
+| `packages/web/.env` | Web in local dev (`pnpm dev:web`) | `cp packages/web/.env.example packages/web/.env` |
 
-# Redis
-REDIS_URL=redis://redis:6379
+### API variables (`packages/api/.env`)
 
-# JWT — use long, random strings
-JWT_SECRET=replace-with-a-secure-secret
-JWT_REFRESH_SECRET=replace-with-another-secure-secret
-```
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | ✅ | PostgreSQL connection string |
+| `REDIS_URL` | ✅ | Redis connection string |
+| `JWT_SECRET` | ✅ | Access-token signing secret — `openssl rand -hex 32` |
+| `JWT_REFRESH_SECRET` | ✅ | Refresh-token signing secret — `openssl rand -hex 32` |
+| `SUPER_ADMIN_JWT_SECRET` | ✅ | Super-admin token signing secret |
+| `ENCRYPTION_KEY` | ✅ | AES-256-GCM key (32-byte hex) for SSO secrets — `openssl rand -hex 32` |
+| `RESEND_API_KEY` | ✅ | [Resend](https://resend.com) API key for transactional email |
+| `RESEND_FROM_EMAIL` | ✅ | Verified "from" address |
+| `FRONTEND_BASE_DOMAIN` | ✅ | Base domain for email/OAuth links (e.g. `lvh.me:3000`) |
+| `OAUTH_CALLBACK_BASE_URL` | ✅ | Public API URL used as OAuth redirect base |
+| `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_NAME` / `SUPER_ADMIN_PASSWORD` | ✅ | Super-admin account created by `db:seed` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | ⬜ | Google OAuth SSO (optional) |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_WHATSAPP_FROM` | ⬜ | WhatsApp via Twilio — sending is skipped if unset |
 
-> `NEXT_PUBLIC_API_URL` is set as a build arg in `docker-compose.yml` and baked into the Next.js bundle. For local development, the default `http://localhost:3001` is used automatically.
+### Web variables (`packages/web/.env`)
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | ✅ | Base URL of the API (defaults to `http://localhost:3001`) |
+| `NEXT_PUBLIC_APP_NAME` | ⬜ | Application name shown in the UI |
+
+> `NEXT_PUBLIC_*` values are **baked into the bundle at build time**. Under Docker, `NEXT_PUBLIC_API_URL` is passed as a build arg in `docker-compose.yml`; changing it later requires rebuilding the web image (`docker compose build web && docker compose up -d web`).
 
 ## Demo accounts
 
