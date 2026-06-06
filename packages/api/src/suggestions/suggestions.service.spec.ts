@@ -32,4 +32,20 @@ describe('SuggestionsService', () => {
     });
     expect(result.id).toBe('sug-1');
   });
+
+  it('findOne throws NotFound when the suggestion does not exist', async () => {
+    const db = {
+      select: () => ({ from: () => ({ leftJoin: () => ({ where: () => ({ limit: () => [] }) }) }) }),
+    } as any;
+    const service = new SuggestionsService(db);
+    await expect(service.findOne('missing')).rejects.toThrow('Suggestion not found');
+  });
+
+  it('updateStatus throws NotFound when nothing was updated', async () => {
+    const db = {
+      update: () => ({ set: () => ({ where: () => ({ returning: () => [] }) }) }),
+    } as any;
+    const service = new SuggestionsService(db);
+    await expect(service.updateStatus('missing', 'resolved')).rejects.toThrow('Suggestion not found');
+  });
 });
