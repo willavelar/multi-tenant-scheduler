@@ -14,6 +14,7 @@ import { AdminsModule } from './admins/admins.module';
 import { EmailQueueModule } from './email-queue/email-queue.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
+import { SuggestionsModule } from './suggestions/suggestions.module';
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
 
 @Module({
@@ -46,6 +47,7 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
     EmailQueueModule,
     NotificationsModule,
     SuperAdminModule,
+    SuggestionsModule,
   ],
 })
 export class AppModule implements NestModule {
