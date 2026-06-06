@@ -33,6 +33,10 @@ export class SuggestionsService {
     });
   }
 
+  // Super-admin methods below run on the raw connection WITHOUT withTenant by design:
+  // `suggestions` has no RLS (like `tenants`/`super_admins`), so the platform operator —
+  // who has no tenant context — can read/triage across all tenants. Do NOT wrap these in
+  // withTenant: setting a single tenant context would hide every other tenant's rows.
   async list(page: number, limit: number, status?: 'new' | 'resolved') {
     const offset = (page - 1) * limit;
     const where = status ? eq(suggestions.status, status) : undefined;
