@@ -14,3 +14,4 @@ export * from './notifications.schema';
 export * from './oauth-accounts.schema';
 export * from './super-admins.schema';
 export * from './sso-providers.schema';
+export * from './suggestions.schema';
