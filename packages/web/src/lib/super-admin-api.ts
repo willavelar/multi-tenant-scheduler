@@ -78,3 +78,62 @@ export async function updateSuggestionStatus(id: string, status: SuggestionStatu
 export async function deleteSuggestion(id: string): Promise<void> {
   await superAdminFetch(`/super-admin/suggestions/${id}`, { method: 'DELETE' })
 }
+
+export interface SuperAdminUser {
+  id: string
+  name: string
+  email: string
+  avatarUrl: string | null
+  active: boolean
+  createdAt: string
+}
+
+export interface SuperAdminUsersPage {
+  data: SuperAdminUser[]
+  total: number
+  page: number
+  limit: number
+}
+
+export async function listSuperAdminUsers(
+  page: number,
+  limit: number,
+  filters: { q?: string; active?: string } = {},
+): Promise<SuperAdminUsersPage> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (filters.q) params.set('q', filters.q)
+  if (filters.active) params.set('active', filters.active)
+  const res = await superAdminFetch(`/super-admin/users?${params.toString()}`)
+  return res.json()
+}
+
+export async function getSuperAdminUser(id: string): Promise<SuperAdminUser> {
+  const res = await superAdminFetch(`/super-admin/users/${id}`)
+  return res.json()
+}
+
+export async function createSuperAdminUser(payload: {
+  name: string
+  email: string
+  password: string
+  avatarUrl?: string | null
+}): Promise<SuperAdminUser> {
+  const res = await superAdminFetch('/super-admin/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  return res.json()
+}
+
+export async function updateSuperAdminUser(id: string, payload: {
+  name?: string
+  avatarUrl?: string | null
+  active?: boolean
+  password?: string
+}): Promise<SuperAdminUser> {
+  const res = await superAdminFetch(`/super-admin/users/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+  return res.json()
+}
