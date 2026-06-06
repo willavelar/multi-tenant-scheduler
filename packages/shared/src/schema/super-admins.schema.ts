@@ -1,10 +1,12 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const superAdmins = pgTable('super_admins', {
   id:           uuid('id').primaryKey().defaultRandom(),
   email:        text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   name:         text('name').notNull(),
+  avatarUrl:    text('avatar_url'),
+  active:       boolean('active').notNull().default(true),
   createdAt:    timestamp('created_at').notNull().defaultNow(),
   updatedAt:    timestamp('updated_at').notNull().defaultNow(),
 });
