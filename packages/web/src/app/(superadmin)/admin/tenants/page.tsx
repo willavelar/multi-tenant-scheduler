@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { superAdminFetch } from '@/lib/super-admin-api'
 import { Button } from '@/components/ui/button'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { EmptyState } from '@/components/feedback/EmptyState'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
 
 interface Tenant {
   id: string
@@ -64,39 +65,35 @@ export default function TenantsPage() {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    {COLS.map((col, i) => (
-                      <th key={i} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tenants.map((tenant) => (
-                    <tr key={tenant.id} className="border-b border-border transition-colors hover:bg-accent">
-                      <td className="px-4 py-3 font-medium">{tenant.name}</td>
-                      <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{tenant.slug}</td>
-                      <td className="px-4 py-3">
-                        <StatusBadge
-                          label={tenant.active ? 'Ativo' : 'Inativo'}
-                          variant={tenant.active ? 'success' : 'neutral'}
-                        />
-                      </td>
-                      <td className="px-4 py-3"><DateTimeCell iso={tenant.createdAt} /></td>
-                      <td className="px-4 py-3 text-right">
-                        <Link href={`/admin/tenants/${tenant.id}`} className="text-sm text-primary hover:underline">
-                          Ver
-                        </Link>
-                      </td>
-                    </tr>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {COLS.map((col, i) => (
+                    <TableHead key={i}>{col}</TableHead>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tenants.map((tenant) => (
+                  <TableRow key={tenant.id}>
+                    <TableCell className="font-medium">{tenant.name}</TableCell>
+                    <TableCell className="text-muted-foreground font-mono text-xs">{tenant.slug}</TableCell>
+                    <TableCell>
+                      <StatusBadge
+                        label={tenant.active ? 'Ativo' : 'Inativo'}
+                        variant={tenant.active ? 'success' : 'neutral'}
+                      />
+                    </TableCell>
+                    <TableCell><DateTimeCell iso={tenant.createdAt} /></TableCell>
+                    <TableCell className="text-right">
+                      <Link href={`/admin/tenants/${tenant.id}`} className="text-sm text-primary hover:underline">
+                        Ver
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-border">

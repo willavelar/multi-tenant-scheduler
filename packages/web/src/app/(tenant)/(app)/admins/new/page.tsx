@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCreateAdmin } from '@/hooks/useAdmins'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { AdminForm, type AdminFormData } from '../_components/AdminForm'
 
 export default function NewAdminPage() {

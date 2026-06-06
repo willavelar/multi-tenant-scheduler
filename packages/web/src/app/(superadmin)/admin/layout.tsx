@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { SuperAdminAuthProvider, useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
-import { SuperAdminShell } from '@/components/SuperAdminShell'
+import { SuperAdminShell } from '@/components/super-admin-shell'
 import QueryProvider from '@/providers/QueryProvider'
 
 function Inner({ children }: { children: React.ReactNode }) {

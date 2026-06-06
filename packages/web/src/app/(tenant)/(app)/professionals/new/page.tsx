@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useCreateProfessional } from '@/hooks/useProfessionals'
 import { useCreateException } from '@/hooks/useWeeklyAvailability'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { ProfessionalForm, type ProfessionalFormData } from '../_components/ProfessionalForm'
 
 export default function NewProfessionalPage() {

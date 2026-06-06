@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useService, useDeleteService, useForceDeleteService } from '@/hooks/useServices'
 import { ServiceDetailView } from '../_components/ServiceDetailView'
-import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
+import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
 
 export default function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>()

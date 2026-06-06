@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/providers/AuthProvider'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { ThemeToggle } from '@/components/navigation/ThemeToggle'
 import { NotificationBell } from './NotificationBell'
 import { cn } from '@/lib/utils'
 

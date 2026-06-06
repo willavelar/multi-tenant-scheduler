@@ -7,11 +7,11 @@ import { z } from 'zod/v3'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTenant } from '@/providers/TenantProvider'
 import { apiFetch, ApiError } from '@/lib/api'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { ThemeToggle } from '@/components/navigation/ThemeToggle'
 import { cn } from '@/lib/utils'
-import {Spinner} from "@/components/ui/Spinner";
-import {EyeIcon} from "@/components/ui/EyeIcon";
-import { Alert } from '@/components/ui/Alert';
+import {Spinner} from "@/components/loading/Spinner";
+import {EyeIcon} from "@/components/fields/EyeIcon";
+import { Alert } from '@/components/feedback/Alert';
 import { useValidateToken } from '@/hooks/auth/useValidateToken'
 
 const schema = z

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCreateService, useServices } from '@/hooks/useServices'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { ServiceForm, type ServiceFormData } from '../_components/ServiceForm'
 import { pickDistinctColor } from '@/lib/calendarColors'
 

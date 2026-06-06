@@ -1,11 +1,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { BackButton } from '@/components/ui/BackButton'
-import { DetailCard } from '@/components/ui/DetailCard'
-import { FieldRow } from '@/components/ui/FieldRow'
-import { DangerZone } from '@/components/ui/DangerZone'
-import { StatusBadge } from '@/components/ui/StatusBadge'
+import { BackButton } from '@/components/navigation/BackButton'
+import { DetailCard } from '@/components/sections/DetailCard'
+import { FieldRow } from '@/components/data-display/FieldRow'
+import { DangerZone } from '@/components/sections/DangerZone'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
 import type { Service } from '@/types'
 import { Button } from '@/components/ui/button'
 

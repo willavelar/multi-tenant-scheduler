@@ -8,8 +8,8 @@ import {
   useCreateWeeklyAvailability,
   useDeleteWeeklyAvailability,
 } from '@/hooks/useWeeklyAvailability'
-import { TimeDisplay } from '@/components/ui/TimeDisplay'
-import { TimeInputField } from '@/components/ui/TimeInputField'
+import { TimeDisplay } from '@/components/data-display/TimeDisplay'
+import { TimeInputField } from '@/components/fields/TimeInputField'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { WeeklyAvailability } from '@/types'
 

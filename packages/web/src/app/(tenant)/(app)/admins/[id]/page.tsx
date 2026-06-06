@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useAdmin } from '@/hooks/useAdmins'
 import { AdminDetailView } from '../_components/AdminDetailView'
-import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
+import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
 
 export default function AdminDetailPage() {
   const { id } = useParams<{ id: string }>()

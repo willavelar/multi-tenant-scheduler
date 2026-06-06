@@ -1,8 +1,8 @@
 'use client'
 
-import { DatePickerField } from '@/components/ui/DatePickerField'
-import { ClientSearchField } from '@/components/ui/ClientSearchField'
-import { ProfessionalSearchField } from '@/components/ui/ProfessionalSearchField'
+import { DatePickerField } from '@/components/fields/DatePickerField'
+import { ClientSearchField } from '@/components/fields/ClientSearchField'
+import { ProfessionalSearchField } from '@/components/fields/ProfessionalSearchField'
 import { useTenantSettingsContext } from '@/providers/TenantSettingsProvider'
 import { Button } from '@/components/ui/button'
 import type { Service } from '@/types'

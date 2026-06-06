@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
-import { Alert } from '@/components/ui/Alert'
+import { Alert } from '@/components/feedback/Alert'
 import { LoginCard, type LoginCardData } from '@/components/auth/LoginCard'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'

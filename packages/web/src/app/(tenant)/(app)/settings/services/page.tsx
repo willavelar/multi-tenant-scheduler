@@ -4,12 +4,13 @@ import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useServices } from '@/hooks/useServices'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { EmptyState } from '@/components/feedback/EmptyState'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import type { Service } from '@/types'
 import { Button } from '@/components/ui/button'
-import { ViewButton } from '@/components/ui/ViewButton'
+import { ViewButton } from '@/components/navigation/ViewButton'
 
 function formatDuration(minutes: number) {
   if (minutes < 60) return `${minutes} min`
@@ -113,39 +114,35 @@ export default function ServicesPage() {
             description={hasFilters ? 'Nenhum serviço encontrado para os filtros aplicados.' : 'Serviços criados aparecerão aqui.'}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[13px]">
-              <thead>
-                <tr className="border-b border-border">
-                  {COLS.map((col, i) => (
-                    <th key={i} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((service: Service) => (
-                  <tr key={service.id} className="border-b border-border transition-colors hover:bg-accent">
-                    <td className="px-4 py-3 font-medium text-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full shrink-0" style={{ background: service.color }} />
-                        {service.name}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDuration(service.durationMinutes)}</td>
-                    <td className="px-4 py-3 text-muted-foreground max-w-[280px] truncate">{service.description ?? '—'}</td>
-                    <td className="px-4 py-3">
-                      <StatusBadge label={service.active ? 'Ativo' : 'Inativo'} variant={service.active ? 'success' : 'error'} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <ViewButton onClick={() => router.push(`/settings/services/${service.id}`)} />
-                    </td>
-                  </tr>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {COLS.map((col, i) => (
+                  <TableHead key={i}>{col}</TableHead>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((service: Service) => (
+                <TableRow key={service.id}>
+                  <TableCell className="font-medium text-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: service.color }} />
+                      {service.name}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground whitespace-nowrap">{formatDuration(service.durationMinutes)}</TableCell>
+                  <TableCell className="text-muted-foreground max-w-[280px] truncate">{service.description ?? '—'}</TableCell>
+                  <TableCell>
+                    <StatusBadge label={service.active ? 'Ativo' : 'Inativo'} variant={service.active ? 'success' : 'error'} />
+                  </TableCell>
+                  <TableCell>
+                    <ViewButton onClick={() => router.push(`/settings/services/${service.id}`)} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </div>
     </div>

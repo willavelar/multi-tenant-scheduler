@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation'
 import { useAppointment } from '@/hooks/useAppointments'
 import { AppointmentDetailView } from '../_components/AppointmentDetailView'
-import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
+import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
 
 export default function AppointmentDetailPage() {
   const { id } = useParams<{ id: string }>()

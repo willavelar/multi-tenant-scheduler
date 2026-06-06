@@ -9,10 +9,10 @@ import {
   deleteSuggestion,
 } from '@/lib/super-admin-api'
 import { Button } from '@/components/ui/button'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
+import { EmptyState } from '@/components/feedback/EmptyState'
 
 export default function SuggestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)

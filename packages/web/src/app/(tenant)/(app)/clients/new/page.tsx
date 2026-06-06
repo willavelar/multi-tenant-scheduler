@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCreateClient } from '@/hooks/useClients'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { ClientForm, type ClientFormData } from '../_components/ClientForm'
 
 export default function NewClientPage() {

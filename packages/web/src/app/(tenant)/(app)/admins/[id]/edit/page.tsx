@@ -3,9 +3,9 @@
 import { useRouter, useParams } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useAdmin, useUpdateAdmin } from '@/hooks/useAdmins'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 import { AdminForm, type AdminFormData } from '../../_components/AdminForm'
-import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { FormSkeleton } from '@/components/loading/FormSkeleton'
 
 export default function EditAdminPage() {
   const { id } = useParams<{ id: string }>()

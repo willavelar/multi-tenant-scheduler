@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton'
-import { DetailCard } from '@/components/ui/DetailCard'
+import { DetailCard } from '@/components/sections/DetailCard'
 
 type Props = {
   fields?: number

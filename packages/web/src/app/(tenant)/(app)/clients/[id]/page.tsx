@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { useClient, useDeleteClient, useForceDeleteClient } from '@/hooks/useClients'
 import { ClientDetailView } from '../_components/ClientDetailView'
-import { DetailSkeleton } from '@/components/ui/DetailSkeleton'
+import { DetailSkeleton } from '@/components/loading/DetailSkeleton'
 
 export default function ClientDetailPage() {
   const { id } = useParams<{ id: string }>()

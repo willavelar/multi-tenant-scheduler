@@ -1,7 +1,7 @@
 'use client'
 
 import { useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
-import { SidebarNavLink } from '@/components/AppShell/SidebarNavLink'
+import { SidebarNavLink } from '@/components/app-shell/SidebarNavLink'
 
 function BuildingIcon() {
   return (

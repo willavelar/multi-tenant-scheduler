@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { LogoCropField } from '@/components/ui/LogoCropField'
+import { LogoCropField } from '@/components/fields/LogoCropField'
 import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/useTenantSettings'
 import { cn } from '@/lib/utils'
-import { FormSkeleton } from '@/components/ui/FormSkeleton'
+import { FormSkeleton } from '@/components/loading/FormSkeleton'
 import { Button } from '@/components/ui/button'
 
 type CancelReasonMode = 'no' | 'optional' | 'required'

@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAdmins } from '@/hooks/useAdmins'
-import { AvatarName } from '@/components/ui/AvatarName'
-import { DateTimeCell } from '@/components/ui/DateTimeCell'
-import { StatusBadge } from '@/components/ui/StatusBadge'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { AvatarName } from '@/components/data-display/AvatarName'
+import { DateTimeCell } from '@/components/data-display/DateTimeCell'
+import { StatusBadge } from '@/components/feedback/StatusBadge'
+import { EmptyState } from '@/components/feedback/EmptyState'
 import type { Admin } from '@/types'
 import { Button } from '@/components/ui/button'
-import { ViewButton } from '@/components/ui/ViewButton'
-import { TableSkeleton } from '@/components/ui/TableSkeleton'
+import { ViewButton } from '@/components/navigation/ViewButton'
+import { TableSkeleton } from '@/components/loading/TableSkeleton'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 
 function AdminStatusBadge({ active }: { active: boolean }) {
   return <StatusBadge label={active ? 'Ativo' : 'Inativo'} variant={active ? 'success' : 'error'} />
@@ -112,36 +113,32 @@ export default function AdminsPage() {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-[13px]">
-                <thead>
-                  <tr className="border-b border-border">
-                    {COLS.map((col, i) => (
-                      <th key={i} className="px-4 py-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] whitespace-nowrap">
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.map((admin: Admin) => (
-                    <tr key={admin.id} className="border-b border-border transition-colors hover:bg-accent">
-                      <td className="px-4 py-3">
-                        <AvatarName name={admin.name} size={32} avatarUrl={admin.avatarUrl} />
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{admin.email}</td>
-                      <td className="px-4 py-3"><DateTimeCell iso={admin.createdAt} /></td>
-                      <td className="px-4 py-3">
-                        <AdminStatusBadge active={admin.active} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <ViewButton onClick={() => router.push(`/admins/${admin.id}`)} />
-                      </td>
-                    </tr>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {COLS.map((col, i) => (
+                    <TableHead key={i}>{col}</TableHead>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {admins.map((admin: Admin) => (
+                  <TableRow key={admin.id}>
+                    <TableCell>
+                      <AvatarName name={admin.name} size={32} avatarUrl={admin.avatarUrl} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">{admin.email}</TableCell>
+                    <TableCell><DateTimeCell iso={admin.createdAt} /></TableCell>
+                    <TableCell>
+                      <AdminStatusBadge active={admin.active} />
+                    </TableCell>
+                    <TableCell>
+                      <ViewButton onClick={() => router.push(`/admins/${admin.id}`)} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
             {/* Pagination */}
             <div className="flex items-center justify-between px-4 py-3 border-t border-border">

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useSearchClients } from '@/hooks/useClients'
-import { AvatarName } from '@/components/ui/AvatarName'
+import { AvatarName } from '@/components/data-display/AvatarName'
 import { cn } from '@/lib/utils'
 
 interface ClientSearchFieldProps {
