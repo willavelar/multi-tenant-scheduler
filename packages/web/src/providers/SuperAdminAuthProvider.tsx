@@ -9,12 +9,14 @@ interface SuperAdminUser {
   id: string
   email: string
   name: string
+  avatarUrl: string | null
 }
 
 interface JwtPayload {
   sub: string
   email: string
   name: string
+  avatarUrl?: string | null
   type: string
   exp: number
 }
@@ -32,7 +34,7 @@ function tokenToUser(token: string): SuperAdminUser | null {
     const payload = jwtDecode<JwtPayload>(token)
     if (payload.exp * 1000 < Date.now()) return null
     if (payload.type !== 'super_admin') return null
-    return { id: payload.sub, email: payload.email, name: payload.name }
+    return { id: payload.sub, email: payload.email, name: payload.name, avatarUrl: payload.avatarUrl ?? null }
   } catch {
     return null
   }
