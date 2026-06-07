@@ -3,8 +3,10 @@
 import { useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
 import { SuperAdminApiError } from '@/lib/super-admin-api'
 import { LoginCard, type LoginCardData } from '@/components/auth/LoginCard'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export default function SuperAdminLoginPage() {
+  usePageTitle([{ label: 'Login' }])
   const { login } = useSuperAdminAuth()
 
   async function handleLogin(data: LoginCardData) {

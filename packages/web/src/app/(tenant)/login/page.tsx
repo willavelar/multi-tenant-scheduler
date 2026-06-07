@@ -7,6 +7,7 @@ import { useAuth } from '@/providers/AuthProvider'
 import { useTenant } from '@/providers/TenantProvider'
 import { Alert } from '@/components/feedback/Alert'
 import { LoginCard, type LoginCardData } from '@/components/auth/LoginCard'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -92,6 +93,7 @@ function Divider() {
 // ── Login Content ─────────────────────────────────────────────────────────
 
 function LoginContent() {
+  usePageTitle([{ label: 'Login' }])
   const { login, user } = useAuth()
   const { slug }        = useTenant()
   const router          = useRouter()
