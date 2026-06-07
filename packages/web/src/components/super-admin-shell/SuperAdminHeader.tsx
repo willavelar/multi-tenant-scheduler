@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
 import { ThemeToggle } from '@/components/navigation/ThemeToggle'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { pickColor, initials } from '@/lib/avatar'
 import { cn } from '@/lib/utils'
 
@@ -68,6 +69,7 @@ export function SuperAdminHeader() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const crumbs = getBreadcrumbs(pathname)
+  usePageTitle(crumbs)
 
   useEffect(() => {
     function handler(e: MouseEvent) {

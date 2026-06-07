@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext } from 'react'
 import { useTenantSettings } from '@/hooks/useTenantSettings'
 
 type TenantSettingsContextValue = {
@@ -36,10 +36,6 @@ export function TenantSettingsProvider({ children }: { children: React.ReactNode
   const cancellationReasonMode    = data?.cancellationReasonMode    ?? 'no'
   const cancellationDeadlineValue = data?.cancellationDeadlineValue ?? null
   const cancellationDeadlineUnit  = data?.cancellationDeadlineUnit  ?? null
-
-  useEffect(() => {
-    document.title = process.env.NEXT_PUBLIC_APP_NAME ?? 'TimoUp'
-  }, [])
 
   return (
     <TenantSettingsContext.Provider value={{

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/providers/AuthProvider'
 import { ThemeToggle } from '@/components/navigation/ThemeToggle'
 import { NotificationBell } from './NotificationBell'
+import { usePageTitle } from '@/hooks/usePageTitle'
 import { cn } from '@/lib/utils'
 
 type Crumb = { label: string; href?: string }
@@ -74,6 +75,7 @@ export function Header() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const crumbs = getBreadcrumbs(pathname)
+  usePageTitle(crumbs)
 
   useEffect(() => {
     function handler(e: MouseEvent) {
