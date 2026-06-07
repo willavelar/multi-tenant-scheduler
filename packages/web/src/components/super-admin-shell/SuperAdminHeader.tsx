@@ -1,8 +1,12 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useSuperAdminAuth } from '@/providers/SuperAdminAuthProvider'
 import { ThemeToggle } from '@/components/navigation/ThemeToggle'
+import { pickColor, initials } from '@/lib/avatar'
+import { cn } from '@/lib/utils'
 
 type Crumb = { label: string; href?: string }
 
@@ -12,6 +16,8 @@ function getBreadcrumbs(pathname: string): Crumb[] {
   const STATIC: Record<string, Crumb[]> = {
     '/admin/tenants':       [{ label: 'Tenants' }],
     '/admin/tenants/new':   [{ label: 'Tenants', href: '/admin/tenants' }, { label: 'Novo tenant' }],
+    '/admin/users':         [{ label: 'Usuários' }],
+    '/admin/users/new':     [{ label: 'Usuários', href: '/admin/users' }, { label: 'Novo usuário' }],
     '/admin/suggestions':   [{ label: 'Sugestões' }],
     '/admin/settings/sso':  [{ label: 'Configurações' }, { label: 'SSO' }],
   }
@@ -25,6 +31,14 @@ function getBreadcrumbs(pathname: string): Crumb[] {
   // /admin/tenants/[id]/edit
   if (segments[1] === 'tenants' && segments.length === 4 && segments[3] === 'edit')
     return [{ label: 'Tenants', href: '/admin/tenants' }, { label: 'Editar tenant' }]
+
+  // /admin/users/[id]
+  if (segments[1] === 'users' && segments.length === 3)
+    return [{ label: 'Usuários', href: '/admin/users' }, { label: 'Visualizar usuário' }]
+
+  // /admin/users/[id]/edit
+  if (segments[1] === 'users' && segments.length === 4 && segments[3] === 'edit')
+    return [{ label: 'Usuários', href: '/admin/users' }, { label: 'Editar usuário' }]
 
   // /admin/suggestions/[id]
   if (segments[1] === 'suggestions' && segments.length === 3)
@@ -50,8 +64,18 @@ export function SuperAdminHeader() {
   const { user, logout } = useSuperAdminAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const [open, setOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const crumbs = getBreadcrumbs(pathname)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   function handleLogout() {
     logout()
@@ -87,17 +111,79 @@ export function SuperAdminHeader() {
         <span className="text-[11px] text-muted-foreground">{formatCurrentDate()}</span>
       </div>
 
-      {/* Right: theme toggle + user */}
-      <div className="flex items-center gap-3">
+      {/* Right: theme toggle + profile menu */}
+      <div className="flex items-center gap-2">
         <ThemeToggle />
-        <div className="h-5 w-px bg-border" />
-        <span className="text-[13px] text-muted-foreground">{user?.email}</span>
-        <button
-          onClick={handleLogout}
-          className="text-[13px] text-destructive bg-transparent border-0 cursor-pointer hover:underline p-0"
-        >
-          Sair
-        </button>
+
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setOpen(v => !v)}
+            className="flex items-center gap-2 bg-transparent border-0 cursor-pointer px-2 py-1.5 rounded-lg transition-colors hover:bg-accent"
+          >
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.name} className="w-8.5 h-8.5 rounded-full object-cover shrink-0" />
+            ) : (
+              <div
+                className="w-8.5 h-8.5 rounded-full text-white flex items-center justify-center text-xs font-bold shrink-0"
+                style={{ background: user ? pickColor(user.name) : '#6366f1' }}
+              >
+                {user ? initials(user.name) : '??'}
+              </div>
+            )}
+
+            <div className="text-left">
+              <p className="text-[13px] font-semibold text-foreground m-0 leading-[1.3]">{user?.name ?? '—'}</p>
+              <p className="text-[11px] text-muted-foreground m-0 leading-[1.3]">Super admin</p>
+            </div>
+
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+              className={cn('shrink-0 transition-transform duration-150 text-muted-foreground', open && 'rotate-180')}
+            >
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+
+          {open && (
+            <div className="absolute top-[calc(100%+6px)] right-0 w-52.5 bg-popover border border-border rounded-[10px] shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1.5 duration-150">
+              <div className="px-3.5 py-3 border-b border-border">
+                <p className="text-xs font-semibold text-popover-foreground m-0">{user?.name}</p>
+                <p className="text-[11px] text-muted-foreground m-0 mt-0.5">{user?.email}</p>
+              </div>
+
+              <div className="py-1">
+                {user && (
+                  <Link
+                    href={`/admin/users/${user.id}`}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-popover-foreground no-underline transition-colors hover:bg-accent"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Perfil
+                  </Link>
+                )}
+              </div>
+
+              <div className="border-t border-border py-1">
+                <button
+                  className="flex items-center gap-2 px-3.5 py-2 text-[13.5px] text-destructive bg-transparent border-0 cursor-pointer w-full text-left transition-colors hover:bg-accent"
+                  onClick={handleLogout}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Sair
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   )
