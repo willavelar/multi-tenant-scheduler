@@ -30,6 +30,16 @@ function KeyIcon() {
   )
 }
 
+function UsersIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  )
+}
+
 export function SuperAdminSidebar() {
   const { user } = useSuperAdminAuth()
 
@@ -51,6 +61,7 @@ export function SuperAdminSidebar() {
           Menu
         </p>
         <SidebarNavLink href="/admin/tenants" icon={<BuildingIcon />} label="Tenants" />
+        <SidebarNavLink href="/admin/users" icon={<UsersIcon />} label="Usuários" />
         <SidebarNavLink href="/admin/suggestions" icon={<ChatIcon />} label="Sugestões" />
 
         <p className="text-[10px] font-semibold text-sidebar-foreground/50 tracking-[0.08em] uppercase px-3 mt-5 mb-2">
