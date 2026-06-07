@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { DatabaseModule } from '../database/database.module';
 import { EmailQueueModule } from '../email-queue/email-queue.module';
+import { IntegrationConfigModule } from '../common/integrations/integration-config.module';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
 import { TwilioService } from './twilio.service';
@@ -24,6 +25,7 @@ import { NotificationCleanupProcessor } from './cleanup/notification-cleanup.pro
     ),
     DatabaseModule,
     EmailQueueModule,
+    IntegrationConfigModule,
   ],
   providers: [
     NotificationsService,
