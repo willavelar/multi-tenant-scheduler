@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
 import { EmailService } from './email.service';
+import { IntegrationConfigService } from '../common/integrations/integration-config.service';
 
 const mockSend = jest.fn().mockResolvedValue({ data: { id: 'msg-1' }, error: null });
 
@@ -10,34 +10,22 @@ jest.mock('resend', () => ({
   })),
 }));
 
-describe('EmailService', () => {
-  let service: EmailService;
+function makeService(config: Record<string, string> | null) {
+  const integrations = { getConfig: jest.fn().mockResolvedValue(config) };
+  return Test.createTestingModule({
+    providers: [
+      EmailService,
+      { provide: IntegrationConfigService, useValue: integrations },
+    ],
+  }).compile().then(m => ({ service: m.get(EmailService), integrations }));
+}
 
-  beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      providers: [
-        EmailService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn().mockImplementation((key: string) => {
-              if (key === 'RESEND_API_KEY') return 're_test';
-              if (key === 'RESEND_FROM_EMAIL') return 'noreply@test.com';
-              return undefined;
-            }),
-          },
-        },
-      ],
-    }).compile();
-    service = module.get(EmailService);
-    jest.clearAllMocks();
-  });
+describe('EmailService', () => {
+  beforeEach(() => jest.clearAllMocks());
 
   it('envia e-mail com link de reset via Resend', async () => {
-    await service.sendPasswordReset(
-      'user@example.com',
-      'https://acme.scheduler.app/reset-password?token=abc123',
-    );
+    const { service } = await makeService({ apiKey: 're_test', fromEmail: 'noreply@test.com' });
+    await service.sendPasswordReset('user@example.com', 'https://acme.scheduler.app/reset-password?token=abc123');
     expect(mockSend).toHaveBeenCalledWith({
       from: 'noreply@test.com',
       to: 'user@example.com',
@@ -47,29 +35,24 @@ describe('EmailService', () => {
   });
 
   it('lança erro quando Resend retorna error', async () => {
+    const { service } = await makeService({ apiKey: 're_test', fromEmail: 'noreply@test.com' });
     mockSend.mockResolvedValueOnce({ data: null, error: { message: 'Invalid API key' } });
     await expect(
       service.sendPasswordReset('user@example.com', 'https://acme.scheduler.app/reset-password?token=abc123'),
     ).rejects.toThrow('Email delivery failed: Invalid API key');
   });
 
-  it('envia e-mail de convite com link de ativação via Resend', async () => {
-    await service.sendInvite(
-      'invited@example.com',
-      'https://acme.scheduler.app/activate-account?token=xyz789',
-    );
-    expect(mockSend).toHaveBeenCalledWith({
-      from: 'noreply@test.com',
-      to: 'invited@example.com',
-      subject: 'Você foi convidado',
-      html: expect.stringContaining('https://acme.scheduler.app/activate-account?token=xyz789'),
-    });
+  it('usa o fromEmail padrão quando não configurado', async () => {
+    const { service } = await makeService({ apiKey: 're_test' });
+    await service.sendInvite('invited@example.com', 'https://acme.scheduler.app/activate-account?token=xyz789');
+    expect(mockSend).toHaveBeenCalledWith(expect.objectContaining({ from: 'noreply@scheduler.app' }));
   });
 
-  it('lança erro quando Resend retorna error no envio do convite', async () => {
-    mockSend.mockResolvedValueOnce({ data: null, error: { message: 'Quota exceeded' } });
-    await expect(
-      service.sendInvite('invited@example.com', 'https://acme.scheduler.app/activate-account?token=xyz789'),
-    ).rejects.toThrow('Email delivery failed: Quota exceeded');
+  it('NÃO envia nenhum e-mail quando a integração está desativada', async () => {
+    const { service } = await makeService(null);
+    await service.sendPasswordReset('user@example.com', 'https://x/reset');
+    await service.sendInvite('user@example.com', 'https://x/activate');
+    await service.sendAppointmentNotification('user@example.com', 'T', 'B');
+    expect(mockSend).not.toHaveBeenCalled();
   });
 });

@@ -1,20 +1,25 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { IntegrationConfigService } from '../common/integrations/integration-config.service';
+
+const DEFAULT_FROM = 'noreply@scheduler.app';
 
 @Injectable()
 export class EmailService {
-  private readonly resend: Resend;
-  private readonly from: string;
+  constructor(private readonly integrations: IntegrationConfigService) {}
 
-  constructor(private readonly config: ConfigService) {
-    this.resend = new Resend(config.get<string>('RESEND_API_KEY'));
-    this.from = config.get<string>('RESEND_FROM_EMAIL') ?? 'noreply@scheduler.app';
+  /** Resolve a Resend client + sender, or null when e-mail is disabled/unconfigured. */
+  private async resolve(): Promise<{ resend: Resend; from: string } | null> {
+    const cfg = await this.integrations.getConfig('email');
+    if (!cfg) return null;
+    return { resend: new Resend(cfg.apiKey), from: cfg.fromEmail || DEFAULT_FROM };
   }
 
   async sendPasswordReset(to: string, resetUrl: string): Promise<void> {
-    const { error } = await this.resend.emails.send({
-      from: this.from,
+    const ctx = await this.resolve();
+    if (!ctx) return;
+    const { error } = await ctx.resend.emails.send({
+      from: ctx.from,
       to,
       subject: 'Redefinição de senha',
       html: `
@@ -27,8 +32,10 @@ export class EmailService {
   }
 
   async sendAppointmentNotification(to: string, title: string, body: string): Promise<void> {
-    const { error } = await this.resend.emails.send({
-      from: this.from,
+    const ctx = await this.resolve();
+    if (!ctx) return;
+    const { error } = await ctx.resend.emails.send({
+      from: ctx.from,
       to,
       subject: title,
       html: `<p>${body}</p>`,
@@ -37,8 +44,10 @@ export class EmailService {
   }
 
   async sendInvite(to: string, inviteUrl: string): Promise<void> {
-    const { error } = await this.resend.emails.send({
-      from: this.from,
+    const ctx = await this.resolve();
+    if (!ctx) return;
+    const { error } = await ctx.resend.emails.send({
+      from: ctx.from,
       to,
       subject: 'Você foi convidado',
       html: `
