@@ -20,7 +20,9 @@ function getBreadcrumbs(pathname: string): Crumb[] {
     '/admin/users':         [{ label: 'Usuários' }],
     '/admin/users/new':     [{ label: 'Usuários', href: '/admin/users' }, { label: 'Novo usuário' }],
     '/admin/suggestions':   [{ label: 'Sugestões' }],
-    '/admin/settings/sso':  [{ label: 'Configurações' }, { label: 'SSO' }],
+    '/admin/settings/sso':      [{ label: 'Configurações' }, { label: 'SSO' }],
+    '/admin/settings/whatsapp': [{ label: 'Configurações' }, { label: 'WhatsApp' }],
+    '/admin/settings/email':    [{ label: 'Configurações' }, { label: 'E-mail' }],
   }
 
   if (STATIC[pathname]) return STATIC[pathname]
