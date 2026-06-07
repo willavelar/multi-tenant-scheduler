@@ -148,6 +148,13 @@
       "when": 1780786791454,
       "tag": "0022_previous_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1780840632337,
+      "tag": "0023_brown_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }
