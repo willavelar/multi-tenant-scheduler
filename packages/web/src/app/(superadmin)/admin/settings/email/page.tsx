@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
-import { cn } from '@/lib/utils'
 import { FormField } from '@/components/fields/FormField'
 import { inputCls } from '@/components/fields/inputStyles'
 import { Alert } from '@/components/feedback/Alert'
@@ -47,8 +46,11 @@ export default function EmailSettingsPage() {
 
   async function handleToggle() {
     if (!email) return
+    const body: Record<string, unknown> = { enabled: !email.enabled, fromEmail }
+    if (apiKey.trim()) body.apiKey = apiKey
     try {
-      await upsert.mutateAsync({ enabled: !email.enabled, fromEmail })
+      await upsert.mutateAsync(body)
+      if (apiKey.trim()) setApiKey('')
       notify(email.enabled ? 'Integração desativada' : 'Integração ativada', 'success')
     } catch (err) {
       notify(err instanceof SuperAdminApiError ? err.message : 'Erro ao atualizar', 'error')
@@ -71,9 +73,6 @@ export default function EmailSettingsPage() {
   if (isLoading) return <FormSkeleton fields={2} />
   if (isError || !email) return <Alert variant="error" size="sm">Erro ao carregar configurações de e-mail.</Alert>
 
-  const isEditable = email.enabled
-  const fieldCls = cn(inputCls(), 'disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed')
-
   return (
     <IntegrationCard
       title="E-mail"
@@ -84,14 +83,14 @@ export default function EmailSettingsPage() {
       feedback={feedback}
     >
       <FormField label={`Resend API Key${email.secretSet ? ' (salvo)' : ''}`}>
-        <input type="password" className={fieldCls} value={apiKey}
-          onChange={e => setApiKey(e.target.value)} disabled={!isEditable}
-          placeholder={email.secretSet ? 'Deixe em branco para manter' : isEditable ? '' : 'Ative para editar'} />
+        <input type="password" className={inputCls()} value={apiKey}
+          onChange={e => setApiKey(e.target.value)}
+          placeholder={email.secretSet ? 'Deixe em branco para manter' : ''} />
       </FormField>
       <FormField label="From Email">
-        <input type="text" className={fieldCls} value={fromEmail}
-          onChange={e => setFromEmail(e.target.value)} disabled={!isEditable}
-          placeholder={isEditable ? 'noreply@suaempresa.com' : 'Ative para editar'} />
+        <input type="text" className={inputCls()} value={fromEmail}
+          onChange={e => setFromEmail(e.target.value)}
+          placeholder="noreply@suaempresa.com" />
       </FormField>
     </IntegrationCard>
   )

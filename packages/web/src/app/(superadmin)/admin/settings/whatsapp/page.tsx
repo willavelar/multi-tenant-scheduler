@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { superAdminFetch, SuperAdminApiError } from '@/lib/super-admin-api'
-import { cn } from '@/lib/utils'
 import { FormField } from '@/components/fields/FormField'
 import { inputCls } from '@/components/fields/inputStyles'
 import { Alert } from '@/components/feedback/Alert'
@@ -49,8 +48,11 @@ export default function WhatsAppSettingsPage() {
 
   async function handleToggle() {
     if (!wa) return
+    const body: Record<string, unknown> = { enabled: !wa.enabled, accountSid, whatsappFrom }
+    if (authToken.trim()) body.authToken = authToken
     try {
-      await upsert.mutateAsync({ enabled: !wa.enabled, accountSid, whatsappFrom })
+      await upsert.mutateAsync(body)
+      if (authToken.trim()) setAuthToken('')
       notify(wa.enabled ? 'Integração desativada' : 'Integração ativada', 'success')
     } catch (err) {
       notify(err instanceof SuperAdminApiError ? err.message : 'Erro ao atualizar', 'error')
@@ -73,9 +75,6 @@ export default function WhatsAppSettingsPage() {
   if (isLoading) return <FormSkeleton fields={3} />
   if (isError || !wa) return <Alert variant="error" size="sm">Erro ao carregar configurações do WhatsApp.</Alert>
 
-  const isEditable = wa.enabled
-  const fieldCls = cn(inputCls(), 'disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed')
-
   return (
     <IntegrationCard
       title="WhatsApp"
@@ -86,19 +85,19 @@ export default function WhatsAppSettingsPage() {
       feedback={feedback}
     >
       <FormField label="Account SID">
-        <input type="text" className={fieldCls} value={accountSid}
-          onChange={e => setAccountSid(e.target.value)} disabled={!isEditable}
-          placeholder={isEditable ? '' : 'Ative para editar'} />
+        <input type="text" className={inputCls()} value={accountSid}
+          onChange={e => setAccountSid(e.target.value)}
+          placeholder="ACxxxxxxxx..." />
       </FormField>
       <FormField label={`Auth Token${wa.secretSet ? ' (salvo)' : ''}`}>
-        <input type="password" className={fieldCls} value={authToken}
-          onChange={e => setAuthToken(e.target.value)} disabled={!isEditable}
-          placeholder={wa.secretSet ? 'Deixe em branco para manter' : isEditable ? '' : 'Ative para editar'} />
+        <input type="password" className={inputCls()} value={authToken}
+          onChange={e => setAuthToken(e.target.value)}
+          placeholder={wa.secretSet ? 'Deixe em branco para manter' : ''} />
       </FormField>
       <FormField label="WhatsApp From">
-        <input type="text" className={fieldCls} value={whatsappFrom}
-          onChange={e => setWhatsappFrom(e.target.value)} disabled={!isEditable}
-          placeholder={isEditable ? 'whatsapp:+5511999999999' : 'Ative para editar'} />
+        <input type="text" className={inputCls()} value={whatsappFrom}
+          onChange={e => setWhatsappFrom(e.target.value)}
+          placeholder="whatsapp:+5511999999999" />
       </FormField>
     </IntegrationCard>
   )
