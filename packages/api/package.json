@@ -9,9 +9,12 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:generate": "drizzle-kit generate:pg",
     "db:migrate": "drizzle-kit push:pg",
-    "db:seed": "ts-node seeds/seed.ts"
+    "db:seed": "ts-node seeds/seed.ts",
+    "cf:deploy": "wrangler deploy",
+    "cf:dry-run": "wrangler deploy --dry-run"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.2.0",
@@ -38,6 +41,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^9.0.0",
+    "wrangler": "^4.125.0",
     "@nestjs/cli": "^10.3.2",
     "@nestjs/schematics": "^10.1.1",
     "@nestjs/testing": "^10.3.8",

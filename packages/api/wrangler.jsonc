@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "scheduler-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2025-05-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "containers": [
+    {
+      "class_name": "ApiContainer",
+      "image": "./Dockerfile",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      { "name": "API_CONTAINER", "class_name": "ApiContainer" }
+    ]
+  },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["ApiContainer"] }
+  ],
+  "routes": [
+    { "pattern": "api.timoup.com", "custom_domain": true }
+  ],
+  "vars": {
+    "FRONTEND_BASE_DOMAIN": "timoup.com",
+    "OAUTH_CALLBACK_BASE_URL": "https://api.timoup.com"
+  }
+}
