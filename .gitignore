@@ -33,3 +33,8 @@ docs/
 .specs/
 memory/
 
+# OpenNext / Cloudflare build output
+.open-next/
+packages/web/.open-next/
+.wrangler/
+
