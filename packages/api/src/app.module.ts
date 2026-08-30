@@ -29,7 +29,11 @@ import { TenantMiddleware } from './common/middleware/tenant.middleware';
           connection: {
             host: url.hostname,
             port: Number(url.port) || 6379,
+            ...(url.username ? { username: url.username } : {}),
             ...(url.password ? { password: url.password } : {}),
+            // Upstash (and any rediss:// endpoint) requires TLS
+            ...(url.protocol === 'rediss:' ? { tls: {} } : {}),
+            maxRetriesPerRequest: null,
           },
         };
       },
