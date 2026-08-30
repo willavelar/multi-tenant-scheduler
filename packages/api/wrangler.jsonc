@@ -21,7 +21,7 @@
     { "tag": "v1", "new_sqlite_classes": ["ApiContainer"] }
   ],
   "routes": [
-    { "pattern": "api.timoup.com", "custom_domain": true }
+    { "pattern": "api.timoup.com/*", "zone_name": "timoup.com" }
   ],
   "vars": {
     "FRONTEND_BASE_DOMAIN": "timoup.com",
