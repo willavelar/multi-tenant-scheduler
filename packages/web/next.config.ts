@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next'
+import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare'
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
   allowedDevOrigins: [
     'clinica-demo.lvh.me',
     '*.lvh.me',
@@ -9,3 +9,5 @@ const nextConfig: NextConfig = {
 }
 
 export default nextConfig
+
+initOpenNextCloudflareForDev()
