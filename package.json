@@ -1,6 +1,7 @@
 {
   "name": "scheduler",
   "private": true,
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "docker compose up --build",
     "dev:api": "pnpm --filter api dev",

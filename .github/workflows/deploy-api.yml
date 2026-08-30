@@ -25,6 +25,12 @@ jobs:
         run: pnpm --filter api db:migrate
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      - name: Apply RLS policies (Neon)
+        run: |
+          sudo apt-get update && sudo apt-get install -y postgresql-client
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f packages/api/migrations/rls.sql
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Deploy container to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
