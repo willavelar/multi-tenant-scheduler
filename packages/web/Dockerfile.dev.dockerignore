@@ -1,0 +1,20 @@
+# Per-Dockerfile ignore: the root .dockerignore excludes packages/web (the API's
+# Cloudflare container builds from the monorepo root and doesn't need the front).
+# This dev image DOES need it, and BuildKit gives <dockerfile>.dockerignore precedence.
+**/node_modules
+node_modules
+**/dist
+dist
+.git
+.worktrees
+.superpowers
+.idea
+.playwright-mcp
+docs
+.env
+.env.*
+**/.env
+**/*.env
+**/.next
+**/.open-next
+.wrangler

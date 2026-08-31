@@ -1,5 +1,5 @@
 FROM node:20-alpine
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10.33.0
 WORKDIR /app
 
 # Install dependencies — layer is cached separately from source

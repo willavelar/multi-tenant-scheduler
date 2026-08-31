@@ -1,5 +1,5 @@
-FROM node:20-alpine
-RUN npm install -g pnpm
+FROM node:20-slim
+RUN npm install -g pnpm@10.33.0
 WORKDIR /app
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml* ./
 COPY packages/shared/package.json ./packages/shared/
