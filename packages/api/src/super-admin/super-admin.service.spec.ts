@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { BadRequestException, ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { sql } from 'drizzle-orm';
 import { SuperAdminService } from './super-admin.service';
 import { DB } from '../database/database.module';
 import { REDIS } from '../redis/redis.module';
@@ -31,19 +32,24 @@ function makeMockDb(responses: unknown[]) {
   methods.forEach((m) => { db[m] = jest.fn().mockReturnValue(chain); });
   db['execute'] = jest.fn().mockResolvedValue(undefined);
   db['transaction'] = jest.fn().mockImplementation((fn: (tx: unknown) => unknown) => fn(chain));
+  db['tx'] = chain;
   return db;
 }
 
-async function buildService(dbResponses: unknown[]) {
+async function buildServiceWith(db: Record<string, unknown>) {
   const module = await Test.createTestingModule({
     providers: [
       SuperAdminService,
-      { provide: DB, useValue: makeMockDb(dbResponses) },
+      { provide: DB, useValue: db },
       { provide: REDIS, useValue: mockRedis },
       { provide: JwtService, useValue: mockJwt },
     ],
   }).compile();
   return module.get(SuperAdminService);
+}
+
+async function buildService(dbResponses: unknown[]) {
+  return buildServiceWith(makeMockDb(dbResponses));
 }
 
 describe('SuperAdminService', () => {
@@ -124,6 +130,31 @@ describe('SuperAdminService', () => {
       const service = await buildService([[], [created], [{ id: 'u-new' }]]);
       const result = await service.createTenant(dto);
       expect(result.slug).toBe('new-tenant');
+    });
+
+    // Regression: the admin user INSERT is subject to the users_tenant_isolation
+    // RLS policy, whose USING expression doubles as the INSERT WITH CHECK. Without
+    // app.current_tenant_id set for the transaction, production (app_user, which
+    // has NOBYPASSRLS) rejects the row with "new row violates row-level security
+    // policy for table users" → 500.
+    it('sets the RLS tenant context between the tenant and the admin user insert', async () => {
+      const created = { id: 't-new', slug: 'new-tenant', name: 'New', active: true, createdAt: new Date() };
+      const db = makeMockDb([[], [created], [{ id: 'u-new' }]]);
+      const service = await buildServiceWith(db);
+
+      await service.createTenant(dto);
+
+      const tx = db.tx as { execute: jest.Mock; insert: jest.Mock };
+      expect(tx.execute).toHaveBeenCalledTimes(1);
+      expect(tx.execute).toHaveBeenCalledWith(
+        sql`SELECT set_config('app.current_tenant_id', ${created.id}, true)`,
+      );
+
+      // ...and it must happen after the tenant exists but before the user insert
+      const [setContext] = tx.execute.mock.invocationCallOrder;
+      const [tenantInsert, userInsert] = tx.insert.mock.invocationCallOrder;
+      expect(setContext).toBeGreaterThan(tenantInsert);
+      expect(setContext).toBeLessThan(userInsert);
     });
   });
 

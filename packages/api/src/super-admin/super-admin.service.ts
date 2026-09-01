@@ -10,6 +10,7 @@ import type Redis from 'ioredis';
 import { DB, DrizzleDB } from '../database/database.module';
 import { REDIS } from '../redis/redis.module';
 import { RESERVED_SLUGS } from '../common/constants/password';
+import { setTenantContext } from '../database/with-tenant';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { CreateSuperAdminUserDto } from './dto/create-super-admin-user.dto';
@@ -101,6 +102,13 @@ export class SuperAdminService {
         .insert(tenants)
         .values({ slug: dto.slug, name: dto.name })
         .returning();
+
+      // Bootstrap exception: withTenant cannot wrap this — the tenant does not
+      // exist until the INSERT above. The `users` RLS policy has no explicit
+      // WITH CHECK, so PostgreSQL applies its USING expression to the INSERT:
+      // without app.current_tenant_id the admin row is rejected under a
+      // NOBYPASSRLS role (production). Set it now that the id is known.
+      await setTenantContext(tx, tenant.id);
 
       await tx.insert(users).values({
         tenantId: tenant.id,
